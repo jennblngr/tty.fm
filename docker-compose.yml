@@ -11,8 +11,13 @@ services:
     image: ${APP_NAME:-selfstream}:latest
     container_name: ${APP_NAME:-selfstream}
     restart: unless-stopped
-    # Run as the NAS user owning the music and data folders (`id` over SSH).
-    user: "${PUID:-1000}:${PGID:-10}"
+    # UGOS Pro refuses inotify watches on shared folders to non-root users,
+    # so the container runs as uid 0 but with every capability dropped: it
+    # cannot bypass file permissions, and the music is mounted read-only.
+    # On other hosts, set PUID/PGID to the user owning the folders.
+    user: "${PUID:-0}:${PGID:-0}"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
     ports:
       - "${PORT:-4533}:4533"
     environment:

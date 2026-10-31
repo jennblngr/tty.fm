@@ -12,49 +12,44 @@ recommender/  service de recommandations (phase 3, vide)
 
 ## Installation sur le NAS (UGREEN DXP2800, UGOS Pro)
 
-Prérequis : Docker activé dans UGOS Pro, accès SSH activé (Panneau de configuration → Terminal).
+Prérequis : Docker activé dans UGOS Pro, SSH activé (Panneau de configuration → Terminal → SSH, puis **Appliquer**). Les commandes ci-dessous se lancent depuis le Terminal du Mac ; remplacer `user` et `nas` par le compte UGOS et l'adresse du NAS.
 
-1. **Créer les dossiers** dans un dossier partagé, par exemple :
-   - musique : `/volume1/Music` (lecture seule pour le conteneur)
-   - données : `/volume1/docker/selfstream` (base SQLite, cache des pochettes et du transcodage)
-
-2. **Copier le dépôt sur le NAS**, par exemple dans `/volume1/docker/selfstream-src` :
+1. **Accès sans mot de passe** (une fois) :
    ```bash
-   rsync -av --exclude app/ --exclude .git/ ./ admin@nas:/volume1/docker/selfstream-src/
+   ssh-copy-id user@nas                                   # demande le mot de passe UGOS
+   ssh -t user@nas 'sudo usermod -aG docker user'         # Docker sans sudo
    ```
+   Une mise à jour d'UGOS peut retirer le compte du groupe `docker` ; il suffit alors de relancer la deuxième commande.
 
-3. **Configurer** :
+2. **Construire l'image sur le Mac** (Apple Silicon, émulation x86_64 via Colima + Rosetta, environ 3 min) et l'envoyer :
    ```bash
-   ssh admin@nas
-   cd /volume1/docker/selfstream-src
-   cp .env.example .env
-   id            # → renseigner PUID / PGID dans .env
-   vi .env       # MUSIC_DIR, DATA_DIR, ADMIN_PASSWORD
+   colima start --vm-type vz --vz-rosetta --cpu 4 --memory 4   # une fois par session
+   docker build --platform linux/amd64 --build-arg VERSION=$(git describe --always) -t selfstream:latest server/
+   docker save selfstream:latest | gzip | ssh user@nas 'gunzip | docker load'
    ```
-   L'utilisateur `PUID` doit pouvoir lire `MUSIC_DIR` et écrire dans `DATA_DIR`.
+   (`scp` vers `/volume1` échoue sur UGOS : le SFTP ne voit pas les volumes, d'où le passage par `ssh`.)
 
-4. **Construire et lancer** :
+3. **Configurer** dans `/volume1/docker/selfstream` :
    ```bash
-   sudo docker compose up -d --build
-   sudo docker compose logs -f
+   ssh user@nas 'mkdir -p /volume1/docker/selfstream/data'
+   sed '/^    build:/,/^        VERSION/d' docker-compose.yml | ssh user@nas 'cat > /volume1/docker/selfstream/docker-compose.yml'
+   ssh user@nas 'cat > /volume1/docker/selfstream/.env' < .env   # préparé à partir de .env.example
    ```
-   On peut aussi importer `docker-compose.yml` comme projet dans l'application Docker de UGOS Pro (Projet → Créer), en pointant sur ce dossier.
+   Dans `.env` : `MUSIC_DIR` (ex. `/volume1/music`), `DATA_DIR` (ex. `/volume1/docker/selfstream/data`), `ADMIN_PASSWORD`.
 
-   Le premier scan démarre automatiquement. Le log affiche `scan done … seen=… added=…`.
+   **Utilisateur du conteneur** : UGOS Pro refuse la surveillance inotify des dossiers partagés aux utilisateurs autres que root (`watch: cannot add … permission denied`). Le conteneur tourne donc en uid 0, mais **sans aucune capability** (`cap_drop: ALL`, `no-new-privileges`) : il ne peut pas contourner les permissions des fichiers, et la musique est montée en lecture seule.
+
+4. **Lancer** :
+   ```bash
+   ssh user@nas 'cd /volume1/docker/selfstream && docker compose up -d && docker compose logs --tail 20'
+   ```
+   Le projet apparaît aussi dans l'application Docker de UGOS Pro. Le premier scan démarre automatiquement ; le log affiche `scan done … seen=… added=…`. Les fichiers copiés ensuite dans le dossier musique (par SMB depuis le Mac, par exemple) sont détectés une dizaine de secondes après la fin de la copie.
 
 5. **Vérifier** : `curl http://nas:4533/api/v1/health` doit répondre `{"status":"ok",…}`.
 
-**Accès distant** : installer Tailscale sur le NAS (paquet UGOS ou conteneur `tailscale/tailscale`) et sur les clients. Utiliser ensuite l'adresse Tailscale du NAS (`http://nas.<tailnet>.ts.net:4533`) dans l'application. Ne pas ouvrir le port 4533 sur Internet.
+**Accès distant** : Tailscale sur le NAS (paquet UGOS ou conteneur `tailscale/tailscale` en `network_mode: host`) et sur les clients. Dans l'application, utiliser l'adresse Tailscale du NAS (`100.x.y.z:4533` ou `nas.<tailnet>.ts.net:4533`) comme adresse du serveur, et l'adresse locale comme adresse locale. Ne pas ouvrir le port 4533 sur Internet.
 
-**Mise à jour** : recopier le dépôt, puis `sudo docker compose up -d --build`.
-
-**Variante sans build sur le NAS** : construire l'image sur le Mac (Apple Silicon, émulation x86_64 via Colima + Rosetta, environ 3 min), puis l'envoyer au NAS :
-```bash
-colima start --vm-type vz --vz-rosetta --cpu 4 --memory 4   # une fois par session
-docker buildx build --platform linux/amd64 --load -t selfstream:latest server/
-docker save selfstream:latest | gzip | ssh admin@nas 'gunzip | sudo docker load'
-ssh admin@nas 'cd /volume1/docker/selfstream-src && sudo docker compose up -d'
-```
+**Mise à jour** : refaire l'étape 2, puis `ssh user@nas 'cd /volume1/docker/selfstream && docker compose up -d'`.
 
 **Tester localement avec Docker** : créer un `.env` de test (chemins sous `$HOME`, que Colima partage avec la VM), puis lancer `docker compose --env-file <fichier> up -d`. Sur Mac, fsnotify ne voit pas les fichiers ajoutés depuis macOS (limite du partage virtiofs) : le scan périodique ou `POST /api/v1/admin/scan` prend le relais. Sur le NAS, la surveillance fonctionne normalement.
 
