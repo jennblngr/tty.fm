@@ -49,7 +49,7 @@ typedef PlayCallback = void Function(PlayRecord play);
 /// devices — goes through these methods; the UI only renders [state].
 class PlaybackController {
   PlaybackController(this._engine, {required this.sourceFor, this.onPlay, DateTime Function()? clock})
-      : _now = clock ?? DateTime.now {
+    : _now = clock ?? DateTime.now {
     _subs.addAll([
       _engine.index.listen(_onEngineIndex),
       _engine.playing.listen((p) {
@@ -131,8 +131,13 @@ class PlaybackController {
 
   /// Replaces the queue with [tracks] and starts at [index]. With shuffle on,
   /// the chosen track plays first and the rest is shuffled.
-  Future<void> playTracks(List<Track> tracks,
-      {int index = 0, bool? shuffle, String? contextKind, int? contextId}) async {
+  Future<void> playTracks(
+    List<Track> tracks, {
+    int index = 0,
+    bool? shuffle,
+    String? contextKind,
+    int? contextId,
+  }) async {
     if (tracks.isEmpty) return;
     _finishSession(byUser: true);
     _contextKind = contextKind;
@@ -142,7 +147,12 @@ class PlaybackController {
     index = index.clamp(0, tracks.length - 1);
     if (_shuffle) {
       final first = _original[index];
-      _queue = [first, ...(_original.toList()..removeAt(index)..shuffle(_rng))];
+      _queue = [
+        first,
+        ...(_original.toList()
+          ..removeAt(index)
+          ..shuffle(_rng)),
+      ];
       _index = 0;
     } else {
       _queue = [..._original];
@@ -322,16 +332,16 @@ class PlaybackController {
   // --- persistence ------------------------------------------------------------
 
   Map<String, dynamic> toJson() => {
-        'queue': [for (final q in _queue) q.track.toJson()],
-        'original': [for (final q in _original) _queue.indexOf(q)],
-        'index': _index,
-        'position_ms': _position.inMilliseconds,
-        'shuffle': _shuffle,
-        'repeat': _repeat.name,
-        'volume': _volume,
-        'context_kind': _contextKind,
-        'context_id': _contextId,
-      };
+    'queue': [for (final q in _queue) q.track.toJson()],
+    'original': [for (final q in _original) _queue.indexOf(q)],
+    'index': _index,
+    'position_ms': _position.inMilliseconds,
+    'shuffle': _shuffle,
+    'repeat': _repeat.name,
+    'volume': _volume,
+    'context_kind': _contextKind,
+    'context_id': _contextId,
+  };
 
   /// Restores a saved queue, paused at the saved position.
   Future<void> restore(Map<String, dynamic> j) async {
@@ -426,14 +436,16 @@ class PlaybackController {
     final threshold = min(240000, s.track.durationMs ~/ 2);
     final skipped = byUser && listened < threshold;
     if (listened < 1000 && !skipped) return;
-    onPlay?.call(PlayRecord(
-      trackId: s.track.id,
-      startedAt: s.startedAt,
-      listenedMs: listened,
-      skipped: skipped,
-      contextKind: _contextKind,
-      contextId: _contextId,
-    ));
+    onPlay?.call(
+      PlayRecord(
+        trackId: s.track.id,
+        startedAt: s.startedAt,
+        listenedMs: listened,
+        skipped: skipped,
+        contextKind: _contextKind,
+        contextId: _contextId,
+      ),
+    );
   }
 
   Future<void> dispose() async {

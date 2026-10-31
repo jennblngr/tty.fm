@@ -23,11 +23,15 @@ class ArtistScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: AsyncView(data, onRetry: () => ref.invalidate(artistProvider(id)), builder: (d) {
-        final (_, albums) = d;
-        if (albums.isEmpty) return const Center(child: Text('Apparaît uniquement sur des compilations'));
-        return AlbumGrid(albums);
-      }),
+      body: AsyncView(
+        data,
+        onRetry: () => ref.invalidate(artistProvider(id)),
+        builder: (d) {
+          final (_, albums) = d;
+          if (albums.isEmpty) return const Center(child: Text('Apparaît uniquement sur des compilations'));
+          return AlbumGrid(albums);
+        },
+      ),
     );
   }
 }

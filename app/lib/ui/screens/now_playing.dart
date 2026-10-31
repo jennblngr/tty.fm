@@ -26,13 +26,25 @@ class NowPlayingScreen extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.queue_music),
               tooltip: 'File d\'attente',
-              onPressed: () => Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (_) => Scaffold(appBar: AppBar(title: const Text('File d\'attente')), body: const QueueView()))),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => Scaffold(
+                    appBar: AppBar(title: const Text('File d\'attente')),
+                    body: const QueueView(),
+                  ),
+                ),
+              ),
             ),
         ],
       ),
       body: wide
-          ? const Row(children: [Expanded(child: _Player()), VerticalDivider(width: 1), SizedBox(width: 420, child: QueueView())])
+          ? const Row(
+              children: [
+                Expanded(child: _Player()),
+                VerticalDivider(width: 1),
+                SizedBox(width: 420, child: QueueView()),
+              ],
+            )
           : const _Player(),
     );
   }
@@ -51,90 +63,116 @@ class _Player extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
 
-    return LayoutBuilder(builder: (context, box) {
-      final coverSize = (box.maxWidth - 48).clamp(120.0, (box.maxHeight - 300).clamp(120.0, 520.0));
-      return Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Hero(tag: 'now-cover', child: CoverImage(track.coverId, size: coverSize, radius: 12)),
-              const SizedBox(height: 24),
-              Row(children: [
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(track.title, style: text.titleLarge, maxLines: 2, overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 2),
-                    InkWell(
-                      onTap: () {
-                        Navigator.pop(context);
-                        openArtist(context, track.artistId);
-                      },
-                      child: Text(track.artist, style: text.titleMedium?.copyWith(color: scheme.primary)),
+    return LayoutBuilder(
+      builder: (context, box) {
+        final coverSize = (box.maxWidth - 48).clamp(120.0, (box.maxHeight - 300).clamp(120.0, 520.0));
+        return Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Hero(
+                    tag: 'now-cover',
+                    child: CoverImage(track.coverId, size: coverSize, radius: 12),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(track.title, style: text.titleLarge, maxLines: 2, overflow: TextOverflow.ellipsis),
+                            const SizedBox(height: 2),
+                            InkWell(
+                              onTap: () {
+                                Navigator.pop(context);
+                                openArtist(context, track.artistId);
+                              },
+                              child: Text(track.artist, style: text.titleMedium?.copyWith(color: scheme.primary)),
+                            ),
+                            InkWell(
+                              onTap: () {
+                                Navigator.pop(context);
+                                openAlbum(context, track.albumId);
+                              },
+                              child: Text(
+                                track.album,
+                                style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(fav ? Icons.favorite : Icons.favorite_border, color: fav ? scheme.primary : null),
+                        onPressed: () =>
+                            guard(context, () => ref.read(favoritesProvider.notifier).toggle('tracks', track.id)),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.playlist_add),
+                        onPressed: () => addToPlaylist(context, ref, [track]),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const _SeekBar(),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.shuffle, color: st.shuffle ? scheme.primary : null),
+                        tooltip: 'Aléatoire',
+                        onPressed: () => c.setShuffle(!st.shuffle),
+                      ),
+                      IconButton(iconSize: 36, icon: const Icon(Icons.skip_previous), onPressed: c.previous),
+                      IconButton.filled(
+                        iconSize: 44,
+                        icon: Icon(st.playing ? Icons.pause : Icons.play_arrow),
+                        onPressed: c.togglePlay,
+                      ),
+                      IconButton(
+                        iconSize: 36,
+                        icon: const Icon(Icons.skip_next),
+                        onPressed: st.hasNext ? c.next : null,
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          st.repeat == RepeatMode.one ? Icons.repeat_one : Icons.repeat,
+                          color: st.repeat != RepeatMode.off ? scheme.primary : null,
+                        ),
+                        tooltip: 'Répétition',
+                        onPressed: c.cycleRepeat,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    [
+                      track.format.toUpperCase(),
+                      if (track.bitDepth != null && track.sampleRate != null)
+                        '${track.bitDepth} bits / ${(track.sampleRate! / 1000).toStringAsFixed(1)} kHz'
+                      else if (track.bitrate != null)
+                        '${track.bitrate} kb/s',
+                    ].join(' · '),
+                    style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                  if (st.error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(st.error!, style: TextStyle(color: scheme.error, fontSize: 12)),
                     ),
-                    InkWell(
-                      onTap: () {
-                        Navigator.pop(context);
-                        openAlbum(context, track.albumId);
-                      },
-                      child: Text(track.album, style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
-                    ),
-                  ]),
-                ),
-                IconButton(
-                  icon: Icon(fav ? Icons.favorite : Icons.favorite_border, color: fav ? scheme.primary : null),
-                  onPressed: () => guard(context, () => ref.read(favoritesProvider.notifier).toggle('tracks', track.id)),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.playlist_add),
-                  onPressed: () => addToPlaylist(context, ref, [track]),
-                ),
-              ]),
-              const SizedBox(height: 8),
-              const _SeekBar(),
-              const SizedBox(height: 4),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-                IconButton(
-                  icon: Icon(Icons.shuffle, color: st.shuffle ? scheme.primary : null),
-                  tooltip: 'Aléatoire',
-                  onPressed: () => c.setShuffle(!st.shuffle),
-                ),
-                IconButton(iconSize: 36, icon: const Icon(Icons.skip_previous), onPressed: c.previous),
-                IconButton.filled(
-                  iconSize: 44,
-                  icon: Icon(st.playing ? Icons.pause : Icons.play_arrow),
-                  onPressed: c.togglePlay,
-                ),
-                IconButton(iconSize: 36, icon: const Icon(Icons.skip_next), onPressed: st.hasNext ? c.next : null),
-                IconButton(
-                  icon: Icon(st.repeat == RepeatMode.one ? Icons.repeat_one : Icons.repeat,
-                      color: st.repeat != RepeatMode.off ? scheme.primary : null),
-                  tooltip: 'Répétition',
-                  onPressed: c.cycleRepeat,
-                ),
-              ]),
-              const SizedBox(height: 8),
-              Text(
-                [
-                  track.format.toUpperCase(),
-                  if (track.bitDepth != null && track.sampleRate != null)
-                    '${track.bitDepth} bits / ${(track.sampleRate! / 1000).toStringAsFixed(1)} kHz'
-                  else if (track.bitrate != null)
-                    '${track.bitrate} kb/s',
-                ].join(' · '),
-                style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+                ],
               ),
-              if (st.error != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(st.error!, style: TextStyle(color: scheme.error, fontSize: 12)),
-                ),
-            ]),
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }
 
@@ -155,24 +193,29 @@ class _SeekBarState extends ConsumerState<_SeekBar> {
     final max = dur.inMilliseconds.toDouble().clamp(1.0, double.infinity);
     final value = (_drag ?? pos.inMilliseconds.toDouble()).clamp(0.0, max);
     final style = TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12);
-    return Column(children: [
-      Slider(
-        value: value,
-        max: max,
-        onChanged: (v) => setState(() => _drag = v),
-        onChangeEnd: (v) {
-          ref.read(playbackControllerProvider).seek(Duration(milliseconds: v.round()));
-          setState(() => _drag = null);
-        },
-      ),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(formatDuration(Duration(milliseconds: value.round())), style: style),
-          Text(formatDuration(dur), style: style),
-        ]),
-      ),
-    ]);
+    return Column(
+      children: [
+        Slider(
+          value: value,
+          max: max,
+          onChanged: (v) => setState(() => _drag = v),
+          onChangeEnd: (v) {
+            ref.read(playbackControllerProvider).seek(Duration(milliseconds: v.round()));
+            setState(() => _drag = null);
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(formatDuration(Duration(milliseconds: value.round())), style: style),
+              Text(formatDuration(dur), style: style),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -197,10 +240,11 @@ class QueueView extends ConsumerWidget {
           key: ValueKey(item.uid),
           direction: current ? DismissDirection.none : DismissDirection.endToStart,
           background: Container(
-              color: scheme.errorContainer,
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 16),
-              child: const Icon(Icons.delete_outline)),
+            color: scheme.errorContainer,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 16),
+            child: const Icon(Icons.delete_outline),
+          ),
           onDismissed: (_) => c.removeAt(i),
           child: ListTile(
             dense: true,

@@ -21,38 +21,57 @@ class MiniPlayer extends ConsumerWidget {
       color: scheme.surfaceContainer,
       child: InkWell(
         onTap: () => openNowPlaying(context),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const _ThinProgress(),
-          SizedBox(
-            height: 60,
-            child: Row(children: [
-              const SizedBox(width: 10),
-              Hero(tag: 'now-cover', child: CoverImage(track.coverId, size: 44)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text(track.artist, maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13)),
-                ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const _ThinProgress(),
+            SizedBox(
+              height: 60,
+              child: Row(
+                children: [
+                  const SizedBox(width: 10),
+                  Hero(tag: 'now-cover', child: CoverImage(track.coverId, size: 44)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          track.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          track.artist,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(icon: const Icon(Icons.skip_previous), onPressed: c.previous, tooltip: 'Précédent'),
+                  SizedBox(
+                    width: 48,
+                    child: buffering && playing
+                        ? const Center(
+                            child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+                          )
+                        : IconButton(
+                            icon: Icon(playing ? Icons.pause : Icons.play_arrow),
+                            onPressed: c.togglePlay,
+                            tooltip: playing ? 'Pause' : 'Lecture',
+                          ),
+                  ),
+                  IconButton(icon: const Icon(Icons.skip_next), onPressed: c.next, tooltip: 'Suivant'),
+                  const SizedBox(width: 4),
+                ],
               ),
-              IconButton(icon: const Icon(Icons.skip_previous), onPressed: c.previous, tooltip: 'Précédent'),
-              SizedBox(
-                width: 48,
-                child: buffering && playing
-                    ? const Center(child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)))
-                    : IconButton(
-                        icon: Icon(playing ? Icons.pause : Icons.play_arrow),
-                        onPressed: c.togglePlay,
-                        tooltip: playing ? 'Pause' : 'Lecture',
-                      ),
-              ),
-              IconButton(icon: const Icon(Icons.skip_next), onPressed: c.next, tooltip: 'Suivant'),
-              const SizedBox(width: 4),
-            ]),
-          ),
-        ]),
+            ),
+          ],
+        ),
       ),
     );
   }

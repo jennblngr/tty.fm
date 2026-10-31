@@ -44,18 +44,23 @@ class TrackTile extends ConsumerWidget {
               child: Center(
                 child: isCurrent
                     ? Icon(Icons.graphic_eq, color: scheme.primary, size: 18)
-                    : Text('${leadingNumber ?? track.trackNo ?? ''}',
-                        style: TextStyle(color: scheme.onSurfaceVariant)),
+                    : Text('${leadingNumber ?? track.trackNo ?? ''}', style: TextStyle(color: scheme.onSurfaceVariant)),
               ),
             ),
       title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: style),
-      subtitle: Text(showCover ? '${track.artist} · ${track.album}' : track.artist,
-          maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        ?trailing,
-        Text(formatDuration(track.duration), style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
-        TrackMenuButton(track, extra: extraMenu),
-      ]),
+      subtitle: Text(
+        showCover ? '${track.artist} · ${track.album}' : track.artist,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ?trailing,
+          Text(formatDuration(track.duration), style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
+          TrackMenuButton(track, extra: extraMenu),
+        ],
+      ),
     );
   }
 }
@@ -71,8 +76,10 @@ class TrackMenuButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final fav = ref.watch(favoritesProvider.select((f) => f.value?['tracks']?.contains(track.id) ?? false));
     final c = ref.read(playbackControllerProvider);
-    PopupMenuItem<VoidCallback> item(IconData icon, String label, VoidCallback action) =>
-        PopupMenuItem(value: action, child: ListTile(leading: Icon(icon), title: Text(label), dense: true));
+    PopupMenuItem<VoidCallback> item(IconData icon, String label, VoidCallback action) => PopupMenuItem(
+      value: action,
+      child: ListTile(leading: Icon(icon), title: Text(label), dense: true),
+    );
     return PopupMenuButton<VoidCallback>(
       icon: const Icon(Icons.more_vert, size: 20),
       tooltip: 'Plus',
@@ -87,8 +94,11 @@ class TrackMenuButton extends ConsumerWidget {
           toast(context, 'Ajouté à la file');
         }),
         item(Icons.playlist_add, 'Ajouter à une playlist…', () => addToPlaylist(context, ref, [track])),
-        item(fav ? Icons.favorite : Icons.favorite_border, fav ? 'Retirer des favoris' : 'Ajouter aux favoris',
-            () => guard(context, () => ref.read(favoritesProvider.notifier).toggle('tracks', track.id))),
+        item(
+          fav ? Icons.favorite : Icons.favorite_border,
+          fav ? 'Retirer des favoris' : 'Ajouter aux favoris',
+          () => guard(context, () => ref.read(favoritesProvider.notifier).toggle('tracks', track.id)),
+        ),
         const PopupMenuDivider(),
         item(Icons.album_outlined, 'Aller à l\'album', () => openAlbum(context, track.albumId)),
         item(Icons.person_outline, 'Aller à l\'artiste', () => openArtist(context, track.artistId)),

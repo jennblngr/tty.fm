@@ -21,15 +21,20 @@ class AlbumCard extends StatelessWidget {
         width: size,
         child: Padding(
           padding: const EdgeInsets.all(4),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            CoverImage(album.coverId, size: size - 8, radius: 8),
-            const SizedBox(height: 6),
-            Text(album.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: text.bodyMedium),
-            Text(album.artist,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CoverImage(album.coverId, size: size - 8, radius: 8),
+              const SizedBox(height: 6),
+              Text(album.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: text.bodyMedium),
+              Text(
+                album.artist,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: text.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          ]),
+                style: text.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -49,10 +54,7 @@ class AlbumGrid extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       shrinkWrap: shrinkWrap,
       physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 190,
-        childAspectRatio: 0.76,
-      ),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 190, childAspectRatio: 0.76),
       itemCount: albums.length,
       itemBuilder: (_, i) => LayoutBuilder(builder: (_, c) => AlbumCard(albums[i], size: c.maxWidth)),
     );

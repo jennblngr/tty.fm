@@ -105,35 +105,40 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       body: _error != null
           ? Center(child: Text(_error!))
           : r.isEmpty
-              ? Center(child: Text(_ctrl.text.isEmpty ? 'Recherchez dans votre bibliothèque' : 'Aucun résultat'))
-              : ListView(children: [
-                  if (r.artists.isNotEmpty) ...[
-                    const _Section('Artistes'),
-                    for (final a in r.artists)
-                      ListTile(
-                        leading: CoverImage(a.coverId, size: 40, radius: 20, icon: Icons.person),
-                        title: Text(a.name),
-                        onTap: () => openArtist(context, a.id),
-                      ),
-                  ],
-                  if (r.albums.isNotEmpty) ...[
-                    const _Section('Albums'),
-                    SizedBox(
-                      height: 200,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        children: [for (final a in r.albums) AlbumCard(a, size: 150)],
-                      ),
+          ? Center(child: Text(_ctrl.text.isEmpty ? 'Recherchez dans votre bibliothèque' : 'Aucun résultat'))
+          : ListView(
+              children: [
+                if (r.artists.isNotEmpty) ...[
+                  const _Section('Artistes'),
+                  for (final a in r.artists)
+                    ListTile(
+                      leading: CoverImage(a.coverId, size: 40, radius: 20, icon: Icons.person),
+                      title: Text(a.name),
+                      onTap: () => openArtist(context, a.id),
                     ),
-                  ],
-                  if (r.tracks.isNotEmpty) ...[
-                    const _Section('Titres'),
-                    for (var i = 0; i < r.tracks.length; i++)
-                      TrackTile(r.tracks[i], onTap: () => c.playTracks(r.tracks, index: i, contextKind: 'search')),
-                  ],
-                  const SizedBox(height: 16),
-                ]),
+                ],
+                if (r.albums.isNotEmpty) ...[
+                  const _Section('Albums'),
+                  SizedBox(
+                    height: 200,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      children: [for (final a in r.albums) AlbumCard(a, size: 150)],
+                    ),
+                  ),
+                ],
+                if (r.tracks.isNotEmpty) ...[
+                  const _Section('Titres'),
+                  for (var i = 0; i < r.tracks.length; i++)
+                    TrackTile(
+                      r.tracks[i],
+                      onTap: () => c.playTracks(r.tracks, index: i, contextKind: 'search'),
+                    ),
+                ],
+                const SizedBox(height: 16),
+              ],
+            ),
     );
   }
 }
@@ -144,7 +149,7 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-        child: Text(title, style: Theme.of(context).textTheme.titleSmall),
-      );
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+    child: Text(title, style: Theme.of(context).textTheme.titleSmall),
+  );
 }

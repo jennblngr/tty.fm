@@ -22,8 +22,10 @@ void openPlaylist(BuildContext context, int id) =>
 void openFolder(BuildContext context, int id) =>
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlaylistsScreen(folderId: id)));
 
-void openNowPlaying(BuildContext context) => Navigator.of(context, rootNavigator: true)
-    .push(MaterialPageRoute(fullscreenDialog: true, builder: (_) => const NowPlayingScreen()));
+void openNowPlaying(BuildContext context) => Navigator.of(
+  context,
+  rootNavigator: true,
+).push(MaterialPageRoute(fullscreenDialog: true, builder: (_) => const NowPlayingScreen()));
 
-void openSettings(BuildContext context) => Navigator.of(context, rootNavigator: true)
-    .push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+void openSettings(BuildContext context) =>
+    Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));

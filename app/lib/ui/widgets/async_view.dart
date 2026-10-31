@@ -20,15 +20,18 @@ class AsyncView<T> extends StatelessWidget {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.cloud_off, size: 40),
-            const SizedBox(height: 12),
-            Text(errorMessage(value.error!), textAlign: TextAlign.center),
-            if (onRetry != null) ...[
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off, size: 40),
               const SizedBox(height: 12),
-              FilledButton.tonal(onPressed: onRetry, child: const Text('Réessayer')),
+              Text(errorMessage(value.error!), textAlign: TextAlign.center),
+              if (onRetry != null) ...[
+                const SizedBox(height: 12),
+                FilledButton.tonal(onPressed: onRetry, child: const Text('Réessayer')),
+              ],
             ],
-          ]),
+          ),
         ),
       );
     }

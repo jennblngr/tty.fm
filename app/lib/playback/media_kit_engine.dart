@@ -19,12 +19,16 @@ class MediaKitEngine implements AudioEngine {
       native.setProperty('demuxer-max-back-bytes', '${64 << 20}');
       native.setProperty('audio-display', 'no');
     }
-    _subs.add(_player.stream.playlist.listen((p) {
-      if (p.medias.isNotEmpty) _index.add(p.index);
-    }));
+    _subs.add(
+      _player.stream.playlist.listen((p) {
+        if (p.medias.isNotEmpty) _index.add(p.index);
+      }),
+    );
   }
 
-  final _player = Player(configuration: const PlayerConfiguration(title: 'selfstream', bufferSize: 64 << 20));
+  final _player = Player(
+    configuration: const PlayerConfiguration(title: 'selfstream', bufferSize: 64 << 20),
+  );
   final _index = StreamController<int>.broadcast();
   final _subs = <StreamSubscription<dynamic>>[];
 
@@ -78,10 +82,10 @@ class MediaKitEngine implements AudioEngine {
 
   @override
   Future<void> setRepeat(RepeatMode mode) => _player.setPlaylistMode(switch (mode) {
-        RepeatMode.off => PlaylistMode.none,
-        RepeatMode.all => PlaylistMode.loop,
-        RepeatMode.one => PlaylistMode.single,
-      });
+    RepeatMode.off => PlaylistMode.none,
+    RepeatMode.all => PlaylistMode.loop,
+    RepeatMode.one => PlaylistMode.single,
+  });
 
   @override
   Future<void> setVolume(double volume) => _player.setVolume(volume * 100);

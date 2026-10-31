@@ -27,10 +27,9 @@ class ServerRoute {
 /// Ethernet, otherwise the remote (Tailscale) address. Re-evaluated on
 /// connectivity changes.
 class RouteNotifier extends Notifier<ServerRoute> {
-  final _probe = Dio(BaseOptions(
-    connectTimeout: const Duration(milliseconds: 600),
-    receiveTimeout: const Duration(milliseconds: 600),
-  ));
+  final _probe = Dio(
+    BaseOptions(connectTimeout: const Duration(milliseconds: 600), receiveTimeout: const Duration(milliseconds: 600)),
+  );
   StreamSubscription<List<ConnectivityResult>>? _sub;
   List<ConnectivityResult> _conn = const [ConnectivityResult.wifi];
 

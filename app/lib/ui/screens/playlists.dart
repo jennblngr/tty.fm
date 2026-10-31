@@ -32,50 +32,59 @@ class PlaylistsScreen extends ConsumerWidget {
                 context: context,
                 useRootNavigator: true,
                 builder: (ctx) => SafeArea(
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    ListTile(
-                      leading: const Icon(Icons.playlist_add),
-                      title: const Text('Nouvelle playlist'),
-                      onTap: () async {
-                        Navigator.pop(ctx);
-                        final name = await promptText(context, title: 'Nouvelle playlist', action: 'Créer');
-                        if (name != null && context.mounted) {
-                          await guard(context, () => actions.createPlaylist(name, folderId));
-                        }
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.create_new_folder_outlined),
-                      title: const Text('Nouveau dossier'),
-                      onTap: () async {
-                        Navigator.pop(ctx);
-                        final name = await promptText(context, title: 'Nouveau dossier', action: 'Créer');
-                        if (name != null && context.mounted) {
-                          await guard(context, () => actions.createFolder(name, folderId));
-                        }
-                      },
-                    ),
-                  ]),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.playlist_add),
+                        title: const Text('Nouvelle playlist'),
+                        onTap: () async {
+                          Navigator.pop(ctx);
+                          final name = await promptText(context, title: 'Nouvelle playlist', action: 'Créer');
+                          if (name != null && context.mounted) {
+                            await guard(context, () => actions.createPlaylist(name, folderId));
+                          }
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.create_new_folder_outlined),
+                        title: const Text('Nouveau dossier'),
+                        onTap: () async {
+                          Navigator.pop(ctx);
+                          final name = await promptText(context, title: 'Nouveau dossier', action: 'Créer');
+                          if (name != null && context.mounted) {
+                            await guard(context, () => actions.createFolder(name, folderId));
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
               child: const Icon(Icons.add),
             ),
-      body: AsyncView(tree, onRetry: () => ref.invalidate(playlistTreeProvider), builder: (tree) {
-        if (missing) return const Center(child: Text('Ce dossier n\'existe plus'));
-        final folders = folder?.folders ?? tree.folders;
-        final playlists = folder?.playlists ?? tree.playlists;
-        if (folders.isEmpty && playlists.isEmpty) {
-          return const Center(child: Text('Vide. Créez une playlist ou un dossier avec +'));
-        }
-        return RefreshIndicator(
-          onRefresh: () => ref.refresh(playlistTreeProvider.future),
-          child: ListView(children: [
-            for (final f in folders) _FolderTile(f, tree),
-            for (final p in playlists) _PlaylistTile(p, tree),
-            const SizedBox(height: 80),
-          ]),
-        );
-      }),
+      body: AsyncView(
+        tree,
+        onRetry: () => ref.invalidate(playlistTreeProvider),
+        builder: (tree) {
+          if (missing) return const Center(child: Text('Ce dossier n\'existe plus'));
+          final folders = folder?.folders ?? tree.folders;
+          final playlists = folder?.playlists ?? tree.playlists;
+          if (folders.isEmpty && playlists.isEmpty) {
+            return const Center(child: Text('Vide. Créez une playlist ou un dossier avec +'));
+          }
+          return RefreshIndicator(
+            onRefresh: () => ref.refresh(playlistTreeProvider.future),
+            child: ListView(
+              children: [
+                for (final f in folders) _FolderTile(f, tree),
+                for (final p in playlists) _PlaylistTile(p, tree),
+                const SizedBox(height: 80),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -115,8 +124,11 @@ class _FolderTile extends ConsumerWidget {
           ),
           PopupMenuItem(
             value: () async {
-              if (await confirm(context, 'Supprimer « ${folder.name} » ?',
-                      'Le dossier, ses sous-dossiers et toutes leurs playlists seront supprimés.') &&
+              if (await confirm(
+                    context,
+                    'Supprimer « ${folder.name} » ?',
+                    'Le dossier, ses sous-dossiers et toutes leurs playlists seront supprimés.',
+                  ) &&
                   context.mounted) {
                 await guard(context, () => actions.deleteFolder(folder.id));
               }
@@ -165,7 +177,11 @@ class _PlaylistTile extends ConsumerWidget {
           ),
           PopupMenuItem(
             value: () async {
-              if (await confirm(context, 'Supprimer « ${playlist.name} » ?', 'Les morceaux restent dans la bibliothèque.') &&
+              if (await confirm(
+                    context,
+                    'Supprimer « ${playlist.name} » ?',
+                    'Les morceaux restent dans la bibliothèque.',
+                  ) &&
                   context.mounted) {
                 await guard(context, () => actions.deletePlaylist(playlist.id));
               }

@@ -10,11 +10,11 @@ import 'shell.dart';
 /// Theme lives here only, so a redesign touches this file and the widgets,
 /// never the state or playback code.
 ThemeData _theme(Brightness b) => ThemeData(
-      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF5B6EF5), brightness: b),
-      useMaterial3: true,
-      visualDensity: VisualDensity.adaptivePlatformDensity,
-      listTileTheme: const ListTileThemeData(contentPadding: EdgeInsets.symmetric(horizontal: 16)),
-    );
+  colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF5B6EF5), brightness: b),
+  useMaterial3: true,
+  visualDensity: VisualDensity.adaptivePlatformDensity,
+  listTileTheme: const ListTileThemeData(contentPadding: EdgeInsets.symmetric(horizontal: 16)),
+);
 
 class SelfstreamApp extends ConsumerWidget {
   const SelfstreamApp({super.key});

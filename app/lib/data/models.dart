@@ -10,11 +10,11 @@ class Artist {
   final int? coverId;
 
   factory Artist.fromJson(Map<String, dynamic> j) => Artist(
-        id: j['id'] as int,
-        name: j['name'] as String,
-        albumCount: j['album_count'] as int? ?? 0,
-        coverId: j['cover_id'] as int?,
-      );
+    id: j['id'] as int,
+    name: j['name'] as String,
+    albumCount: j['album_count'] as int? ?? 0,
+    coverId: j['cover_id'] as int?,
+  );
 }
 
 class Album {
@@ -41,16 +41,16 @@ class Album {
   final int durationMs;
 
   factory Album.fromJson(Map<String, dynamic> j) => Album(
-        id: j['id'] as int,
-        title: j['title'] as String,
-        artistId: j['artist_id'] as int,
-        artist: j['artist'] as String,
-        year: j['year'] as int?,
-        genre: j['genre'] as String?,
-        coverId: j['cover_id'] as int?,
-        trackCount: j['track_count'] as int? ?? 0,
-        durationMs: j['duration_ms'] as int? ?? 0,
-      );
+    id: j['id'] as int,
+    title: j['title'] as String,
+    artistId: j['artist_id'] as int,
+    artist: j['artist'] as String,
+    year: j['year'] as int?,
+    genre: j['genre'] as String?,
+    coverId: j['cover_id'] as int?,
+    trackCount: j['track_count'] as int? ?? 0,
+    durationMs: j['duration_ms'] as int? ?? 0,
+  );
 }
 
 class Track {
@@ -93,42 +93,42 @@ class Track {
   Duration get duration => Duration(milliseconds: durationMs);
 
   factory Track.fromJson(Map<String, dynamic> j) => Track(
-        id: j['id'] as int,
-        title: j['title'] as String,
-        artistId: j['artist_id'] as int,
-        artist: j['artist'] as String,
-        albumId: j['album_id'] as int,
-        album: j['album'] as String,
-        albumArtist: j['album_artist'] as String? ?? '',
-        trackNo: j['track_no'] as int?,
-        discNo: j['disc_no'] as int?,
-        year: j['year'] as int?,
-        durationMs: j['duration_ms'] as int,
-        format: j['format'] as String? ?? '',
-        bitrate: j['bitrate'] as int?,
-        sampleRate: j['sample_rate'] as int?,
-        bitDepth: j['bit_depth'] as int?,
-        coverId: j['cover_id'] as int?,
-      );
+    id: j['id'] as int,
+    title: j['title'] as String,
+    artistId: j['artist_id'] as int,
+    artist: j['artist'] as String,
+    albumId: j['album_id'] as int,
+    album: j['album'] as String,
+    albumArtist: j['album_artist'] as String? ?? '',
+    trackNo: j['track_no'] as int?,
+    discNo: j['disc_no'] as int?,
+    year: j['year'] as int?,
+    durationMs: j['duration_ms'] as int,
+    format: j['format'] as String? ?? '',
+    bitrate: j['bitrate'] as int?,
+    sampleRate: j['sample_rate'] as int?,
+    bitDepth: j['bit_depth'] as int?,
+    coverId: j['cover_id'] as int?,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'artist_id': artistId,
-        'artist': artist,
-        'album_id': albumId,
-        'album': album,
-        'album_artist': albumArtist,
-        'track_no': trackNo,
-        'disc_no': discNo,
-        'year': year,
-        'duration_ms': durationMs,
-        'format': format,
-        'bitrate': bitrate,
-        'sample_rate': sampleRate,
-        'bit_depth': bitDepth,
-        'cover_id': coverId,
-      };
+    'id': id,
+    'title': title,
+    'artist_id': artistId,
+    'artist': artist,
+    'album_id': albumId,
+    'album': album,
+    'album_artist': albumArtist,
+    'track_no': trackNo,
+    'disc_no': discNo,
+    'year': year,
+    'duration_ms': durationMs,
+    'format': format,
+    'bitrate': bitrate,
+    'sample_rate': sampleRate,
+    'bit_depth': bitDepth,
+    'cover_id': coverId,
+  };
 }
 
 class Playlist {
@@ -151,14 +151,14 @@ class Playlist {
   final List<int> coverIds;
 
   factory Playlist.fromJson(Map<String, dynamic> j) => Playlist(
-        id: j['id'] as int,
-        name: j['name'] as String,
-        folderId: j['folder_id'] as int?,
-        position: j['position'] as int? ?? 0,
-        trackCount: j['track_count'] as int? ?? 0,
-        durationMs: j['duration_ms'] as int? ?? 0,
-        coverIds: (j['cover_ids'] as List? ?? const []).cast<int>(),
-      );
+    id: j['id'] as int,
+    name: j['name'] as String,
+    folderId: j['folder_id'] as int?,
+    position: j['position'] as int? ?? 0,
+    trackCount: j['track_count'] as int? ?? 0,
+    durationMs: j['duration_ms'] as int? ?? 0,
+    coverIds: (j['cover_ids'] as List? ?? const []).cast<int>(),
+  );
 }
 
 class Folder {
@@ -177,14 +177,12 @@ class Folder {
   final List<Playlist> playlists;
 
   factory Folder.fromJson(Map<String, dynamic> j) => Folder(
-        id: j['id'] as int,
-        name: j['name'] as String,
-        parentId: j['parent_id'] as int?,
-        folders: [for (final f in j['folders'] as List? ?? const []) Folder.fromJson(f as Map<String, dynamic>)],
-        playlists: [
-          for (final p in j['playlists'] as List? ?? const []) Playlist.fromJson(p as Map<String, dynamic>)
-        ],
-      );
+    id: j['id'] as int,
+    name: j['name'] as String,
+    parentId: j['parent_id'] as int?,
+    folders: [for (final f in j['folders'] as List? ?? const []) Folder.fromJson(f as Map<String, dynamic>)],
+    playlists: [for (final p in j['playlists'] as List? ?? const []) Playlist.fromJson(p as Map<String, dynamic>)],
+  );
 }
 
 /// Root of the playlist hierarchy, with lookup helpers.
@@ -259,10 +257,10 @@ class PlaylistEntry {
   final Track track;
 
   factory PlaylistEntry.fromJson(Map<String, dynamic> j) => PlaylistEntry(
-        entryId: j['entry_id'] as int,
-        position: j['position'] as int,
-        track: Track.fromJson(j['track'] as Map<String, dynamic>),
-      );
+    entryId: j['entry_id'] as int,
+    position: j['position'] as int,
+    track: Track.fromJson(j['track'] as Map<String, dynamic>),
+  );
 }
 
 class SearchResult {
@@ -275,10 +273,10 @@ class SearchResult {
   bool get isEmpty => artists.isEmpty && albums.isEmpty && tracks.isEmpty;
 
   factory SearchResult.fromJson(Map<String, dynamic> j) => SearchResult(
-        artists: [for (final a in j['artists'] as List) Artist.fromJson(a as Map<String, dynamic>)],
-        albums: [for (final a in j['albums'] as List) Album.fromJson(a as Map<String, dynamic>)],
-        tracks: [for (final t in j['tracks'] as List) Track.fromJson(t as Map<String, dynamic>)],
-      );
+    artists: [for (final a in j['artists'] as List) Artist.fromJson(a as Map<String, dynamic>)],
+    albums: [for (final a in j['albums'] as List) Album.fromJson(a as Map<String, dynamic>)],
+    tracks: [for (final t in j['tracks'] as List) Track.fromJson(t as Map<String, dynamic>)],
+  );
 }
 
 class HomeData {
@@ -289,14 +287,10 @@ class HomeData {
   final List<Track> recentTracks;
 
   factory HomeData.fromJson(Map<String, dynamic> j) => HomeData(
-        recentlyAdded: [for (final a in j['recently_added'] as List) Album.fromJson(a as Map<String, dynamic>)],
-        recentlyPlayed: [
-          for (final a in j['recently_played_albums'] as List) Album.fromJson(a as Map<String, dynamic>)
-        ],
-        recentTracks: [
-          for (final t in j['recently_played_tracks'] as List) Track.fromJson(t as Map<String, dynamic>)
-        ],
-      );
+    recentlyAdded: [for (final a in j['recently_added'] as List) Album.fromJson(a as Map<String, dynamic>)],
+    recentlyPlayed: [for (final a in j['recently_played_albums'] as List) Album.fromJson(a as Map<String, dynamic>)],
+    recentTracks: [for (final t in j['recently_played_tracks'] as List) Track.fromJson(t as Map<String, dynamic>)],
+  );
 }
 
 /// One listening session of a track, reported to the server.
@@ -318,20 +312,20 @@ class PlayRecord {
   final int? contextId;
 
   Map<String, dynamic> toJson() => {
-        'track_id': trackId,
-        'started_at': startedAt.millisecondsSinceEpoch,
-        'listened_ms': listenedMs,
-        'skipped': skipped,
-        if (contextKind != null) 'context_kind': contextKind,
-        if (contextId != null) 'context_id': contextId,
-      };
+    'track_id': trackId,
+    'started_at': startedAt.millisecondsSinceEpoch,
+    'listened_ms': listenedMs,
+    'skipped': skipped,
+    if (contextKind != null) 'context_kind': contextKind,
+    if (contextId != null) 'context_id': contextId,
+  };
 
   factory PlayRecord.fromJson(Map<String, dynamic> j) => PlayRecord(
-        trackId: j['track_id'] as int,
-        startedAt: DateTime.fromMillisecondsSinceEpoch(j['started_at'] as int),
-        listenedMs: j['listened_ms'] as int,
-        skipped: j['skipped'] as bool,
-        contextKind: j['context_kind'] as String?,
-        contextId: j['context_id'] as int?,
-      );
+    trackId: j['track_id'] as int,
+    startedAt: DateTime.fromMillisecondsSinceEpoch(j['started_at'] as int),
+    listenedMs: j['listened_ms'] as int,
+    skipped: j['skipped'] as bool,
+    contextKind: j['context_kind'] as String?,
+    contextId: j['context_id'] as int?,
+  );
 }

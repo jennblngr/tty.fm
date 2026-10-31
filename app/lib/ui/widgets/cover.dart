@@ -41,7 +41,10 @@ class CoverImage extends ConsumerWidget {
         errorWidget: (_, _, _) => placeholder,
       );
     }
-    return ClipRRect(borderRadius: BorderRadius.circular(radius), child: SizedBox(width: size, height: size, child: child));
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: SizedBox(width: size, height: size, child: child),
+    );
   }
 }
 

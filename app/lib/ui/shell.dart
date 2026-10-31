@@ -73,20 +73,25 @@ class _AppShellState extends State<AppShell> {
           children: [
             Expanded(
               child: wide
-                  ? Row(children: [
-                      NavigationRail(
-                        selectedIndex: _index,
-                        onDestinationSelected: _select,
-                        labelType: NavigationRailLabelType.all,
-                        destinations: [
-                          for (final t in _tabs)
-                            NavigationRailDestination(
-                                icon: Icon(t.icon), selectedIcon: Icon(t.selectedIcon), label: Text(t.label)),
-                        ],
-                      ),
-                      const VerticalDivider(width: 1),
-                      Expanded(child: body),
-                    ])
+                  ? Row(
+                      children: [
+                        NavigationRail(
+                          selectedIndex: _index,
+                          onDestinationSelected: _select,
+                          labelType: NavigationRailLabelType.all,
+                          destinations: [
+                            for (final t in _tabs)
+                              NavigationRailDestination(
+                                icon: Icon(t.icon),
+                                selectedIcon: Icon(t.selectedIcon),
+                                label: Text(t.label),
+                              ),
+                          ],
+                        ),
+                        const VerticalDivider(width: 1),
+                        Expanded(child: body),
+                      ],
+                    )
                   : body,
             ),
             const MiniPlayer(),

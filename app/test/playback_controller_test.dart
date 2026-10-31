@@ -60,7 +60,12 @@ class FakeEngine implements AudioEngine {
   }
 
   @override
-  Future<void> open(List<EngineSource> sources, {int index = 0, Duration start = Duration.zero, bool play = true}) async {
+  Future<void> open(
+    List<EngineSource> sources, {
+    int index = 0,
+    Duration start = Duration.zero,
+    bool play = true,
+  }) async {
     opens.add((index: index, start: start, play: play));
     urls
       ..clear()

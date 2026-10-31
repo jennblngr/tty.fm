@@ -46,15 +46,14 @@ class Settings {
     StreamQuality? qualityRemoteWifi,
     StreamQuality? qualityCellular,
     ThemeMode? themeMode,
-  }) =>
-      Settings(
-        remoteUrl: remoteUrl ?? this.remoteUrl,
-        lanUrl: lanUrl ?? this.lanUrl,
-        qualityLocal: qualityLocal ?? this.qualityLocal,
-        qualityRemoteWifi: qualityRemoteWifi ?? this.qualityRemoteWifi,
-        qualityCellular: qualityCellular ?? this.qualityCellular,
-        themeMode: themeMode ?? this.themeMode,
-      );
+  }) => Settings(
+    remoteUrl: remoteUrl ?? this.remoteUrl,
+    lanUrl: lanUrl ?? this.lanUrl,
+    qualityLocal: qualityLocal ?? this.qualityLocal,
+    qualityRemoteWifi: qualityRemoteWifi ?? this.qualityRemoteWifi,
+    qualityCellular: qualityCellular ?? this.qualityCellular,
+    themeMode: themeMode ?? this.themeMode,
+  );
 }
 
 /// Set in main() once SharedPreferences is loaded.
@@ -65,8 +64,7 @@ class SettingsNotifier extends Notifier<Settings> {
 
   @override
   Settings build() {
-    T pick<T extends Enum>(List<T> values, String key, T def) =>
-        values.asNameMap()[_p.getString(key)] ?? def;
+    T pick<T extends Enum>(List<T> values, String key, T def) => values.asNameMap()[_p.getString(key)] ?? def;
     return Settings(
       remoteUrl: _p.getString('remoteUrl') ?? '',
       lanUrl: _p.getString('lanUrl') ?? '',

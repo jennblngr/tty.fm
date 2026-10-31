@@ -85,45 +85,59 @@ Future<void> addToPlaylist(BuildContext context, WidgetRef ref, List<Track> trac
     useRootNavigator: true,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (ctx) => Consumer(builder: (ctx, ref, _) {
-      final tree = ref.watch(playlistTreeProvider);
-      return DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.6,
-        builder: (ctx, scroll) => AsyncView(tree, builder: (tree) {
-          final entries = <(Playlist, String)>[
-            for (final p in tree.playlists) (p, ''),
-            for (final (f, _) in tree.flatten())
-              for (final p in f.playlists) (p, _folderPath(tree, f)),
-          ];
-          return ListView(controller: scroll, children: [
-            ListTile(
-              leading: const Icon(Icons.add),
-              title: const Text('Nouvelle playlist'),
-              onTap: () async {
-                final name = await promptText(ctx, title: 'Nouvelle playlist', action: 'Créer');
-                if (name == null || !ctx.mounted) return;
-                Navigator.pop(ctx);
-                await guard(context, () => ref.read(playlistActionsProvider).createPlaylist(name, null, ids),
-                    success: 'Ajouté à « $name »');
-              },
-            ),
-            const Divider(),
-            for (final (p, path) in entries)
-              ListTile(
-                leading: PlaylistCover(p.coverIds, size: 40),
-                title: Text(p.name),
-                subtitle: path.isEmpty ? null : Text(path),
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  await guard(context, () => ref.read(playlistActionsProvider).addTracks(p.id, ids),
-                      success: 'Ajouté à « ${p.name} »');
-                },
-              ),
-          ]);
-        }),
-      );
-    }),
+    builder: (ctx) => Consumer(
+      builder: (ctx, ref, _) {
+        final tree = ref.watch(playlistTreeProvider);
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6,
+          builder: (ctx, scroll) => AsyncView(
+            tree,
+            builder: (tree) {
+              final entries = <(Playlist, String)>[
+                for (final p in tree.playlists) (p, ''),
+                for (final (f, _) in tree.flatten())
+                  for (final p in f.playlists) (p, _folderPath(tree, f)),
+              ];
+              return ListView(
+                controller: scroll,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.add),
+                    title: const Text('Nouvelle playlist'),
+                    onTap: () async {
+                      final name = await promptText(ctx, title: 'Nouvelle playlist', action: 'Créer');
+                      if (name == null || !ctx.mounted) return;
+                      Navigator.pop(ctx);
+                      await guard(
+                        context,
+                        () => ref.read(playlistActionsProvider).createPlaylist(name, null, ids),
+                        success: 'Ajouté à « $name »',
+                      );
+                    },
+                  ),
+                  const Divider(),
+                  for (final (p, path) in entries)
+                    ListTile(
+                      leading: PlaylistCover(p.coverIds, size: 40),
+                      title: Text(p.name),
+                      subtitle: path.isEmpty ? null : Text(path),
+                      onTap: () async {
+                        Navigator.pop(ctx);
+                        await guard(
+                          context,
+                          () => ref.read(playlistActionsProvider).addTracks(p.id, ids),
+                          success: 'Ajouté à « ${p.name} »',
+                        );
+                      },
+                    ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    ),
   );
 }
 

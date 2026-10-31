@@ -44,81 +44,107 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(playlist?.name ?? '')),
-      body: AsyncView(entries, onRetry: () => ref.invalidate(playlistTracksProvider(id)), builder: (fresh) {
-        final list = _optimistic ?? fresh;
-        final tracks = [for (final e in list) e.track];
-        final totalMs = tracks.fold<int>(0, (s, t) => s + t.durationMs);
-        return CustomScrollView(slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(children: [
-                PlaylistCover(playlist?.coverIds ?? const [], size: 96),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(playlist?.name ?? '', style: text.titleLarge),
-                    Text(formatCountDuration(tracks.length, totalMs), style: text.bodySmall),
-                    const SizedBox(height: 8),
-                    Wrap(spacing: 8, children: [
-                      FilledButton.icon(
-                        icon: const Icon(Icons.play_arrow),
-                        label: const Text('Lire'),
-                        onPressed: tracks.isEmpty
-                            ? null
-                            : () => c.playTracks(tracks, shuffle: false, contextKind: 'playlist', contextId: id),
-                      ),
-                      OutlinedButton.icon(
-                        icon: const Icon(Icons.shuffle),
-                        label: const Text('Aléatoire'),
-                        onPressed: tracks.isEmpty
-                            ? null
-                            : () => c.playTracks(tracks, shuffle: true, contextKind: 'playlist', contextId: id),
-                      ),
-                    ]),
-                  ]),
-                ),
-              ]),
-            ),
-          ),
-          if (list.isEmpty)
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(child: Text('Playlist vide.\nAjoutez des titres depuis leur menu ⋮', textAlign: TextAlign.center)),
-            ),
-          SliverReorderableList(
-            itemCount: list.length,
-            onReorderItem: (from, to) => _reorder(list, from, to),
-            itemBuilder: (context, i) {
-              final e = list[i];
-              return ReorderableDelayedDragStartListener(
-                key: ValueKey(e.entryId),
-                index: i,
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: TrackTile(
-                    e.track,
-                    onTap: () => c.playTracks(tracks, index: i, contextKind: 'playlist', contextId: id),
-                    trailing: ReorderableDragStartListener(
-                      index: i,
-                      child: const Padding(padding: EdgeInsets.all(8), child: Icon(Icons.drag_handle, size: 20)),
-                    ),
-                    extraMenu: [
-                      const PopupMenuDivider(),
-                      PopupMenuItem(
-                        value: () => guard(context, () => ref.read(playlistActionsProvider).removeEntry(id, e.entryId)),
-                        child: const ListTile(
-                            leading: Icon(Icons.remove_circle_outline), title: Text('Retirer de la playlist'), dense: true),
+      body: AsyncView(
+        entries,
+        onRetry: () => ref.invalidate(playlistTracksProvider(id)),
+        builder: (fresh) {
+          final list = _optimistic ?? fresh;
+          final tracks = [for (final e in list) e.track];
+          final totalMs = tracks.fold<int>(0, (s, t) => s + t.durationMs);
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      PlaylistCover(playlist?.coverIds ?? const [], size: 96),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(playlist?.name ?? '', style: text.titleLarge),
+                            Text(formatCountDuration(tracks.length, totalMs), style: text.bodySmall),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                FilledButton.icon(
+                                  icon: const Icon(Icons.play_arrow),
+                                  label: const Text('Lire'),
+                                  onPressed: tracks.isEmpty
+                                      ? null
+                                      : () => c.playTracks(
+                                          tracks,
+                                          shuffle: false,
+                                          contextKind: 'playlist',
+                                          contextId: id,
+                                        ),
+                                ),
+                                OutlinedButton.icon(
+                                  icon: const Icon(Icons.shuffle),
+                                  label: const Text('Aléatoire'),
+                                  onPressed: tracks.isEmpty
+                                      ? null
+                                      : () =>
+                                            c.playTracks(tracks, shuffle: true, contextKind: 'playlist', contextId: id),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-              );
-            },
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-        ]);
-      }),
+              ),
+              if (list.isEmpty)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Text('Playlist vide.\nAjoutez des titres depuis leur menu ⋮', textAlign: TextAlign.center),
+                  ),
+                ),
+              SliverReorderableList(
+                itemCount: list.length,
+                onReorderItem: (from, to) => _reorder(list, from, to),
+                itemBuilder: (context, i) {
+                  final e = list[i];
+                  return ReorderableDelayedDragStartListener(
+                    key: ValueKey(e.entryId),
+                    index: i,
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: TrackTile(
+                        e.track,
+                        onTap: () => c.playTracks(tracks, index: i, contextKind: 'playlist', contextId: id),
+                        trailing: ReorderableDragStartListener(
+                          index: i,
+                          child: const Padding(padding: EdgeInsets.all(8), child: Icon(Icons.drag_handle, size: 20)),
+                        ),
+                        extraMenu: [
+                          const PopupMenuDivider(),
+                          PopupMenuItem(
+                            value: () =>
+                                guard(context, () => ref.read(playlistActionsProvider).removeEntry(id, e.entryId)),
+                            child: const ListTile(
+                              leading: Icon(Icons.remove_circle_outline),
+                              title: Text('Retirer de la playlist'),
+                              dense: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            ],
+          );
+        },
+      ),
     );
   }
 }

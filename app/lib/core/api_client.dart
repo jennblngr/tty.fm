@@ -9,27 +9,28 @@ import 'session.dart';
 /// bearer token on every request. 401 responses log the user out.
 class ApiClient {
   ApiClient(this._ref) {
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (o, h) {
-        o.baseUrl = '${_ref.read(routeProvider).baseUrl}$apiPrefix';
-        final tok = _ref.read(tokenProvider);
-        if (tok.isNotEmpty) o.headers['Authorization'] = 'Bearer $tok';
-        h.next(o);
-      },
-      onError: (e, h) {
-        if (e.response?.statusCode == 401 && _ref.read(tokenProvider).isNotEmpty) {
-          _ref.read(sessionProvider.notifier).logout();
-        }
-        h.next(e);
-      },
-    ));
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (o, h) {
+          o.baseUrl = '${_ref.read(routeProvider).baseUrl}$apiPrefix';
+          final tok = _ref.read(tokenProvider);
+          if (tok.isNotEmpty) o.headers['Authorization'] = 'Bearer $tok';
+          h.next(o);
+        },
+        onError: (e, h) {
+          if (e.response?.statusCode == 401 && _ref.read(tokenProvider).isNotEmpty) {
+            _ref.read(sessionProvider.notifier).logout();
+          }
+          h.next(e);
+        },
+      ),
+    );
   }
 
   final Ref _ref;
-  final _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 30),
-  ));
+  final _dio = Dio(
+    BaseOptions(connectTimeout: const Duration(seconds: 5), receiveTimeout: const Duration(seconds: 30)),
+  );
 
   Future<dynamic> get(String path, {Map<String, dynamic>? query, CancelToken? cancel}) async =>
       (await _dio.get(path, queryParameters: query, cancelToken: cancel)).data;
