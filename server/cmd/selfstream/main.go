@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -25,6 +26,9 @@ import (
 const purgeAfter = 30 * 24 * time.Hour
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
+		os.Exit(healthcheck())
+	}
 	if err := run(); err != nil {
 		slog.Error("fatal", "err", err)
 		os.Exit(1)
@@ -129,4 +133,26 @@ func run() error {
 	bg.Wait()
 	log.Info("stopped")
 	return nil
+}
+
+// healthcheck is used by the Docker HEALTHCHECK (the image has no curl).
+func healthcheck() int {
+	cfg, err := config.Load()
+	if err != nil {
+		return 1
+	}
+	addr := cfg.Listen
+	if strings.HasPrefix(addr, ":") {
+		addr = "127.0.0.1" + addr
+	}
+	c := http.Client{Timeout: 3 * time.Second}
+	resp, err := c.Get("http://" + addr + "/api/" + app.APIVersion + "/health")
+	if err != nil {
+		return 1
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return 1
+	}
+	return 0
 }
