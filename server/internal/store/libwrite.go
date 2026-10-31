@@ -374,3 +374,44 @@ func baseName(p string) string {
 	}
 	return p
 }
+
+// AlbumsInDir returns the albums having a present track directly in dir.
+func (w *LibWriter) AlbumsInDir(dir string) ([]int64, error) {
+	prefix := dir + "/"
+	if dir == "" {
+		prefix = ""
+	}
+	rows, err := w.tx.Query(`
+		SELECT DISTINCT album_id FROM tracks
+		WHERE missing_since IS NULL AND substr(path, 1, ?) = ? AND instr(substr(path, ?), '/') = 0`,
+		len(prefix), prefix, len(prefix)+1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var ids []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
+}
+
+// CoverHash returns the content hash of a cover.
+func (db *DB) CoverHash(ctx context.Context, id int64) (string, error) {
+	var h string
+	err := db.r.QueryRowContext(ctx, `SELECT hash FROM covers WHERE id = ?`, id).Scan(&h)
+	return h, notFound(err)
+}
+
+// LibraryStats returns counts for status displays.
+func (db *DB) LibraryStats(ctx context.Context) (tracks, albums, artists int, err error) {
+	err = db.r.QueryRowContext(ctx, `SELECT
+		(SELECT COUNT(*) FROM tracks WHERE missing_since IS NULL),
+		(SELECT COUNT(*) FROM albums WHERE track_count > 0),
+		(SELECT COUNT(*) FROM artists)`).Scan(&tracks, &albums, &artists)
+	return
+}
