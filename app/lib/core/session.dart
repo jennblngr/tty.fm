@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -65,6 +66,7 @@ class SessionNotifier extends AsyncNotifier<String?> {
     await _storage.delete(key: _tokenKey);
     state = const AsyncData(null);
     await ref.read(jsonCacheProvider).clear();
+    await DefaultCacheManager().emptyCache(); // covers are keyed by server id
   }
 
   static Future<String> _deviceName() async {
