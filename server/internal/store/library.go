@@ -400,12 +400,21 @@ func (db *DB) AlbumTracks(ctx context.Context, albumID int64) ([]Track, error) {
 	return db.trackList(ctx, trackSelect+" AND t.album_id = ? ORDER BY t.disc_no, t.track_no, t.path", albumID)
 }
 
-// TrackPath returns the relative file path of a present track.
-func (db *DB) TrackPath(ctx context.Context, id int64) (path, format string, durationMs int64, err error) {
-	err = db.r.QueryRowContext(ctx,
-		`SELECT path, format, duration_ms FROM tracks WHERE id = ? AND missing_since IS NULL`, id).
-		Scan(&path, &format, &durationMs)
-	return path, format, durationMs, notFound(err)
+// TrackFileInfo is what streaming needs to know about a track's file.
+type TrackFileInfo struct {
+	Path       string
+	Format     string
+	DurationMs int64
+	Mtime      int64
+}
+
+// TrackFileInfo returns file information for a present track.
+func (db *DB) TrackFileInfo(ctx context.Context, id int64) (TrackFileInfo, error) {
+	var f TrackFileInfo
+	err := db.r.QueryRowContext(ctx,
+		`SELECT path, format, duration_ms, file_mtime FROM tracks WHERE id = ? AND missing_since IS NULL`, id).
+		Scan(&f.Path, &f.Format, &f.DurationMs, &f.Mtime)
+	return f, notFound(err)
 }
 
 // RecentlyPlayed returns distinct recently played tracks, newest first.

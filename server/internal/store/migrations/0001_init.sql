@@ -12,7 +12,7 @@ CREATE TABLE artists (
 CREATE INDEX artists_sort ON artists(sort_name COLLATE NOCASE, id);
 
 CREATE TABLE covers (
-  id      INTEGER PRIMARY KEY,
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,  -- never reused: clients cache by id
   hash    TEXT    NOT NULL UNIQUE,           -- sha1 of the source image
   source  TEXT    NOT NULL                   -- 'embedded' | 'file'
 );

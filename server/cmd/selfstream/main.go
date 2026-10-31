@@ -7,12 +7,22 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
+	"selfstream/internal/api"
 	"selfstream/internal/app"
+	"selfstream/internal/auth"
 	"selfstream/internal/config"
+	"selfstream/internal/covers"
+	"selfstream/internal/scanner"
+	"selfstream/internal/store"
+	"selfstream/internal/stream"
 )
+
+// Tracks missing for longer than this are deleted for good.
+const purgeAfter = 30 * 24 * time.Hour
 
 func main() {
 	if err := run(); err != nil {
@@ -26,22 +36,85 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: cfg.LogLevel})))
-	slog.Info("starting", "app", app.Name, "version", app.Version, "music", cfg.MusicDir, "data", cfg.DataDir)
+	log := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: cfg.LogLevel}))
+	slog.SetDefault(log)
+	log.Info("starting", "app", app.Name, "version", app.Version, "music", cfg.MusicDir, "data", cfg.DataDir)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /api/v1/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok"}`))
-	})
+	if err := os.MkdirAll(cfg.DataDir, 0o755); err != nil {
+		return err
+	}
+	db, err := store.Open(cfg.DBPath())
+	if err != nil {
+		return err
+	}
+	defer db.Close()
 
-	srv := &http.Server{Addr: cfg.Listen, Handler: mux, ReadHeaderTimeout: 10 * time.Second}
+	authSvc := auth.NewService(db, log)
+	if err := authSvc.EnsureUser(ctx, cfg.AdminUser, cfg.AdminPassword); err != nil {
+		return err
+	}
+	coverCache, err := covers.New(cfg.CoverDir())
+	if err != nil {
+		return err
+	}
+	streamer, err := stream.New(cfg.MusicDir, cfg.FFmpeg, cfg.TranscodeDir(), cfg.TranscodeMB, log)
+	if err != nil {
+		return err
+	}
+	sc := scanner.New(db, cfg.MusicDir, coverCache, cfg.ScanWorkers, log)
+
+	var bg sync.WaitGroup
+	startScan := func(full bool) {
+		bg.Add(1)
+		go func() {
+			defer bg.Done()
+			sc.Scan(ctx, full)
+		}()
+	}
+
+	srv := &api.Server{DB: db, Auth: authSvc, Scanner: sc, Covers: coverCache, Streamer: streamer, Log: log, ScanFn: startScan}
+	httpSrv := &http.Server{Addr: cfg.Listen, Handler: srv.Handler(), ReadHeaderTimeout: 10 * time.Second}
+
+	if cfg.ScanOnStart {
+		startScan(false)
+	}
+	if cfg.Watch {
+		bg.Add(1)
+		go func() {
+			defer bg.Done()
+			if err := sc.Watch(ctx, cfg.WatchDebounce); err != nil {
+				log.Error("watcher stopped", "err", err)
+			}
+		}()
+	}
+	// Periodic safety-net scan (fsnotify misses changes made over SMB on
+	// some setups) and purge of long-missing tracks.
+	bg.Add(1)
+	go func() {
+		defer bg.Done()
+		t := time.NewTicker(cfg.ScanInterval)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+				sc.Scan(ctx, false)
+				if n, err := db.PurgeMissing(ctx, purgeAfter); err != nil {
+					log.Error("purge", "err", err)
+				} else if n > 0 {
+					log.Info("purged missing tracks", "count", n)
+				}
+			}
+		}
+	}()
+
 	errc := make(chan error, 1)
-	go func() { errc <- srv.ListenAndServe() }()
-	slog.Info("listening", "addr", cfg.Listen)
+	go func() { errc <- httpSrv.ListenAndServe() }()
+	log.Info("listening", "addr", cfg.Listen)
 
 	select {
 	case err := <-errc:
@@ -50,9 +123,10 @@ func run() error {
 	}
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err := httpSrv.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
-	slog.Info("stopped")
+	bg.Wait()
+	log.Info("stopped")
 	return nil
 }

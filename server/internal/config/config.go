@@ -23,6 +23,7 @@ type Config struct {
 	ScanOnStart   bool          // run an incremental scan at startup
 	Watch         bool          // watch MusicDir with fsnotify
 	WatchDebounce time.Duration // delay before rescanning after changes
+	ScanInterval  time.Duration // periodic incremental scan
 	ScanWorkers   int           // parallel tag readers
 	FFmpeg        string        // ffmpeg binary
 	TranscodeMB   int64         // transcode cache size limit
@@ -55,6 +56,9 @@ func Load() (*Config, error) {
 	}
 	if c.WatchDebounce, err = time.ParseDuration(env("WATCH_DEBOUNCE", "10s")); err != nil {
 		return nil, fmt.Errorf("%sWATCH_DEBOUNCE: %w", app.EnvPrefix, err)
+	}
+	if c.ScanInterval, err = time.ParseDuration(env("SCAN_INTERVAL", "1h")); err != nil || c.ScanInterval <= 0 {
+		return nil, fmt.Errorf("%sSCAN_INTERVAL: invalid value", app.EnvPrefix)
 	}
 	if c.ScanWorkers, err = strconv.Atoi(env("SCAN_WORKERS", strconv.Itoa(runtime.NumCPU()))); err != nil || c.ScanWorkers < 1 {
 		return nil, fmt.Errorf("%sSCAN_WORKERS: invalid value", app.EnvPrefix)
