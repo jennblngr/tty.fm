@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app_info.dart';
 import 'core/api_client.dart';
 import 'core/json_cache.dart';
+import 'core/network.dart';
 import 'core/settings.dart';
 import 'core/session.dart';
 import 'playback/system_audio.dart';
@@ -19,15 +20,17 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final cache = await JsonCache.open();
-  final container = ProviderContainer(overrides: [
-    sharedPrefsProvider.overrideWithValue(prefs),
-    jsonCacheProvider.overrideWithValue(cache),
-  ]);
+  final container = ProviderContainer(
+    overrides: [sharedPrefsProvider.overrideWithValue(prefs), jsonCacheProvider.overrideWithValue(cache)],
+  );
 
   if (SystemAudioHandler.supported) {
+    // The artwork URL carries the token: load it before the restored queue
+    // publishes its first media item.
+    await container.read(sessionProvider.future);
     final controller = container.read(playbackControllerProvider);
     try {
-      await AudioService.init(
+      final handler = await AudioService.init(
         builder: () => SystemAudioHandler(controller, (t) {
           if (t.coverId == null) return null;
           final api = container.read(apiProvider);
@@ -40,6 +43,10 @@ Future<void> main() async {
           androidStopForegroundOnPause: true,
         ),
       );
+      // Server address (LAN probe done, network changed) or token changed:
+      // the artwork URL must follow.
+      container.listen(routeProvider, (_, _) => handler.refreshArtwork());
+      container.listen(tokenProvider, (_, _) => handler.refreshArtwork());
     } catch (e) {
       debugPrint('audio_service unavailable: $e');
     }

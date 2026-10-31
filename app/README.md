@@ -26,6 +26,8 @@ Au premier lancement, renseigner :
 
 Depuis un émulateur Android, le Mac s'appelle `10.0.2.2`.
 
+**Hot reload** : dans le terminal de `flutter run`, `r` recharge l'interface en moins d'une seconde sans perdre l'état (la lecture continue). On peut aussi le déclencher de l'extérieur : `flutter run -d macos --pid-file /tmp/flutter.pid`, puis `kill -USR1 $(cat /tmp/flutter.pid)`. **Éviter le hot restart (`R`)** : media_kit/mpv plante quand le lecteur est détruit en plein chargement. Pour un changement dans `main()` ou dans un provider initialisé au démarrage, relancer `flutter run` (environ 15 s). Le mode debug partage la session et le cache avec l'app installée.
+
 ## Builds
 
 ### macOS

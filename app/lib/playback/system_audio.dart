@@ -67,6 +67,13 @@ class SystemAudioHandler extends svc.BaseAudioHandler with svc.SeekHandler {
     ));
   }
 
+  /// Republishes the current item and queue with fresh artwork URLs.
+  void refreshArtwork() {
+    _lastTrackId = null;
+    _lastQueueLength = -1;
+    _publish(_c.state);
+  }
+
   @override
   Future<void> play() => _c.play();
   @override
