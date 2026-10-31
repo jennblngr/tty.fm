@@ -1,0 +1,256 @@
+import 'dart:async';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:selfstream/data/models.dart';
+import 'package:selfstream/playback/audio_engine.dart';
+import 'package:selfstream/playback/playback_controller.dart';
+
+/// In-memory engine that mimics mpv's playlist behaviour closely enough to
+/// test the controller.
+class FakeEngine implements AudioEngine {
+  final urls = <String>[];
+  int current = -1;
+  bool isPlaying = false;
+  Duration pos = Duration.zero;
+  RepeatMode repeat = RepeatMode.off;
+  final opens = <({int index, Duration start, bool play})>[];
+
+  final _index = StreamController<int>.broadcast(sync: true);
+  final _playing = StreamController<bool>.broadcast(sync: true);
+  final _position = StreamController<Duration>.broadcast(sync: true);
+  final _completed = StreamController<void>.broadcast(sync: true);
+
+  @override
+  Stream<int> get index => _index.stream;
+  @override
+  Stream<bool> get playing => _playing.stream;
+  @override
+  Stream<bool> get buffering => const Stream.empty();
+  @override
+  Stream<Duration> get position => _position.stream;
+  @override
+  Stream<Duration> get duration => const Stream.empty();
+  @override
+  Stream<void> get completed => _completed.stream;
+  @override
+  Stream<String> get errors => const Stream.empty();
+
+  void _setPlaying(bool p) {
+    isPlaying = p;
+    _playing.add(p);
+  }
+
+  /// Simulates playback progressing to [to] within the current track.
+  void tick(Duration to) {
+    pos = to;
+    _position.add(to);
+  }
+
+  /// Simulates the current track ending naturally.
+  void finishTrack() {
+    if (current < urls.length - 1) {
+      current++;
+      pos = Duration.zero;
+      _index.add(current);
+      _position.add(Duration.zero);
+    } else {
+      _setPlaying(false);
+      _completed.add(null);
+    }
+  }
+
+  @override
+  Future<void> open(List<EngineSource> sources, {int index = 0, Duration start = Duration.zero, bool play = true}) async {
+    opens.add((index: index, start: start, play: play));
+    urls
+      ..clear()
+      ..addAll(sources.map((s) => s.url));
+    current = index;
+    _index.add(index);
+    pos = start;
+    _setPlaying(play);
+  }
+
+  @override
+  Future<void> add(EngineSource source) async => urls.add(source.url);
+  @override
+  Future<void> move(int from, int to) async => urls.insert(to, urls.removeAt(from));
+  @override
+  Future<void> remove(int index) async => urls.removeAt(index);
+  @override
+  Future<void> jump(int index) async {
+    current = index;
+    _index.add(index);
+  }
+
+  @override
+  Future<void> play() async => _setPlaying(true);
+  @override
+  Future<void> pause() async => _setPlaying(false);
+  @override
+  Future<void> seek(Duration position) async => tick(position);
+  @override
+  Future<void> stop() async {
+    urls.clear();
+    current = -1;
+    _setPlaying(false);
+  }
+
+  @override
+  Future<void> setRepeat(RepeatMode mode) async => repeat = mode;
+  @override
+  Future<void> setVolume(double volume) async {}
+  @override
+  Future<void> dispose() async {}
+}
+
+Track t(int id, {int durationMs = 200000}) =>
+    Track(id: id, title: 'T$id', artistId: 1, artist: 'A', albumId: 1, album: 'B', durationMs: durationMs);
+
+void main() {
+  late FakeEngine engine;
+  late PlaybackController c;
+  late List<PlayRecord> plays;
+
+  setUp(() {
+    engine = FakeEngine();
+    plays = [];
+    c = PlaybackController(engine, sourceFor: (t) => EngineSource('u${t.id}'), onPlay: plays.add);
+  });
+
+  List<int> ids() => [for (final q in c.state.queue) q.track.id];
+
+  test('playTracks opens the engine at the chosen index', () async {
+    await c.playTracks([t(1), t(2), t(3)], index: 1);
+    expect(c.state.current!.id, 2);
+    expect(engine.urls, ['u1', 'u2', 'u3']);
+    expect(engine.current, 1);
+    expect(c.state.playing, isTrue);
+  });
+
+  test('natural advance follows the engine and records a full play', () async {
+    await c.playTracks([t(1), t(2)]);
+    for (var s = 1; s <= 200; s++) {
+      engine.tick(Duration(seconds: s));
+    }
+    engine.finishTrack();
+    expect(c.state.index, 1);
+    expect(plays, hasLength(1));
+    expect(plays.single.trackId, 1);
+    expect(plays.single.skipped, isFalse);
+    expect(plays.single.listenedMs, closeTo(200000, 1000));
+  });
+
+  test('next() early counts as a skip, seeks do not count as listening', () async {
+    await c.playTracks([t(1), t(2), t(3)]);
+    engine.tick(const Duration(seconds: 1));
+    engine.tick(const Duration(seconds: 2));
+    await c.seek(const Duration(seconds: 150)); // jump ahead: not listened
+    engine.tick(const Duration(seconds: 151));
+    await c.next();
+    expect(c.state.current!.id, 2);
+    expect(plays.single.skipped, isTrue);
+    expect(plays.single.listenedMs, 3000);
+  });
+
+  test('previous restarts the track after 3 s, else goes back', () async {
+    await c.playTracks([t(1), t(2)], index: 1);
+    engine.tick(const Duration(seconds: 10));
+    await c.previous();
+    expect(c.state.index, 1);
+    expect(engine.pos, Duration.zero);
+    await c.previous();
+    expect(c.state.index, 0);
+  });
+
+  test('playNext and addToQueue keep engine and queue in sync', () async {
+    await c.playTracks([t(1), t(2), t(3)]);
+    await c.addToQueue([t(9)]);
+    await c.playNext([t(7), t(8)]);
+    expect(ids(), [1, 7, 8, 2, 3, 9]);
+    expect(engine.urls, ['u1', 'u7', 'u8', 'u2', 'u3', 'u9']);
+  });
+
+  test('move and remove keep the current track', () async {
+    await c.playTracks([t(1), t(2), t(3), t(4)], index: 1);
+    await c.move(3, 0);
+    expect(ids(), [4, 1, 2, 3]);
+    expect(c.state.current!.id, 2);
+    expect(engine.urls, ['u4', 'u1', 'u2', 'u3']);
+    await c.removeAt(0);
+    expect(ids(), [1, 2, 3]);
+    expect(c.state.current!.id, 2);
+    expect(engine.urls, ['u1', 'u2', 'u3']);
+  });
+
+  test('shuffle keeps the current track and restores the order', () async {
+    final tracks = [for (var i = 1; i <= 20; i++) t(i)];
+    await c.playTracks(tracks, index: 4);
+    engine.tick(const Duration(seconds: 30));
+    await c.setShuffle(true);
+    expect(c.state.current!.id, 5);
+    expect(ids().sublist(0, 5), [1, 2, 3, 4, 5]); // history untouched
+    expect(ids().toSet(), tracks.map((t) => t.id).toSet());
+    expect(engine.opens.last.start, const Duration(seconds: 30)); // resumes in place
+    await c.setShuffle(false);
+    expect(ids(), [for (var i = 1; i <= 20; i++) i]);
+    expect(c.state.current!.id, 5);
+    expect(plays, isEmpty); // reordering is not a track change
+  });
+
+  test('playTracks with shuffle starts with the chosen track', () async {
+    await c.playTracks([for (var i = 1; i <= 10; i++) t(i)], index: 6, shuffle: true);
+    expect(c.state.index, 0);
+    expect(c.state.current!.id, 7);
+    expect(c.state.shuffle, isTrue);
+  });
+
+  test('end of queue stops; play restarts from the top', () async {
+    await c.playTracks([t(1)]);
+    for (var s = 1; s <= 199; s++) {
+      engine.tick(Duration(seconds: s));
+    }
+    engine.finishTrack();
+    expect(c.state.playing, isFalse);
+    expect(plays.single.skipped, isFalse);
+    await c.play();
+    expect(c.state.index, 0);
+    expect(engine.isPlaying, isTrue);
+  });
+
+  test('repeat one records each loop', () async {
+    await c.playTracks([t(1, durationMs: 10000)]);
+    await c.setRepeat(RepeatMode.one);
+    for (var s = 1; s <= 9; s++) {
+      engine.tick(Duration(seconds: s));
+    }
+    engine.tick(const Duration(milliseconds: 9900));
+    engine.tick(const Duration(milliseconds: 100)); // engine looped
+    expect(plays, hasLength(1));
+    expect(engine.repeat, RepeatMode.one);
+  });
+
+  test('persistence round-trip restores queue, order and position', () async {
+    await c.playTracks([t(1), t(2), t(3)], index: 2);
+    engine.tick(const Duration(seconds: 42));
+    final saved = c.toJson();
+
+    final engine2 = FakeEngine();
+    final c2 = PlaybackController(engine2, sourceFor: (t) => EngineSource('u${t.id}'));
+    await c2.restore(saved);
+    expect([for (final q in c2.state.queue) q.track.id], [1, 2, 3]);
+    expect(c2.state.current!.id, 3);
+    expect(engine2.opens.single.start, const Duration(seconds: 42));
+    expect(engine2.opens.single.play, isFalse);
+  });
+
+  test('refreshSources rebuilds urls in place', () async {
+    await c.playTracks([t(1), t(2)], index: 1);
+    engine.tick(const Duration(seconds: 5));
+    c.sourceFor = (t) => EngineSource('remote${t.id}');
+    await c.refreshSources();
+    expect(engine.urls, ['remote1', 'remote2']);
+    expect(engine.opens.last.index, 1);
+    expect(engine.opens.last.start, const Duration(seconds: 5));
+  });
+}
