@@ -55,7 +55,10 @@ final playbackControllerProvider = Provider<PlaybackController>((ref) {
   });
   // Logged out: stop and forget.
   ref.listen(tokenProvider, (prev, next) {
-    if (next.isEmpty) c.clear();
+    if (next.isEmpty) {
+      reporter.discard();
+      c.clear();
+    }
   });
 
   // Persist the queue (debounced) and the position while playing.
@@ -91,8 +94,7 @@ class PlaybackStateNotifier extends Notifier<PlaybackState> {
   }
 }
 
-final playbackStateProvider =
-    NotifierProvider<PlaybackStateNotifier, PlaybackState>(PlaybackStateNotifier.new);
+final playbackStateProvider = NotifierProvider<PlaybackStateNotifier, PlaybackState>(PlaybackStateNotifier.new);
 
 /// Current position, separate from [playbackStateProvider] to keep rebuilds
 /// limited to the progress bar.

@@ -124,6 +124,19 @@ func (w *LibWriter) albumID(f *TrackFile, albumArtistID int64) (int64, error) {
 	}
 	key := fmt.Sprintf("%d\x00%s", albumArtistID, MatchKey(title))
 	if id, ok := w.albums[key]; ok {
+		// Tracks are read in parallel, so the first one seen may lack the
+		// year or genre a sibling has: fill the gaps.
+		if f.Year != 0 || f.Genre != "" || f.AlbumMBID != "" {
+			if _, err := w.tx.Exec(`
+				UPDATE albums SET
+				  year  = COALESCE(year, ?),
+				  genre = COALESCE(genre, ?),
+				  mbid  = COALESCE(mbid, ?)
+				WHERE id = ?`,
+				nullInt(f.Year), nullStr(f.Genre), nullStr(f.AlbumMBID), id); err != nil {
+				return 0, fmt.Errorf("album %q: %w", title, err)
+			}
+		}
 		return id, nil
 	}
 	var id int64

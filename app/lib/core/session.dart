@@ -6,15 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../app_info.dart';
+import 'json_cache.dart';
 import 'settings.dart';
 
 const _tokenKey = '${appName}_token';
 
 /// Authentication state: the device token, or null when logged out.
 class SessionNotifier extends AsyncNotifier<String?> {
-  static const _storage = FlutterSecureStorage(
-    mOptions: MacOsOptions(usesDataProtectionKeychain: false),
-  );
+  static const _storage = FlutterSecureStorage(mOptions: MacOsOptions(usesDataProtectionKeychain: false));
 
   @override
   Future<String?> build() async {
@@ -56,13 +55,16 @@ class SessionNotifier extends AsyncNotifier<String?> {
     state = AsyncData(token);
   }
 
-  /// Forgets the token locally (the server-side revocation is best effort).
+  /// Forgets the token locally (the server-side revocation is best effort)
+  /// and drops the cached responses: the next login may target another
+  /// server, whose ids mean different things.
   Future<void> logout({Future<void> Function()? revoke}) async {
     try {
       await revoke?.call();
     } catch (_) {}
     await _storage.delete(key: _tokenKey);
     state = const AsyncData(null);
+    await ref.read(jsonCacheProvider).clear();
   }
 
   static Future<String> _deviceName() async {

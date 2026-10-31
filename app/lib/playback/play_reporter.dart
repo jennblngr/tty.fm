@@ -29,6 +29,13 @@ class PlayReporter {
     _schedule(const Duration(seconds: 5));
   }
 
+  /// Drops unsent plays (logged out: they belong to the previous server).
+  void discard() {
+    _timer?.cancel();
+    _pending.clear();
+    _persist();
+  }
+
   void _persist() => _cache.write(_key, [for (final p in _pending) p.toJson()]);
 
   void _schedule(Duration d) {
