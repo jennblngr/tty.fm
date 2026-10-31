@@ -58,6 +58,7 @@ flutter analyze
 
 ```bash
 # terminal 1 : serveur de développement avec une petite bibliothèque
+tools/demo-library.sh            # génère data/dev-music
 cd server && make build && SELFSTREAM_MUSIC_DIR=../data/dev-music SELFSTREAM_DATA_DIR=../data/dev-data \
   SELFSTREAM_ADMIN_PASSWORD=devpass SELFSTREAM_LISTEN=127.0.0.1:4533 ./bin/selfstream
 # terminal 2
@@ -65,7 +66,7 @@ cd app && flutter test integration_test -d macos
 cd app && flutter test integration_test -d emulator-5554 --dart-define=SERVER=10.0.2.2:4533
 ```
 
-Le test attend un album « Blue Hours » de 4 titres de 40 s. La recette de génération (ffmpeg) est dans l'historique git du projet, sinon il suffit d'adapter les noms dans le test.
+Le test s'appuie sur la bibliothèque de démo générée par `tools/demo-library.sh`.
 
 ## Architecture
 
