@@ -168,7 +168,7 @@ func TestSearch(t *testing.T) {
 		{`"); DROP`, 0, 0, 0}, // FTS syntax is neutralised
 	}
 	for _, c := range cases {
-		r, err := db.Search(ctx, c.q, 10)
+		r, err := db.Search(ctx, c.q, Filter{}, 10)
 		if err != nil {
 			t.Fatalf("%q: %v", c.q, err)
 		}
@@ -176,6 +176,47 @@ func TestSearch(t *testing.T) {
 			t.Errorf("%q: got %d/%d/%d, want %d/%d/%d", c.q,
 				len(r.Artists), len(r.Albums), len(r.Tracks), c.artists, c.albums, c.tracks)
 		}
+	}
+}
+
+func TestSearchFilters(t *testing.T) {
+	db := openTest(t)
+	ctx := context.Background()
+	seed(t, db,
+		TrackFile{Path: "a/1.flac", Title: "Rolling", Artist: "Adele", Album: "21", Year: 2011, Genre: "Pop", Format: "flac"},
+		TrackFile{Path: "a/2.flac", Title: "Rumour", Artist: "Adele", Album: "21", Year: 2011, Genre: "pop", Format: "flac"},
+		TrackFile{Path: "b/1.mp3", Title: "Roxanne", Artist: "The Police", Album: "Outlandos", Year: 1978, Genre: "Rock", Format: "mp3"},
+		TrackFile{Path: "c/1.mp3", Title: "Hello", Artist: "Adele", Album: "25", Year: 2015, Genre: "Pop", Format: "mp3"},
+	)
+	cases := []struct {
+		q              string
+		f              Filter
+		albums, tracks int
+	}{
+		{"", Filter{}, 0, 0},
+		{"", Filter{Genre: "POP"}, 2, 3}, // case-insensitive
+		{"", Filter{YearMin: 1970, YearMax: 1989}, 1, 1},
+		{"", Filter{Format: "MP3"}, 2, 2},
+		{"ro", Filter{}, 0, 2}, // Rolling, Roxanne
+		{"ro", Filter{Genre: "rock"}, 0, 1},
+		{"ro", Filter{YearMin: 2000}, 0, 1},
+		{"adele", Filter{Format: "mp3"}, 1, 1}, // album 25 and its track only
+	}
+	for _, c := range cases {
+		r, err := db.Search(ctx, c.q, c.f, 50)
+		if err != nil {
+			t.Fatalf("%q %+v: %v", c.q, c.f, err)
+		}
+		if len(r.Albums) != c.albums || len(r.Tracks) != c.tracks {
+			t.Errorf("%q %+v: got %d albums / %d tracks, want %d / %d", c.q, c.f, len(r.Albums), len(r.Tracks), c.albums, c.tracks)
+		}
+	}
+	fa, err := db.SearchFacets(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fa.Genres) != 2 || fa.Genres[0].Count != 3 || len(fa.Formats) != 2 || *fa.YearMin != 1978 || *fa.YearMax != 2015 {
+		t.Fatalf("facets: %+v", fa)
 	}
 }
 

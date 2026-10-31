@@ -12,6 +12,8 @@ import (
 	"selfstream/internal/app"
 	"selfstream/internal/auth"
 	"selfstream/internal/covers"
+	"selfstream/internal/hub"
+	"selfstream/internal/lyrics"
 	"selfstream/internal/scanner"
 	"selfstream/internal/store"
 	"selfstream/internal/stream"
@@ -24,6 +26,8 @@ type Server struct {
 	Covers   *covers.Cache
 	Streamer *stream.Streamer
 	Log      *slog.Logger
+	Hub      *hub.Hub
+	Lyrics   *lyrics.Finder
 	// ScanFn starts a background scan (owned by main so it outlives requests).
 	ScanFn func(full bool)
 }
@@ -38,6 +42,7 @@ func (s *Server) Handler() http.Handler {
 
 	priv := http.NewServeMux()
 	priv.HandleFunc("GET "+prefix+"/me", s.me)
+	priv.HandleFunc("GET "+prefix+"/ws", s.ws)
 	priv.HandleFunc("POST "+prefix+"/auth/logout", s.logout)
 	priv.HandleFunc("GET "+prefix+"/devices", s.devices)
 	priv.HandleFunc("DELETE "+prefix+"/devices/{id}", s.deleteDevice)
@@ -49,33 +54,57 @@ func (s *Server) Handler() http.Handler {
 	priv.HandleFunc("GET "+prefix+"/albums/{id}", s.album)
 	priv.HandleFunc("GET "+prefix+"/tracks", s.tracks)
 	priv.HandleFunc("GET "+prefix+"/tracks/{id}", s.track)
+	priv.HandleFunc("GET "+prefix+"/tracks/{id}/lyrics", s.lyrics)
 	priv.HandleFunc("GET "+prefix+"/search", s.search)
+	priv.HandleFunc("GET "+prefix+"/search/facets", s.searchFacets)
 	priv.HandleFunc("GET "+prefix+"/covers/{id}", s.cover)
 	priv.HandleFunc("GET "+prefix+"/stream/{id}", s.stream)
 
 	priv.HandleFunc("GET "+prefix+"/playlists/tree", s.playlistTree)
-	priv.HandleFunc("POST "+prefix+"/folders", s.createFolder)
-	priv.HandleFunc("PATCH "+prefix+"/folders/{id}", s.updateFolder)
-	priv.HandleFunc("DELETE "+prefix+"/folders/{id}", s.deleteFolder)
-	priv.HandleFunc("POST "+prefix+"/playlists", s.createPlaylist)
+	priv.HandleFunc("POST "+prefix+"/folders", s.notify("playlists", s.createFolder))
+	priv.HandleFunc("PATCH "+prefix+"/folders/{id}", s.notify("playlists", s.updateFolder))
+	priv.HandleFunc("DELETE "+prefix+"/folders/{id}", s.notify("playlists", s.deleteFolder))
+	priv.HandleFunc("POST "+prefix+"/playlists", s.notify("playlists", s.createPlaylist))
 	priv.HandleFunc("GET "+prefix+"/playlists/{id}", s.playlist)
-	priv.HandleFunc("PATCH "+prefix+"/playlists/{id}", s.updatePlaylist)
-	priv.HandleFunc("DELETE "+prefix+"/playlists/{id}", s.deletePlaylist)
+	priv.HandleFunc("PATCH "+prefix+"/playlists/{id}", s.notify("playlists", s.updatePlaylist))
+	priv.HandleFunc("DELETE "+prefix+"/playlists/{id}", s.notify("playlists", s.deletePlaylist))
 	priv.HandleFunc("GET "+prefix+"/playlists/{id}/tracks", s.playlistTracks)
-	priv.HandleFunc("POST "+prefix+"/playlists/{id}/tracks", s.addPlaylistTracks)
-	priv.HandleFunc("PATCH "+prefix+"/playlists/{id}/tracks", s.movePlaylistTrack)
-	priv.HandleFunc("DELETE "+prefix+"/playlists/{id}/tracks/{entry}", s.removePlaylistTrack)
+	priv.HandleFunc("POST "+prefix+"/playlists/{id}/tracks", s.notify("playlists", s.addPlaylistTracks))
+	priv.HandleFunc("PATCH "+prefix+"/playlists/{id}/tracks", s.notify("playlists", s.movePlaylistTrack))
+	priv.HandleFunc("DELETE "+prefix+"/playlists/{id}/tracks/{entry}", s.notify("playlists", s.removePlaylistTrack))
 
 	priv.HandleFunc("POST "+prefix+"/plays", s.addPlays)
 	priv.HandleFunc("GET "+prefix+"/favorites", s.favorites)
-	priv.HandleFunc("PUT "+prefix+"/favorites/{kind}/{id}", s.setFavorite(true))
-	priv.HandleFunc("DELETE "+prefix+"/favorites/{kind}/{id}", s.setFavorite(false))
+	priv.HandleFunc("PUT "+prefix+"/favorites/{kind}/{id}", s.notify("favorites", s.setFavorite(true)))
+	priv.HandleFunc("DELETE "+prefix+"/favorites/{kind}/{id}", s.notify("favorites", s.setFavorite(false)))
 
 	priv.HandleFunc("POST "+prefix+"/admin/scan", s.startScan)
 	priv.HandleFunc("GET "+prefix+"/admin/scan", s.scanStatus)
 
 	pub.Handle(prefix+"/", s.Auth.Middleware(priv))
 	return s.logRequests(pub)
+}
+
+// --- live updates ----------------------------------------------------------
+
+func (s *Server) ws(w http.ResponseWriter, r *http.Request) {
+	if s.Hub == nil {
+		http.NotFound(w, r)
+		return
+	}
+	s.Hub.Serve(w, r, auth.DeviceFrom(r.Context()))
+}
+
+// notify wraps a mutation: once it succeeds, the other devices are told
+// that what ("playlists", "favorites") changed.
+func (s *Server) notify(what string, h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sw := &statusWriter{ResponseWriter: w, status: http.StatusOK}
+		h(sw, r)
+		if s.Hub != nil && sw.status < 300 {
+			s.Hub.Changed(what, auth.DeviceFrom(r.Context()).ID)
+		}
+	}
 }
 
 // --- helpers ---------------------------------------------------------------

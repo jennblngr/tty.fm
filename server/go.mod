@@ -3,6 +3,7 @@ module selfstream
 go 1.27.1
 
 require (
+	github.com/coder/websocket v1.8.15 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/mattn/go-sqlite3 v1.14.52 // indirect
 	github.com/tetratelabs/wazero v1.11.1-0.20260428013916-2bbd517b7633 // indirect

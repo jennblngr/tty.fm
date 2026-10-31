@@ -1,12 +1,15 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"strconv"
 
 	"selfstream/internal/auth"
 	"selfstream/internal/covers"
+	"selfstream/internal/lyrics"
+	"selfstream/internal/store"
 	"selfstream/internal/stream"
 )
 
@@ -182,13 +185,50 @@ func (s *Server) track(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, t)
 }
 
+// search: q (prefix words) and optional filters genre, year_min, year_max,
+// format. With filters only, it lists what matches them.
 func (s *Server) search(w http.ResponseWriter, r *http.Request) {
-	res, err := s.DB.Search(r.Context(), r.URL.Query().Get("q"), queryInt(r, "limit", 20))
+	q := r.URL.Query()
+	f := store.Filter{Genre: q.Get("genre"), YearMin: queryInt(r, "year_min", 0),
+		YearMax: queryInt(r, "year_max", 0), Format: q.Get("format")}
+	res, err := s.DB.Search(r.Context(), q.Get("q"), f, queryInt(r, "limit", 20))
 	if err != nil {
 		s.fail(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, res)
+}
+
+func (s *Server) searchFacets(w http.ResponseWriter, r *http.Request) {
+	f, err := s.DB.SearchFacets(r.Context())
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, f)
+}
+
+func (s *Server) lyrics(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r, "id")
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	info, err := s.DB.TrackFileInfo(r.Context(), id)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	l, err := s.Lyrics.Find(info.Path)
+	if errors.Is(err, lyrics.ErrNone) {
+		writeJSON(w, http.StatusNotFound, apiError{"no lyrics"})
+		return
+	}
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, l)
 }
 
 // --- media -----------------------------------------------------------------

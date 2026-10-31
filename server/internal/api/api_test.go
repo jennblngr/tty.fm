@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -12,10 +13,16 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
+
+	"github.com/coder/websocket"
 
 	"selfstream/internal/auth"
 	"selfstream/internal/covers"
+	"selfstream/internal/hub"
+	"selfstream/internal/lyrics"
 	"selfstream/internal/scanner"
 	"selfstream/internal/store"
 	"selfstream/internal/stream"
@@ -93,7 +100,9 @@ func setup(t *testing.T) *client {
 	if err := a.EnsureUser(context.Background(), "me", "secret"); err != nil {
 		t.Fatal(err)
 	}
-	s := &Server{DB: db, Auth: a, Scanner: sc, Covers: cov, Streamer: st, Log: log, ScanFn: func(bool) {}}
+	os.WriteFile(filepath.Join(root, "Band", "Record", "Alpha.lrc"), []byte("[00:01.00]first\n[00:02.50]second"), 0o644)
+	s := &Server{DB: db, Auth: a, Scanner: sc, Covers: cov, Streamer: st, Log: log, ScanFn: func(bool) {},
+		Hub: hub.New(log), Lyrics: lyrics.New(root)}
 	ts := httptest.NewServer(s.Handler())
 	t.Cleanup(ts.Close)
 	return &client{t: t, base: ts.URL + "/api/v1"}
@@ -259,3 +268,105 @@ func TestPlaylistsAPI(t *testing.T) {
 }
 
 func itoa(n int64) string { return strconv.FormatInt(n, 10) }
+
+func TestLyrics(t *testing.T) {
+	c := setup(t)
+	login(c)
+	var tracks struct {
+		Items []struct {
+			ID    int64  `json:"id"`
+			Title string `json:"title"`
+		} `json:"items"`
+	}
+	c.json("GET", "/tracks?sort=name", nil, 200, &tracks)
+	var l struct {
+		Synced bool `json:"synced"`
+		Lines  []struct {
+			Ms   int64  `json:"ms"`
+			Text string `json:"text"`
+		} `json:"lines"`
+	}
+	c.json("GET", fmt.Sprintf("/tracks/%d/lyrics", tracks.Items[0].ID), nil, 200, &l) // Alpha
+	if !l.Synced || len(l.Lines) != 2 || l.Lines[1].Ms != 2500 {
+		t.Fatalf("lyrics: %+v", l)
+	}
+	c.json("GET", fmt.Sprintf("/tracks/%d/lyrics", tracks.Items[1].ID), nil, 404, nil) // Beta
+	var f struct {
+		Formats []struct{ Name string } `json:"formats"`
+	}
+	c.json("GET", "/search/facets", nil, 200, &f)
+	if len(f.Formats) != 1 || f.Formats[0].Name != "flac" {
+		t.Fatalf("facets: %+v", f)
+	}
+}
+
+// wsDial connects a device to the live hub and returns a reader of messages.
+func wsDial(t *testing.T, c *client) (*websocket.Conn, func() map[string]any) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	t.Cleanup(cancel)
+	conn, _, err := websocket.Dial(ctx, strings.Replace(c.base, "http", "ws", 1)+"/ws",
+		&websocket.DialOptions{HTTPHeader: http.Header{"Authorization": {"Bearer " + c.token}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { conn.CloseNow() })
+	return conn, func() map[string]any {
+		t.Helper()
+		_, b, err := conn.Read(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var m map[string]any
+		json.Unmarshal(b, &m)
+		return m
+	}
+}
+
+func TestHub(t *testing.T) {
+	a := setup(t)
+	login(a)
+	b := &client{t: t, base: a.base}
+	login(b) // second device, same user
+
+	connA, readA := wsDial(t, a)
+	if m := readA(); m["type"] != "hello" || len(m["devices"].([]any)) != 0 {
+		t.Fatalf("hello A: %v", m)
+	}
+	connB, readB := wsDial(t, b)
+	if m := readB(); m["type"] != "hello" || len(m["devices"].([]any)) != 1 {
+		t.Fatalf("hello B: %v", m)
+	}
+	m := readA()
+	if m["type"] != "presence" || m["online"] != true {
+		t.Fatalf("presence: %v", m)
+	}
+	idB := m["device"].(map[string]any)["id"].(float64)
+	ctx := context.Background()
+
+	// B publishes its state; A receives it.
+	connB.Write(ctx, websocket.MessageText, []byte(`{"type":"state","state":{"playing":true,"track_id":1}}`))
+	if m := readA(); m["type"] != "state" || m["state"].(map[string]any)["playing"] != true {
+		t.Fatalf("state: %v", m)
+	}
+	// A sends a command to B.
+	connA.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf(`{"type":"command","target":%d,"action":"pause"}`, int64(idB))))
+	if m := readB(); m["type"] != "command" || m["action"] != "pause" {
+		t.Fatalf("command: %v", m)
+	}
+	// Command to an unknown device: error back to the sender.
+	connA.Write(ctx, websocket.MessageText, []byte(`{"type":"command","target":999,"action":"pause"}`))
+	if m := readA(); m["type"] != "error" {
+		t.Fatalf("offline target: %v", m)
+	}
+	// A creates a playlist over REST: B is told, A (the origin) is not.
+	a.json("POST", "/playlists", map[string]any{"name": "Live"}, 201, nil)
+	if m := readB(); m["type"] != "changed" || m["what"] != "playlists" {
+		t.Fatalf("changed: %v", m)
+	}
+	// B leaves: A sees it go offline.
+	connB.Close(websocket.StatusNormalClosure, "")
+	if m := readA(); m["type"] != "presence" || m["online"] != false {
+		t.Fatalf("offline: %v", m)
+	}
+}

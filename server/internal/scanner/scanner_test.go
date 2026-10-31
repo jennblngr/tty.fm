@@ -179,7 +179,7 @@ func TestScan(t *testing.T) {
 	if st := e.scan(t, false); st.Updated != 1 {
 		t.Fatalf("retag scan: %+v", st)
 	}
-	if r, _ := e.db.Search(ctx, "remast", 10); len(r.Tracks) != 1 {
+	if r, _ := e.db.Search(ctx, "remast", store.Filter{}, 10); len(r.Tracks) != 1 {
 		t.Fatalf("search after retag: %+v", r.Tracks)
 	}
 }

@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 	"unicode"
 )
@@ -25,23 +26,94 @@ func ftsQuery(input string) string {
 	return strings.Join(parts, " ")
 }
 
-// Search runs a prefix full-text search over artists, albums and tracks.
-// Results are ranked by bm25 with the title column weighted highest.
-func (db *DB) Search(ctx context.Context, input string, limit int) (SearchResult, error) {
+// Filter narrows a search. Zero values mean "any".
+type Filter struct {
+	Genre   string
+	YearMin int
+	YearMax int
+	Format  string
+}
+
+func (f Filter) active() bool {
+	return f.Genre != "" || f.YearMin != 0 || f.YearMax != 0 || f.Format != ""
+}
+
+// trackConds returns SQL conditions on the tracks alias a (e.g. "t").
+func (f Filter) trackConds(a string) (string, []any) {
+	var sb strings.Builder
+	var args []any
+	if f.Genre != "" {
+		sb.WriteString(" AND " + a + ".genre = ? COLLATE NOCASE")
+		args = append(args, f.Genre)
+	}
+	if f.YearMin != 0 {
+		sb.WriteString(" AND " + a + ".year >= ?")
+		args = append(args, f.YearMin)
+	}
+	if f.YearMax != 0 {
+		sb.WriteString(" AND " + a + ".year <= ?")
+		args = append(args, f.YearMax)
+	}
+	if f.Format != "" {
+		sb.WriteString(" AND " + a + ".format = ?")
+		args = append(args, strings.ToLower(f.Format))
+	}
+	return sb.String(), args
+}
+
+// exists returns a condition "some present track joined on link matches".
+func (f Filter) exists(link string) (string, []any) {
+	conds, args := f.trackConds("ft")
+	return " AND EXISTS (SELECT 1 FROM tracks ft WHERE ft.missing_since IS NULL AND " + link + conds + ")", args
+}
+
+// Search runs a prefix full-text search over artists, albums and tracks,
+// narrowed by f. Results are ranked by bm25 with the title column weighted
+// highest. With an empty input and an active filter, it lists what matches
+// the filter (albums by year, tracks by title).
+func (db *DB) Search(ctx context.Context, input string, f Filter, limit int) (SearchResult, error) {
 	res := SearchResult{Artists: []Artist{}, Albums: []Album{}, Tracks: []Track{}}
 	q := ftsQuery(input)
-	if q == "" {
+	if q == "" && !f.active() {
 		return res, nil
 	}
-	if limit <= 0 || limit > 100 {
-		limit = 20
+	maxLimit := 100
+	if f.active() {
+		maxLimit = 500 // browsing a genre or a decade
 	}
+	if limit <= 0 || limit > maxLimit {
+		limit = min(20, maxLimit)
+	}
+	artistCond, artistArgs := f.exists("(ft.artist_id = a.id OR ft.album_id IN (SELECT id FROM albums WHERE album_artist_id = a.id))")
+	albumCond, albumArgs := f.exists("ft.album_id = al.id")
+	trackCond, trackArgs := f.trackConds("t")
+	if !f.active() {
+		artistCond, artistArgs, albumCond, albumArgs = "", nil, "", nil
+	}
+
+	if q == "" {
+		var err error
+		if res.Albums, err = db.albumList(ctx, albumSelect+albumCond+" ORDER BY COALESCE(al.year, 0) DESC, al.sort_title LIMIT ?",
+			append(albumArgs, limit)...); err != nil {
+			return res, err
+		}
+		res.Tracks, err = db.trackList(ctx, trackSelect+trackCond+" ORDER BY t.title COLLATE NOCASE LIMIT ?",
+			append(trackArgs, limit)...)
+		return res, err
+	}
+
 	// Weights: kind, ref_id, title, artist, album.
 	const ranked = `SELECT ref_id, bm25(search_fts, 0, 0, 10, 5, 3) AS score
 	                FROM search_fts WHERE search_fts MATCH ? AND kind = ? ORDER BY score LIMIT ?`
+	// The FTS subquery is limited before filtering: over-fetch when filtering.
+	ftsLimit := limit
+	if f.active() {
+		ftsLimit = 1000
+	}
 
+	args := append([]any{q, "artist", ftsLimit}, artistArgs...)
 	rows, err := db.r.QueryContext(ctx, `SELECT a.* FROM (`+artistSelect+`) a
-		JOIN (`+ranked+`) s ON s.ref_id = a.id ORDER BY s.score`, q, "artist", limit)
+		JOIN (`+ranked+`) s ON s.ref_id = a.id WHERE 1=1`+artistCond+` ORDER BY s.score LIMIT ?`, append(args, limit)...)
 	if err != nil {
 		return res, err
 	}
@@ -55,15 +127,68 @@ func (db *DB) Search(ctx context.Context, input string, limit int) (SearchResult
 	}
 	rows.Close()
 
+	args = append([]any{q, "album", ftsLimit}, albumArgs...)
 	if res.Albums, err = db.albumList(ctx, strings.Replace(albumSelect, "WHERE al.track_count > 0",
-		"JOIN ("+ranked+") s ON s.ref_id = al.id WHERE al.track_count > 0", 1)+" ORDER BY s.score",
-		q, "album", limit); err != nil {
+		"JOIN ("+ranked+") s ON s.ref_id = al.id WHERE al.track_count > 0", 1)+albumCond+" ORDER BY s.score LIMIT ?",
+		append(args, limit)...); err != nil {
 		return res, err
 	}
+	args = append([]any{q, "track", ftsLimit}, trackArgs...)
 	if res.Tracks, err = db.trackList(ctx, strings.Replace(trackSelect, "WHERE t.missing_since IS NULL",
-		"JOIN ("+ranked+") s ON s.ref_id = t.id WHERE t.missing_since IS NULL", 1)+" ORDER BY s.score",
-		q, "track", limit); err != nil {
+		"JOIN ("+ranked+") s ON s.ref_id = t.id WHERE t.missing_since IS NULL", 1)+trackCond+" ORDER BY s.score LIMIT ?",
+		append(args, limit)...); err != nil {
 		return res, err
 	}
 	return res, nil
+}
+
+// Facet is one filter value with the number of tracks having it.
+type Facet struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+
+// Facets lists the values available for search filters.
+type Facets struct {
+	Genres  []Facet `json:"genres"`
+	Formats []Facet `json:"formats"`
+	YearMin *int    `json:"year_min,omitempty"`
+	YearMax *int    `json:"year_max,omitempty"`
+}
+
+func (db *DB) SearchFacets(ctx context.Context) (Facets, error) {
+	out := Facets{Genres: []Facet{}, Formats: []Facet{}}
+	list := func(q string) ([]Facet, error) {
+		rows, err := db.r.QueryContext(ctx, q)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		res := []Facet{}
+		for rows.Next() {
+			var f Facet
+			if err := rows.Scan(&f.Name, &f.Count); err != nil {
+				return nil, err
+			}
+			res = append(res, f)
+		}
+		return res, rows.Err()
+	}
+	var err error
+	if out.Genres, err = list(`SELECT MIN(genre), COUNT(*) FROM tracks
+		WHERE missing_since IS NULL AND genre IS NOT NULL AND genre <> ''
+		GROUP BY genre COLLATE NOCASE ORDER BY COUNT(*) DESC, MIN(genre)`); err != nil {
+		return out, err
+	}
+	if out.Formats, err = list(`SELECT format, COUNT(*) FROM tracks WHERE missing_since IS NULL
+		GROUP BY format ORDER BY COUNT(*) DESC`); err != nil {
+		return out, err
+	}
+	var lo, hi sql.NullInt64
+	if err := db.r.QueryRowContext(ctx, `SELECT MIN(year), MAX(year) FROM tracks
+		WHERE missing_since IS NULL AND year > 0`).Scan(&lo, &hi); err != nil {
+		return out, err
+	}
+	out.YearMin, out.YearMax = intPtr(lo), intPtr(hi)
+	return out, nil
 }

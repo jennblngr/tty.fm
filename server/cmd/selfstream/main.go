@@ -17,6 +17,8 @@ import (
 	"selfstream/internal/auth"
 	"selfstream/internal/config"
 	"selfstream/internal/covers"
+	"selfstream/internal/hub"
+	"selfstream/internal/lyrics"
 	"selfstream/internal/scanner"
 	"selfstream/internal/store"
 	"selfstream/internal/stream"
@@ -69,6 +71,8 @@ func run() error {
 		return err
 	}
 	sc := scanner.New(db, cfg.MusicDir, coverCache, cfg.ScanWorkers, log)
+	liveHub := hub.New(log)
+	sc.SetOnChange(func() { liveHub.Changed("library", 0) })
 
 	var bg sync.WaitGroup
 	startScan := func(full bool) {
@@ -79,7 +83,9 @@ func run() error {
 		}()
 	}
 
-	srv := &api.Server{DB: db, Auth: authSvc, Scanner: sc, Covers: coverCache, Streamer: streamer, Log: log, ScanFn: startScan}
+	srv := &api.Server{DB: db, Auth: authSvc, Scanner: sc, Covers: coverCache, Streamer: streamer, Log: log, Hub: liveHub,
+		Lyrics: lyrics.New(cfg.MusicDir),
+		ScanFn: startScan}
 	httpSrv := &http.Server{Addr: cfg.Listen, Handler: srv.Handler(), ReadHeaderTimeout: 10 * time.Second}
 
 	if cfg.ScanOnStart {

@@ -65,6 +65,8 @@ type Scanner struct {
 	covers  *covers.Cache
 	workers int
 	log     *slog.Logger
+	// onChange is called after a scan that changed the library.
+	onChange func()
 
 	mu       sync.Mutex // one scan at a time
 	running  atomic.Bool
@@ -75,6 +77,9 @@ type Scanner struct {
 	lastAt   time.Time
 	lastErr  string
 }
+
+// SetOnChange registers a callback run after a scan that changed the library.
+func (s *Scanner) SetOnChange(f func()) { s.onChange = f }
 
 func New(db *store.DB, root string, c *covers.Cache, workers int, log *slog.Logger) *Scanner {
 	return &Scanner{db: db, root: root, covers: c, workers: max(1, workers), log: log}
@@ -195,6 +200,9 @@ func (s *Scanner) Scan(ctx context.Context, full bool) (Stats, error) {
 	} else {
 		s.log.Info("scan done", "full", full, "seen", st.Seen, "added", st.Added, "updated", st.Updated,
 			"moved", st.Moved, "missing", st.Missing, "errors", st.Errors, "duration", st.Duration.Round(time.Millisecond))
+		if s.onChange != nil && st.Added+st.Updated+st.Moved+st.Missing > 0 {
+			s.onChange()
+		}
 	}
 	return st, err
 }
