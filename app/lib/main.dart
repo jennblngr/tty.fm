@@ -12,6 +12,8 @@ import 'core/settings.dart';
 import 'core/session.dart';
 import 'playback/system_audio.dart';
 import 'state/playback.dart';
+import 'offline/downloads.dart';
+import 'state/remote.dart';
 import 'ui/app.dart';
 
 Future<void> main() async {
@@ -51,6 +53,11 @@ Future<void> main() async {
       debugPrint('audio_service unavailable: $e');
     }
   }
+
+  container.read(downloadsProvider); // loads the offline index
+  // Live hub (sync and remote control). Listened, not just read, so it is
+  // rebuilt when the server address or the token changes.
+  container.listen(liveSyncProvider, (_, _) {});
 
   runApp(UncontrolledProviderScope(container: container, child: const SelfstreamApp()));
 }

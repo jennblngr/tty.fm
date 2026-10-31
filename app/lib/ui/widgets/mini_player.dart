@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../state/playback.dart';
+import '../../state/remote.dart';
+import '../screens/devices.dart';
 import '../nav.dart';
 import 'cover.dart';
 
@@ -12,7 +14,10 @@ class MiniPlayer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final track = ref.watch(currentTrackProvider);
-    if (track == null) return const SizedBox.shrink();
+    if (track == null) {
+      final elsewhere = ref.watch(remoteDevicesProvider.select((r) => r.activeElsewhere));
+      return elsewhere == null ? const SizedBox.shrink() : RemoteMiniBar(elsewhere);
+    }
     final playing = ref.watch(playbackStateProvider.select((s) => s.playing));
     final buffering = ref.watch(playbackStateProvider.select((s) => s.buffering));
     final c = ref.read(playbackControllerProvider);
@@ -66,6 +71,11 @@ class MiniPlayer extends ConsumerWidget {
                           ),
                   ),
                   IconButton(icon: const Icon(Icons.skip_next), onPressed: c.next, tooltip: 'Suivant'),
+                  IconButton(
+                    icon: const Icon(Icons.devices),
+                    onPressed: () => showDevicesSheet(context),
+                    tooltip: 'Appareils',
+                  ),
                   const SizedBox(width: 4),
                 ],
               ),

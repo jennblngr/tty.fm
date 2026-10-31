@@ -7,7 +7,10 @@ import '../../core/network.dart';
 import '../../core/session.dart';
 import '../../core/settings.dart';
 import '../../data/library_repository.dart';
+import '../../offline/downloads.dart';
+import '../dialogs.dart';
 import '../widgets/async_view.dart';
+import 'offline.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -61,6 +64,28 @@ class SettingsScreen extends ConsumerWidget {
           qualityTile('Réseau local', s.qualityLocal, (q) => s.copyWith(qualityLocal: q)),
           qualityTile('À distance (Wi-Fi)', s.qualityRemoteWifi, (q) => s.copyWith(qualityRemoteWifi: q)),
           qualityTile('Réseau mobile', s.qualityCellular, (q) => s.copyWith(qualityCellular: q)),
+          const _Header('Hors ligne'),
+          qualityTile('Qualité des téléchargements', s.downloadQuality, (q) => s.copyWith(downloadQuality: q)),
+          SwitchListTile(
+            title: const Text('Télécharger en Wi-Fi uniquement'),
+            subtitle: const Text('Les téléchargements attendent hors du réseau mobile'),
+            value: s.downloadWifiOnly,
+            onChanged: (v) => notifier.update(s.copyWith(downloadWifiOnly: v)),
+          ),
+          const OfflineStatusTile(),
+          ListTile(
+            leading: const Icon(Icons.delete_sweep_outlined),
+            title: const Text('Supprimer tous les téléchargements'),
+            onTap: () async {
+              if (await confirm(
+                context,
+                'Supprimer tous les téléchargements ?',
+                'Les fichiers seront effacés de cet appareil.',
+              )) {
+                ref.read(downloadsProvider.notifier).removeAll();
+              }
+            },
+          ),
           const _Header('Apparence'),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

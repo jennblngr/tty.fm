@@ -7,9 +7,11 @@
 //
 // Screenshots are written to the app's support directory (path printed).
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,8 +20,11 @@ import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:selfstream/data/library_repository.dart';
 import 'package:selfstream/main.dart' as app;
+import 'package:selfstream/offline/downloads.dart';
 import 'package:selfstream/state/library.dart';
 import 'package:selfstream/state/playback.dart';
+import 'package:selfstream/state/remote.dart';
+import 'package:selfstream/ui/widgets/mini_player.dart';
 
 const server = String.fromEnvironment('SERVER', defaultValue: '127.0.0.1:4533');
 const password = String.fromEnvironment('PASSWORD', defaultValue: 'devpass');
@@ -37,6 +42,23 @@ Future<void> waitFor(WidgetTester tester, Finder f, {Duration timeout = const Du
   final texts = tester.widgetList<Text>(find.byType(Text)).map((t) => t.data).whereType<String>().toList();
   await shot(tester, 'timeout');
   throw TestFailure('Timed out waiting for $f. Visible texts: $texts');
+}
+
+/// Pumps until [cond] holds.
+Future<void> waitUntil(
+  WidgetTester tester,
+  bool Function() cond,
+  String what, {
+  Duration timeout = const Duration(seconds: 20),
+}) async {
+  final end = DateTime.now().add(timeout);
+  while (!cond()) {
+    if (DateTime.now().isAfter(end)) {
+      await shot(tester, 'timeout');
+      throw TestFailure('Timed out waiting for $what');
+    }
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
 Future<void> settle(WidgetTester tester, [Duration d = const Duration(milliseconds: 800)]) async {
@@ -150,6 +172,106 @@ void main() {
     await waitFor(tester, find.text('Track 1 of Blue Hours'));
     await settle(tester, const Duration(seconds: 1));
     await shot(tester, '09_playlist');
+
+    // --- another device: live sync and remote control -------------------------
+    final other = Dio(BaseOptions(baseUrl: 'http://$server/api/v1'));
+    final login2 = await other.post<Map<String, dynamic>>(
+      '/auth/login',
+      data: {'username': 'admin', 'password': password, 'device_name': 'Autre appareil', 'platform': 'linux'},
+    );
+    final token2 = login2.data!['token'] as String;
+    other.options.headers['Authorization'] = 'Bearer $token2';
+    // A playlist created elsewhere shows up here without refreshing.
+    final remotePl = await other.post<Map<String, dynamic>>('/playlists', data: {'name': 'Depuis ailleurs $stamp'});
+    await waitUntil(
+      tester,
+      () =>
+          container.read(playlistTreeProvider).value?.allPlaylists.any((p) => p.name == 'Depuis ailleurs $stamp') ??
+          false,
+      'live playlist sync',
+    );
+    // The other device joins the live hub and sends us a command.
+    final ws = await WebSocket.connect('ws://$server/api/v1/ws', headers: {'Authorization': 'Bearer $token2'});
+    final inbox = ws.map((m) => jsonDecode(m as String) as Map<String, dynamic>).asBroadcastStream();
+    final hello = await inbox.firstWhere((m) => m['type'] == 'hello');
+    final me = (hello['devices'] as List).cast<Map<String, dynamic>>().firstWhere((d) => d['platform'] != 'linux');
+    await waitUntil(
+      tester,
+      () => container.read(remoteDevicesProvider).devices.values.any((d) => d.name == 'Autre appareil'),
+      'presence',
+    );
+    await tester.tap(find.byIcon(Icons.devices).first);
+    await waitFor(tester, find.text('Autre appareil'));
+    await settle(tester);
+    await shot(tester, '10_devices');
+    Navigator.of(tester.element(find.text('Autre appareil')), rootNavigator: true).pop(); // close the sheet
+    await settle(tester);
+    await c.pause();
+    await settle(tester);
+    ws.add(jsonEncode({'type': 'command', 'target': me['id'], 'action': 'play'}));
+    await waitUntil(tester, () => c.state.playing, 'remote play command');
+    final st = await inbox.firstWhere((m) => m['type'] == 'state' && (m['state'] as Map)['playing'] == true);
+    expect(st['device_id'], me['id']);
+    await c.pause();
+    await ws.close();
+
+    // --- lyrics (synced .lrc next to track 1 of Blue Hours) --------------------
+    await tester.tap(find.text('Bibliothèque').first);
+    await waitFor(tester, find.text('Quartz Trio')); // still on the Blue Hours album page
+    await tester.tap(find.text('Lire'));
+    await waitUntil(tester, () => c.state.current?.title == 'Track 1 of Blue Hours', 'track 1');
+    await settle(tester);
+    await tester.tap(find.descendant(of: find.byType(MiniPlayer), matching: find.text('Track 1 of Blue Hours')));
+    await waitFor(tester, find.byIcon(Icons.lyrics_outlined));
+    await tester.tap(find.byIcon(Icons.lyrics_outlined));
+    await waitFor(tester, find.text('First line of Blue Hours'));
+    await settle(tester, const Duration(seconds: 4)); // let the highlight move on
+    await shot(tester, '11_lyrics');
+    await tester.tap(find.byIcon(Icons.lyrics_outlined)); // back to the cover
+    await c.pause();
+    await tester.tap(find.byIcon(Icons.keyboard_arrow_down));
+    await settle(tester);
+
+    // --- offline: download the album, then play from the local files ----------
+    await tester.tap(find.byTooltip('Télécharger'));
+    final dm = container.read(downloadsProvider.notifier);
+    final blueHours = c.state.queue[0].track.albumId;
+    await waitUntil(
+      tester,
+      () => container.read(downloadsProvider).status('album', blueHours) == CollectionStatus.done,
+      'album download',
+      timeout: const Duration(seconds: 60),
+    );
+    final local = dm.pathFor(c.state.queue[0].track.id);
+    expect(local, isNotNull);
+    expect(File(local!).lengthSync(), greaterThan(10000));
+    expect(c.sourceFor(c.state.queue[0].track).url, local, reason: 'playback uses the offline copy');
+    await settle(tester);
+    await shot(tester, '12_album_downloaded');
+    await tester.tap(find.text('Bibliothèque').first); // back to the library root
+    await settle(tester);
+    await tester.tap(find.text('Bibliothèque').first);
+    await settle(tester);
+    await tester.tap(find.text('Hors ligne'));
+    await waitFor(tester, find.textContaining('4 titres'));
+    await shot(tester, '13_offline');
+
+    // --- search filters ---------------------------------------------------------
+    await tester.tap(find.text('Recherche').first);
+    await settle(tester);
+    await tester.tap(find.byIcon(Icons.clear)); // clears the previous "riv" query
+    await settle(tester);
+    await tester.tap(find.text('Genre'));
+    await settle(tester);
+    await tester.tap(find.text('Jazz (4)'));
+    await waitFor(tester, find.text('Track 4 of Blue Hours'));
+    expect(find.text('Track 1 of Midnight Drive'), findsNothing);
+    await settle(tester);
+    await shot(tester, '14_search_filter');
+
+    dm.remove('album', blueHours);
+    await other.delete<void>('/playlists/${remotePl.data!['id']}');
+    await other.post<void>('/auth/logout');
 
     // --- history reached the server --------------------------------------------
     await c.pause();

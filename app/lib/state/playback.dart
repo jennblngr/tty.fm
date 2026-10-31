@@ -8,6 +8,7 @@ import '../core/network.dart';
 import '../core/session.dart';
 import '../data/library_repository.dart';
 import '../data/models.dart';
+import '../offline/downloads.dart';
 import '../playback/audio_engine.dart';
 import '../playback/media_kit_engine.dart';
 import '../playback/play_reporter.dart';
@@ -26,9 +27,11 @@ final playReporterProvider = Provider<PlayReporter>((ref) {
   return r;
 });
 
-/// Builds the stream source for a track according to the current route and
-/// quality setting.
+/// Builds the stream source for a track: the offline copy if any, otherwise
+/// a stream URL according to the current route and quality setting.
 EngineSource buildSource(Ref ref, Track t) {
+  final local = ref.read(downloadsProvider.notifier).pathFor(t.id);
+  if (local != null) return EngineSource(local); // downloaded: no network needed
   final api = ref.read(apiProvider);
   final q = ref.read(streamQualityProvider);
   final query = q.format == null ? '' : '?format=${q.format}&bitrate=${q.bitrate}';

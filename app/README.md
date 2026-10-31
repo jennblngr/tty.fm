@@ -75,7 +75,8 @@ Le test s'appuie sur la bibliothèque de démo générée par `tools/demo-librar
 ```
 lib/
   app_info.dart          nom de l'app (titre de travail, centralisé)
-  core/                  réglages, session/jeton, choix LAN/distant, client HTTP, cache JSON
+  core/                  réglages, session/jeton, choix LAN/distant, client HTTP, cache JSON,
+                         connexion en direct au hub (live.dart)
   data/                  modèles + LibraryRepository (cache d'abord, puis serveur)
   playback/
     playback_controller.dart   état de lecture unique : file, aléatoire, répétition, historique
@@ -83,7 +84,8 @@ lib/
     media_kit_engine.dart      implémentation media_kit/libmpv (gapless, préchargement)
     system_audio.dart          pont audio_service (écran de verrouillage, casque, Now Playing)
     play_reporter.dart         envoi groupé des écoutes, persistant hors ligne
-  state/                 providers Riverpod (lecture et mutations)
+  offline/downloads.dart téléchargements hors ligne (albums, playlists, favoris), synchronisés
+  state/                 providers Riverpod (lecture, mutations, recherche, appareils distants)
   ui/                    écrans et widgets : uniquement de l'affichage
 ```
 
@@ -94,6 +96,10 @@ lib/
 - **Qualité** : original sur le réseau local, Opus 192 kb/s à distance en Wi-Fi, Opus 128 kb/s sur réseau mobile. Ces valeurs se règlent dans Réglages. Changer de réseau en cours de lecture reconstruit les URL et reprend au même endroit.
 - **Historique** : une écoute compte comme passée (skip) si l'utilisateur change de morceau avant la moitié (plafonnée à 4 min). Les écoutes partent par lots ; hors ligne, elles sont conservées et renvoyées plus tard.
 - **File d'attente** : elle est sauvegardée et restaurée (en pause, à la même position) au redémarrage de l'app.
+- **En direct** (`core/live.dart`, `state/remote.dart`) : une WebSocket vers le serveur. L'app publie son état de lecture, exécute les commandes reçues via `PlaybackController` (mêmes méthodes que les boutons) et rafraîchit bibliothèque, playlists et favoris quand un autre appareil ou un scan les modifie. Le bouton « Appareils » liste les autres appareils : les contrôler, ou transférer la lecture (« Écouter ici », « Envoyer vers… »).
+- **Hors ligne** (`offline/downloads.dart`) : ⤓ sur un album, une playlist ou les favoris. Les fichiers vont dans le dossier support de l'app, en Opus 192 kb/s sur téléphone et en original sur ordinateur par défaut (réglable, Wi-Fi uniquement par défaut sur téléphone). La lecture utilise la copie locale si elle existe. Les playlists et favoris téléchargés suivent les modifications faites ailleurs. L'onglet « Hors ligne » fonctionne sans réseau.
+- **Paroles** : bouton dans le lecteur plein écran ; les paroles synchronisées suivent la lecture (toucher une ligne y saute).
+- **Recherche avancée** : filtres genre, période (décennies) et format, avec ou sans texte.
 
 ## État
 
@@ -103,6 +109,9 @@ lib/
 | Lecture, suivant, enchaînement automatique, historique | testé (e2e) | testé (e2e, émulateur) |
 | Contrôles système (Now Playing / notification, écran de verrouillage) | branché, non vérifié à l'œil | branché, non vérifié à l'œil |
 | Boutons du casque Bluetooth | — | branché via audio_service, à vérifier sur le téléphone |
+| Synchro en direct, contrôle à distance, transfert | testé (sonde contre le NAS) | testé (e2e, émulateur) |
+| Téléchargement hors ligne, lecture locale | — | testé (e2e, émulateur) |
+| Paroles, filtres de recherche | — | testé (e2e, émulateur) |
 | Lecture en arrière-plan, écran éteint | n/a | service configuré, à vérifier sur le téléphone |
 
 **Windows (plus tard)** : la lecture media_kit fonctionne telle quelle. Il restera à brancher les touches multimédia et SMTC, par exemple avec `smtc_windows`, sur le même `PlaybackController`.

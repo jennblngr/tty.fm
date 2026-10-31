@@ -7,6 +7,7 @@ import '../../state/playback.dart';
 import '../format.dart';
 import '../widgets/async_view.dart';
 import '../widgets/cover.dart';
+import '../widgets/download_button.dart';
 import '../widgets/track_tile.dart';
 
 /// Playlist detail: play / shuffle, drag to reorder, remove entries.
@@ -43,7 +44,18 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(playlist?.name ?? '')),
+      appBar: AppBar(
+        title: Text(playlist?.name ?? ''),
+        actions: [
+          DownloadButton(
+            kind: 'playlist',
+            id: id,
+            title: playlist?.name ?? '',
+            coverIds: playlist?.coverIds ?? const [],
+            tracks: entries.value == null ? null : [for (final e in entries.value!) e.track],
+          ),
+        ],
+      ),
       body: AsyncView(
         entries,
         onRetry: () => ref.invalidate(playlistTracksProvider(id)),

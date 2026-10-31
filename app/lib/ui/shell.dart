@@ -50,10 +50,18 @@ class _AppShellState extends State<AppShell> {
     final body = IndexedStack(
       index: _index,
       children: [
+        // Inactive tabs keep their state but are offstage (no animations,
+        // hidden from screen readers and from hit testing).
         for (var i = 0; i < _tabs.length; i++)
-          Navigator(
-            key: _keys[i],
-            onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => _tabs[i].root),
+          Offstage(
+            offstage: i != _index,
+            child: TickerMode(
+              enabled: i == _index,
+              child: Navigator(
+                key: _keys[i],
+                onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => _tabs[i].root),
+              ),
+            ),
           ),
       ],
     );

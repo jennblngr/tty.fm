@@ -8,6 +8,7 @@ import '../format.dart';
 import '../nav.dart';
 import '../widgets/async_view.dart';
 import '../widgets/cover.dart';
+import '../widgets/download_button.dart';
 import '../widgets/track_tile.dart';
 
 class AlbumScreen extends ConsumerWidget {
@@ -22,6 +23,14 @@ class AlbumScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         actions: [
+          DownloadButton(
+            kind: 'album',
+            id: id,
+            title: data.value?.$1.title ?? '',
+            subtitle: data.value?.$1.artist ?? '',
+            coverIds: [?data.value?.$1.coverId],
+            tracks: data.value?.$2,
+          ),
           IconButton(
             icon: Icon(fav ? Icons.favorite : Icons.favorite_border),
             onPressed: () => guard(context, () => ref.read(favoritesProvider.notifier).toggle('albums', id)),

@@ -102,7 +102,9 @@ Toutes les routes sauf `health` et `auth/login` exigent `Authorization: Bearer <
 | GET | `/api/v1/albums?sort=name\|added\|year&cursor=&limit=` | |
 | GET | `/api/v1/albums/{id}` | album + morceaux |
 | GET | `/api/v1/tracks?sort=name\|added&cursor=&limit=`, `/tracks/{id}` | |
-| GET | `/api/v1/search?q=&limit=` | préfixes, accents ignorés |
+| GET | `/api/v1/tracks/{id}/lyrics` | `{synced, source, lines: [{ms, text}]}` ; 404 sans paroles |
+| GET | `/api/v1/search?q=&genre=&year_min=&year_max=&format=&limit=` | préfixes, accents ignorés ; filtres seuls possibles |
+| GET | `/api/v1/search/facets` | genres, formats, années disponibles |
 | GET | `/api/v1/covers/{id}?size=64\|300\|800` | cache immuable |
 | GET | `/api/v1/stream/{id}` | original, requêtes Range |
 | GET | `/api/v1/stream/{id}?format=opus\|aac\|mp3&bitrate=128&offset=s` | transcodé (mis en cache, Range au 2ᵉ accès) |
@@ -115,6 +117,21 @@ Toutes les routes sauf `health` et `auth/login` exigent `Authorization: Bearer <
 | GET | `/api/v1/favorites[?full=1]` | identifiants, ou listes complètes |
 | PUT/DELETE | `/api/v1/favorites/{tracks\|albums\|artists}/{id}` | |
 | POST/GET | `/api/v1/admin/scan[?full=1]` | lancer / état |
+| GET | `/api/v1/ws` | WebSocket du hub en direct (voir ci-dessous) |
+
+### Hub en direct (`/api/v1/ws`)
+
+Chaque app garde une WebSocket ouverte (jeton en `Authorization` ou `?token=`). Messages JSON avec un champ `type` :
+
+- **Serveur → app** : `hello` (son `device_id` et les autres appareils en ligne, avec leur état), `presence` (un appareil arrive ou part), `state` (état de lecture d'un autre appareil), `command` (commande reçue d'un autre appareil), `changed` (`library`, `playlists` ou `favorites` : rafraîchir), `error`.
+- **App → serveur** : `state` (son propre état de lecture, opaque pour le serveur), `command` (`target`, `action`, `args`).
+- **Actions** : `play`, `pause`, `toggle`, `next`, `previous`, `seek {ms}`, `volume {value}`, `jump {index}`, `remove {index}`, `move {from, to}`, `shuffle {on}`, `repeat {mode}`, `load {file d'attente…}`, `transfer {to}` (l'appareil source envoie sa file à `to` puis se met en pause).
+
+Le serveur garde en mémoire le dernier état de chaque appareil connecté et relaie ; rien n'est persisté.
+
+### Paroles
+
+Le serveur cherche, dans l'ordre : `morceau.lrc`, puis `morceau.txt` à côté du fichier audio, puis les paroles intégrées aux tags (`LYRICS`, `UNSYNCEDLYRICS`). Les fichiers LRC (`[mm:ss.xx]texte`, plusieurs horodatages par ligne, `[offset:]`) donnent des paroles synchronisées.
 
 ## Développement
 

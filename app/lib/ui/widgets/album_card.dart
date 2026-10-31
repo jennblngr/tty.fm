@@ -54,7 +54,7 @@ class AlbumGrid extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       shrinkWrap: shrinkWrap,
       physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 190, childAspectRatio: 0.76),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 190, childAspectRatio: 0.74),
       itemCount: albums.length,
       itemBuilder: (_, i) => LayoutBuilder(builder: (_, c) => AlbumCard(albums[i], size: c.maxWidth)),
     );

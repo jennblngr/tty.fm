@@ -8,6 +8,7 @@ import '../../core/api_client.dart';
 import '../../data/library_repository.dart';
 import '../../data/models.dart';
 import '../../state/playback.dart';
+import '../../state/search.dart';
 import '../nav.dart';
 import '../widgets/album_card.dart';
 import '../widgets/cover.dart';
@@ -26,6 +27,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Timer? _debounce;
   CancelToken? _cancel;
   SearchResult _result = const SearchResult();
+  SearchFilter _filter = const SearchFilter();
   String? _error;
   bool _loading = false;
 
@@ -36,7 +38,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Future<void> _run(String q) async {
     _cancel?.cancel();
-    if (q.trim().isEmpty) {
+    if (q.trim().isEmpty && !_filter.isActive) {
       setState(() {
         _result = const SearchResult();
         _error = null;
@@ -46,7 +48,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final token = _cancel = CancelToken();
     setState(() => _loading = true);
     try {
-      final r = await ref.read(libraryProvider).search(q, cancel: token);
+      final r = await ref
+          .read(libraryProvider)
+          .search(q, filter: _filter, limit: q.trim().isEmpty ? 300 : 30, cancel: token);
       if (!token.isCancelled && mounted) {
         setState(() {
           _result = r;
@@ -63,6 +67,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         });
       }
     }
+  }
+
+  void _setFilter(SearchFilter f) {
+    setState(() => _filter = f);
+    _run(_ctrl.text);
   }
 
   @override
@@ -98,9 +107,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ),
           ),
         ),
-        bottom: _loading
-            ? const PreferredSize(preferredSize: Size.fromHeight(2), child: LinearProgressIndicator(minHeight: 2))
-            : null,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(50),
+          child: Column(
+            children: [
+              _FilterBar(filter: _filter, onChanged: _setFilter),
+              SizedBox(height: 2, child: _loading ? const LinearProgressIndicator(minHeight: 2) : null),
+            ],
+          ),
+        ),
       ),
       body: _error != null
           ? Center(child: Text(_error!))
@@ -152,4 +167,72 @@ class _Section extends StatelessWidget {
     padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
     child: Text(title, style: Theme.of(context).textTheme.titleSmall),
   );
+}
+
+/// Genre / period / format filter chips.
+class _FilterBar extends ConsumerWidget {
+  const _FilterBar({required this.filter, required this.onChanged});
+  final SearchFilter filter;
+  final ValueChanged<SearchFilter> onChanged;
+
+  static String _decade(int d) => 'Années ${d >= 2000 ? d : d % 100}';
+
+  String _periodLabel(SearchFilter f) {
+    final (lo, hi) = (f.yearMin, f.yearMax);
+    if (lo == null && hi == null) return 'Période';
+    if (lo != null && hi == lo + 9 && lo % 10 == 0) return _decade(lo);
+    return '${lo ?? '…'} – ${hi ?? '…'}';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final facets = ref.watch(searchFacetsProvider).value ?? const SearchFacets();
+    final decades = <int>[
+      if (facets.yearMin != null && facets.yearMax != null)
+        for (var d = facets.yearMin! ~/ 10 * 10; d <= facets.yearMax!; d += 10) d,
+    ];
+
+    // Menu values are callbacks: a null value would count as "cancelled".
+    Widget chip<T>(String label, bool selected, List<(String, T)> options, void Function(T?) pick) => Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: PopupMenuButton<VoidCallback>(
+        tooltip: '',
+        onSelected: (f) => f(),
+        itemBuilder: (_) => [
+          if (selected) PopupMenuItem(value: () => pick(null), child: const Text('Tous')),
+          for (final (text, value) in options) PopupMenuItem(value: () => pick(value), child: Text(text)),
+        ],
+        child: Chip(
+          label: Text(label),
+          avatar: selected ? const Icon(Icons.check, size: 16) : const Icon(Icons.arrow_drop_down, size: 18),
+          side: selected ? BorderSide(color: Theme.of(context).colorScheme.primary) : null,
+        ),
+      ),
+    );
+
+    return SizedBox(
+      height: 48,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        children: [
+          chip<String>(filter.genre ?? 'Genre', filter.genre != null, [
+            for (final g in facets.genres) ('${g.name} (${g.count})', g.name),
+          ], (g) => onChanged(filter.copyWith(genre: () => g))),
+          chip<int>(_periodLabel(filter), filter.yearMin != null || filter.yearMax != null, [
+            for (final d in decades.reversed) (_periodLabel(SearchFilter(yearMin: d, yearMax: d + 9)), d),
+          ], (d) => onChanged(filter.copyWith(yearMin: () => d, yearMax: () => d == null ? null : d + 9))),
+          chip<String>(filter.format?.toUpperCase() ?? 'Format', filter.format != null, [
+            for (final f in facets.formats) ('${f.name.toUpperCase()} (${f.count})', f.name),
+          ], (f) => onChanged(filter.copyWith(format: () => f))),
+          if (filter.isActive)
+            TextButton.icon(
+              icon: const Icon(Icons.clear, size: 18),
+              label: const Text('Effacer'),
+              onPressed: () => onChanged(const SearchFilter()),
+            ),
+        ],
+      ),
+    );
+  }
 }

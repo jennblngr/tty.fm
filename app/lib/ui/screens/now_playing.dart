@@ -9,6 +9,8 @@ import '../format.dart';
 import '../nav.dart';
 import '../widgets/async_view.dart';
 import '../widgets/cover.dart';
+import '../widgets/lyrics_view.dart';
+import 'devices.dart';
 
 /// Full-screen player with the queue (side by side on wide screens).
 class NowPlayingScreen extends ConsumerWidget {
@@ -22,6 +24,7 @@ class NowPlayingScreen extends ConsumerWidget {
         leading: IconButton(icon: const Icon(Icons.keyboard_arrow_down), onPressed: () => Navigator.pop(context)),
         title: const Text('En cours de lecture'),
         actions: [
+          IconButton(icon: const Icon(Icons.devices), tooltip: 'Appareils', onPressed: () => showDevicesSheet(context)),
           if (!wide)
             IconButton(
               icon: const Icon(Icons.queue_music),
@@ -50,6 +53,16 @@ class NowPlayingScreen extends ConsumerWidget {
   }
 }
 
+/// Whether the player shows lyrics in place of the cover (kept while the
+/// app runs, like a view preference).
+class _LyricsShown extends Notifier<bool> {
+  @override
+  bool build() => false;
+  void toggle() => state = !state;
+}
+
+final _lyricsShownProvider = NotifierProvider<_LyricsShown, bool>(_LyricsShown.new);
+
 class _Player extends ConsumerWidget {
   const _Player();
 
@@ -60,6 +73,7 @@ class _Player extends ConsumerWidget {
     final st = ref.watch(playbackStateProvider);
     final c = ref.read(playbackControllerProvider);
     final fav = ref.watch(favoritesProvider.select((f) => f.value?['tracks']?.contains(track.id) ?? false));
+    final showLyrics = ref.watch(_lyricsShownProvider);
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
 
@@ -74,10 +88,13 @@ class _Player extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Hero(
-                    tag: 'now-cover',
-                    child: CoverImage(track.coverId, size: coverSize, radius: 12),
-                  ),
+                  if (showLyrics)
+                    SizedBox(width: coverSize, height: coverSize, child: LyricsView(track))
+                  else
+                    Hero(
+                      tag: 'now-cover',
+                      child: CoverImage(track.coverId, size: coverSize, radius: 12),
+                    ),
                   const SizedBox(height: 24),
                   Row(
                     children: [
@@ -115,6 +132,11 @@ class _Player extends ConsumerWidget {
                       IconButton(
                         icon: const Icon(Icons.playlist_add),
                         onPressed: () => addToPlaylist(context, ref, [track]),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.lyrics_outlined, color: showLyrics ? scheme.primary : null),
+                        tooltip: 'Paroles',
+                        onPressed: () => ref.read(_lyricsShownProvider.notifier).toggle(),
                       ),
                     ],
                   ),

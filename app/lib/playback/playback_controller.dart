@@ -343,6 +343,14 @@ class PlaybackController {
     'context_id': _contextId,
   };
 
+  /// Takes over a queue snapshot ([toJson]) sent by another device: playback
+  /// transfer. The current listening session ends as a user action.
+  Future<void> load(Map<String, dynamic> j, {bool play = true}) async {
+    _finishSession(byUser: true);
+    await restore(j);
+    if (play) await this.play();
+  }
+
   /// Restores a saved queue, paused at the saved position.
   Future<void> restore(Map<String, dynamic> j) async {
     final tracks = [for (final t in j['queue'] as List) Track.fromJson(t as Map<String, dynamic>)];

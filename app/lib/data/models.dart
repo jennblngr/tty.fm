@@ -329,3 +329,85 @@ class PlayRecord {
     contextId: j['context_id'] as int?,
   );
 }
+
+/// Search filters; null fields mean "any".
+class SearchFilter {
+  const SearchFilter({this.genre, this.yearMin, this.yearMax, this.format});
+
+  final String? genre;
+  final int? yearMin;
+  final int? yearMax;
+  final String? format;
+
+  bool get isActive => genre != null || yearMin != null || yearMax != null || format != null;
+
+  SearchFilter copyWith({
+    String? Function()? genre,
+    int? Function()? yearMin,
+    int? Function()? yearMax,
+    String? Function()? format,
+  }) => SearchFilter(
+    genre: genre != null ? genre() : this.genre,
+    yearMin: yearMin != null ? yearMin() : this.yearMin,
+    yearMax: yearMax != null ? yearMax() : this.yearMax,
+    format: format != null ? format() : this.format,
+  );
+
+  Map<String, dynamic> toQuery() => {'genre': ?genre, 'year_min': ?yearMin, 'year_max': ?yearMax, 'format': ?format};
+}
+
+class Facet {
+  const Facet(this.name, this.count);
+  final String name;
+  final int count;
+}
+
+/// Values available for each search filter.
+class SearchFacets {
+  const SearchFacets({this.genres = const [], this.formats = const [], this.yearMin, this.yearMax});
+
+  final List<Facet> genres;
+  final List<Facet> formats;
+  final int? yearMin;
+  final int? yearMax;
+
+  static List<Facet> _facets(dynamic j) => [
+    for (final f in j as List? ?? const []) Facet((f as Map)['name'] as String, f['count'] as int),
+  ];
+
+  factory SearchFacets.fromJson(Map<String, dynamic> j) => SearchFacets(
+    genres: _facets(j['genres']),
+    formats: _facets(j['formats']),
+    yearMin: j['year_min'] as int?,
+    yearMax: j['year_max'] as int?,
+  );
+}
+
+class LyricLine {
+  const LyricLine(this.time, this.text);
+  final Duration time;
+  final String text;
+}
+
+class Lyrics {
+  const Lyrics({required this.synced, required this.lines});
+  final bool synced;
+  final List<LyricLine> lines;
+
+  factory Lyrics.fromJson(Map<String, dynamic> j) => Lyrics(
+    synced: j['synced'] as bool? ?? false,
+    lines: [
+      for (final l in j['lines'] as List? ?? const [])
+        LyricLine(Duration(milliseconds: (l as Map)['ms'] as int? ?? 0), l['text'] as String? ?? ''),
+    ],
+  );
+
+  /// Index of the line being sung at [pos] (-1 before the first one).
+  int lineAt(Duration pos) {
+    var i = -1;
+    for (var k = 0; k < lines.length && lines[k].time <= pos; k++) {
+      i = k;
+    }
+    return i;
+  }
+}

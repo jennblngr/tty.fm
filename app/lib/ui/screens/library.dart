@@ -7,6 +7,8 @@ import '../nav.dart';
 import '../widgets/album_card.dart';
 import '../widgets/async_view.dart';
 import '../widgets/cover.dart';
+import '../widgets/download_button.dart';
+import 'offline.dart';
 import '../widgets/track_tile.dart';
 
 /// Artists / Albums / Tracks / Favourites. Whole lists are loaded once and cached, so
@@ -17,20 +19,23 @@ class LibraryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Bibliothèque'),
           bottom: const TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
             tabs: [
               Tab(text: 'Artistes'),
               Tab(text: 'Albums'),
               Tab(text: 'Titres'),
               Tab(text: 'Favoris'),
+              Tab(text: 'Hors ligne'),
             ],
           ),
         ),
-        body: const TabBarView(children: [_Artists(), _Albums(), _Tracks(), _Favorites()]),
+        body: const TabBarView(children: [_Artists(), _Albums(), _Tracks(), _Favorites(), OfflineList()]),
       ),
     );
   }
@@ -189,6 +194,7 @@ class _Favorites extends ConsumerWidget {
                 SliverToBoxAdapter(child: _Section('Titres (${tracks.length})')),
                 SliverToBoxAdapter(
                   child: ListTile(
+                    trailing: DownloadButton(kind: 'favorites', id: 0, title: 'Titres favoris', tracks: tracks),
                     leading: const Icon(Icons.shuffle),
                     title: const Text('Lire en aléatoire'),
                     onTap: () => c.playTracks(tracks, shuffle: true, contextKind: 'favorites'),

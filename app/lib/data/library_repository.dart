@@ -65,8 +65,41 @@ class LibraryRepository {
 
   /// Search goes straight to the server (FTS answers in milliseconds);
   /// [cancel] aborts the previous keystroke's request.
-  Future<SearchResult> search(String q, {CancelToken? cancel}) async =>
-      SearchResult.fromJson(await _api.get('/search', query: {'q': q, 'limit': 20}, cancel: cancel));
+  /// Text search, optionally narrowed by [filter]. Filter-only searches list
+  /// what matches (up to [limit]).
+  Future<SearchResult> search(
+    String q, {
+    SearchFilter filter = const SearchFilter(),
+    int limit = 20,
+    CancelToken? cancel,
+  }) async => SearchResult.fromJson(
+    await _api.get('/search', query: {'q': q, 'limit': limit, ...filter.toQuery()}, cancel: cancel),
+  );
+
+  Stream<SearchFacets> searchFacets() => _cached(
+    'search:facets',
+    () => _api.get('/search/facets'),
+    (j) => SearchFacets.fromJson(j as Map<String, dynamic>),
+  );
+
+  /// Lyrics of a track, or null when it has none. Cached for offline use.
+  Future<Lyrics?> lyrics(int trackId) async {
+    final key = 'lyrics:$trackId';
+    try {
+      final j = await _api.get('/tracks/$trackId/lyrics');
+      await _cache.write(key, j);
+      return Lyrics.fromJson(j as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        await _cache.write(key, null);
+        return null;
+      }
+      final cached = await _cache.read(key);
+      if (cached is Map<String, dynamic>) return Lyrics.fromJson(cached);
+      if (await _cache.readRaw(key) == 'null') return null; // known to have none
+      rethrow;
+    }
+  }
 
   // --- playlists -----------------------------------------------------------
 
