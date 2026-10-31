@@ -37,8 +37,9 @@ class LibraryRepository {
     return out;
   }
 
-  static List<T> _list<T>(dynamic j, T Function(Map<String, dynamic>) f) =>
-      [for (final e in j as List) f(e as Map<String, dynamic>)];
+  static List<T> _list<T>(dynamic j, T Function(Map<String, dynamic>) f) => [
+    for (final e in j as List) f(e as Map<String, dynamic>),
+  ];
 
   Stream<HomeData> home() =>
       _cached('home', () => _api.get('/home'), (j) => HomeData.fromJson(j as Map<String, dynamic>));
@@ -53,14 +54,14 @@ class LibraryRepository {
       _cached('tracks', () => _all('/tracks', {'sort': 'name'}), (j) => _list(j, Track.fromJson));
 
   Stream<(Artist, List<Album>)> artist(int id) => _cached('artist:$id', () => _api.get('/artists/$id'), (j) {
-        final m = j as Map<String, dynamic>;
-        return (Artist.fromJson(m['artist'] as Map<String, dynamic>), _list(m['albums'], Album.fromJson));
-      });
+    final m = j as Map<String, dynamic>;
+    return (Artist.fromJson(m['artist'] as Map<String, dynamic>), _list(m['albums'], Album.fromJson));
+  });
 
   Stream<(Album, List<Track>)> album(int id) => _cached('album:$id', () => _api.get('/albums/$id'), (j) {
-        final m = j as Map<String, dynamic>;
-        return (Album.fromJson(m['album'] as Map<String, dynamic>), _list(m['tracks'], Track.fromJson));
-      });
+    final m = j as Map<String, dynamic>;
+    return (Album.fromJson(m['album'] as Map<String, dynamic>), _list(m['tracks'], Track.fromJson));
+  });
 
   /// Search goes straight to the server (FTS answers in milliseconds);
   /// [cancel] aborts the previous keystroke's request.
@@ -70,10 +71,16 @@ class LibraryRepository {
   // --- playlists -----------------------------------------------------------
 
   Stream<PlaylistTree> playlistTree() => _cached(
-      'playlists:tree', () => _api.get('/playlists/tree'), (j) => PlaylistTree.fromJson(j as Map<String, dynamic>));
+    'playlists:tree',
+    () => _api.get('/playlists/tree'),
+    (j) => PlaylistTree.fromJson(j as Map<String, dynamic>),
+  );
 
-  Stream<List<PlaylistEntry>> playlistTracks(int id) => _cached('playlist:$id:tracks',
-      () => _api.get('/playlists/$id/tracks'), (j) => _list((j as Map)['items'], PlaylistEntry.fromJson));
+  Stream<List<PlaylistEntry>> playlistTracks(int id) => _cached(
+    'playlist:$id:tracks',
+    () => _api.get('/playlists/$id/tracks'),
+    (j) => _list((j as Map)['items'], PlaylistEntry.fromJson),
+  );
 
   Future<int> createFolder(String name, int? parentId) async =>
       (await _api.post('/folders', {'name': name, 'parent_id': parentId}))['id'] as int;
@@ -103,11 +110,19 @@ class LibraryRepository {
     return {for (final e in j.entries) e.key: (e.value as List).cast<int>().toSet()};
   }
 
+  /// Favourite tracks and albums, most recently added first.
+  Stream<(List<Track>, List<Album>)> favorites() =>
+      _cached('favorites', () => _api.get('/favorites', query: {'full': '1'}), (j) {
+        final m = j as Map<String, dynamic>;
+        return (_list(m['tracks'], Track.fromJson), _list(m['albums'], Album.fromJson));
+      });
+
   Future<void> setFavorite(String kind, int id, bool on) =>
       on ? _api.put('/favorites/$kind/$id') : _api.delete('/favorites/$kind/$id');
 
-  Future<void> reportPlays(List<PlayRecord> plays) =>
-      _api.post('/plays', {'plays': [for (final p in plays) p.toJson()]});
+  Future<void> reportPlays(List<PlayRecord> plays) => _api.post('/plays', {
+    'plays': [for (final p in plays) p.toJson()],
+  });
 
   Future<void> startScan({bool full = false}) => _api.post('/admin/scan${full ? '?full=1' : ''}');
 
@@ -117,4 +132,5 @@ class LibraryRepository {
 }
 
 final libraryProvider = Provider<LibraryRepository>(
-    (ref) => LibraryRepository(ref.watch(apiProvider), ref.watch(jsonCacheProvider)));
+  (ref) => LibraryRepository(ref.watch(apiProvider), ref.watch(jsonCacheProvider)),
+);

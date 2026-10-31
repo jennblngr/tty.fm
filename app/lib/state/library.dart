@@ -20,15 +20,17 @@ final albumsProvider = StreamProvider.family<List<Album>, String>((ref, sort) =>
 
 final tracksProvider = StreamProvider<List<Track>>((ref) => _repo(ref).tracks());
 
-final artistProvider =
-    StreamProvider.autoDispose.family<(Artist, List<Album>), int>((ref, id) => _repo(ref).artist(id));
+final artistProvider = StreamProvider.autoDispose.family<(Artist, List<Album>), int>(
+  (ref, id) => _repo(ref).artist(id),
+);
 
 final albumProvider = StreamProvider.autoDispose.family<(Album, List<Track>), int>((ref, id) => _repo(ref).album(id));
 
 final playlistTreeProvider = StreamProvider<PlaylistTree>((ref) => _repo(ref).playlistTree());
 
-final playlistTracksProvider =
-    StreamProvider.autoDispose.family<List<PlaylistEntry>, int>((ref, id) => _repo(ref).playlistTracks(id));
+final playlistTracksProvider = StreamProvider.autoDispose.family<List<PlaylistEntry>, int>(
+  (ref, id) => _repo(ref).playlistTracks(id),
+);
 
 /// Favourite ids by kind ("tracks", "albums", "artists"), toggled
 /// optimistically.
@@ -41,7 +43,9 @@ class FavoritesNotifier extends AsyncNotifier<Map<String, Set<int>>> {
   Future<void> toggle(String kind, int id) async {
     final cur = state.value ?? {};
     final on = !(cur[kind]?.contains(id) ?? false);
-    final next = {for (final e in cur.entries) e.key: {...e.value}};
+    final next = {
+      for (final e in cur.entries) e.key: {...e.value},
+    };
     final set = next.putIfAbsent(kind, () => <int>{});
     on ? set.add(id) : set.remove(id);
     state = AsyncData(next);
@@ -128,3 +132,9 @@ class PlaylistActions {
 }
 
 final playlistActionsProvider = Provider<PlaylistActions>(PlaylistActions.new);
+
+/// Full favourite lists, refetched whenever a favourite is toggled.
+final favoriteListsProvider = StreamProvider.autoDispose<(List<Track>, List<Album>)>((ref) {
+  ref.watch(favoritesProvider);
+  return _repo(ref).favorites();
+});

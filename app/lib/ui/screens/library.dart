@@ -9,7 +9,7 @@ import '../widgets/async_view.dart';
 import '../widgets/cover.dart';
 import '../widgets/track_tile.dart';
 
-/// Artists / Albums / Tracks. Whole lists are loaded once and cached, so
+/// Artists / Albums / Tracks / Favourites. Whole lists are loaded once and cached, so
 /// scrolling and the local filter are instant.
 class LibraryScreen extends StatelessWidget {
   const LibraryScreen({super.key});
@@ -17,13 +17,20 @@ class LibraryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Bibliothèque'),
-          bottom: const TabBar(tabs: [Tab(text: 'Artistes'), Tab(text: 'Albums'), Tab(text: 'Titres')]),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Artistes'),
+              Tab(text: 'Albums'),
+              Tab(text: 'Titres'),
+              Tab(text: 'Favoris'),
+            ],
+          ),
         ),
-        body: const TabBarView(children: [_Artists(), _Albums(), _Tracks()]),
+        body: const TabBarView(children: [_Artists(), _Albums(), _Tracks(), _Favorites()]),
       ),
     );
   }
@@ -35,24 +42,28 @@ class _Artists extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final artists = ref.watch(artistsProvider);
-    return AsyncView(artists, onRetry: () => ref.invalidate(artistsProvider), builder: (list) {
-      return RefreshIndicator(
-        onRefresh: () => ref.refresh(artistsProvider.future),
-        child: ListView.builder(
-          itemExtent: 64,
-          itemCount: list.length,
-          itemBuilder: (_, i) {
-            final a = list[i];
-            return ListTile(
-              leading: CoverImage(a.coverId, size: 44, radius: 22, icon: Icons.person),
-              title: Text(a.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-              subtitle: Text('${a.albumCount} album${a.albumCount > 1 ? 's' : ''}'),
-              onTap: () => openArtist(context, a.id),
-            );
-          },
-        ),
-      );
-    });
+    return AsyncView(
+      artists,
+      onRetry: () => ref.invalidate(artistsProvider),
+      builder: (list) {
+        return RefreshIndicator(
+          onRefresh: () => ref.refresh(artistsProvider.future),
+          child: ListView.builder(
+            itemExtent: 64,
+            itemCount: list.length,
+            itemBuilder: (_, i) {
+              final a = list[i];
+              return ListTile(
+                leading: CoverImage(a.coverId, size: 44, radius: 22, icon: Icons.person),
+                title: Text(a.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: Text('${a.albumCount} album${a.albumCount > 1 ? 's' : ''}'),
+                onTap: () => openArtist(context, a.id),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -69,25 +80,34 @@ class _AlbumsState extends ConsumerState<_Albums> {
   @override
   Widget build(BuildContext context) {
     final albums = ref.watch(albumsProvider(_sort));
-    return Column(children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-        child: SegmentedButton<String>(
-          segments: const [
-            ButtonSegment(value: 'added', label: Text('Récents')),
-            ButtonSegment(value: 'name', label: Text('A-Z')),
-            ButtonSegment(value: 'year', label: Text('Année')),
-          ],
-          selected: {_sort},
-          onSelectionChanged: (s) => setState(() => _sort = s.first),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          child: SegmentedButton<String>(
+            segments: const [
+              ButtonSegment(value: 'added', label: Text('Récents')),
+              ButtonSegment(value: 'name', label: Text('A-Z')),
+              ButtonSegment(value: 'year', label: Text('Année')),
+            ],
+            selected: {_sort},
+            onSelectionChanged: (s) => setState(() => _sort = s.first),
+          ),
         ),
-      ),
-      Expanded(
-        child: AsyncView(albums, onRetry: () => ref.invalidate(albumsProvider(_sort)), builder: (list) {
-          return RefreshIndicator(onRefresh: () => ref.refresh(albumsProvider(_sort).future), child: AlbumGrid(list));
-        }),
-      ),
-    ]);
+        Expanded(
+          child: AsyncView(
+            albums,
+            onRetry: () => ref.invalidate(albumsProvider(_sort)),
+            builder: (list) {
+              return RefreshIndicator(
+                onRefresh: () => ref.refresh(albumsProvider(_sort).future),
+                child: AlbumGrid(list),
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -97,26 +117,107 @@ class _Tracks extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tracks = ref.watch(tracksProvider);
-    return AsyncView(tracks, onRetry: () => ref.invalidate(tracksProvider), builder: (list) {
-      return Column(children: [
-        ListTile(
-          leading: const Icon(Icons.shuffle),
-          title: Text('Tout en aléatoire (${list.length})'),
-          onTap: () => ref.read(playbackControllerProvider).playTracks(list, shuffle: true, contextKind: 'library'),
-        ),
-        const Divider(height: 1),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () => ref.refresh(tracksProvider.future),
-            child: ListView.builder(
-              itemExtent: 60,
-              itemCount: list.length,
-              itemBuilder: (_, i) => TrackTile(list[i],
-                  onTap: () => ref.read(playbackControllerProvider).playTracks(list, index: i, contextKind: 'library')),
+    return AsyncView(
+      tracks,
+      onRetry: () => ref.invalidate(tracksProvider),
+      builder: (list) {
+        return Column(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.shuffle),
+              title: Text('Tout en aléatoire (${list.length})'),
+              onTap: () => ref.read(playbackControllerProvider).playTracks(list, shuffle: true, contextKind: 'library'),
             ),
-          ),
-        ),
-      ]);
-    });
+            const Divider(height: 1),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () => ref.refresh(tracksProvider.future),
+                child: ListView.builder(
+                  itemExtent: 60,
+                  itemCount: list.length,
+                  itemBuilder: (_, i) => TrackTile(
+                    list[i],
+                    onTap: () =>
+                        ref.read(playbackControllerProvider).playTracks(list, index: i, contextKind: 'library'),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
+}
+
+class _Favorites extends ConsumerWidget {
+  const _Favorites();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final favs = ref.watch(favoriteListsProvider);
+    return AsyncView(
+      favs,
+      onRetry: () => ref.invalidate(favoriteListsProvider),
+      builder: (data) {
+        final (tracks, albums) = data;
+        if (tracks.isEmpty && albums.isEmpty) {
+          return const Center(
+            child: Text('Aucun favori.\nUtilisez ♡ sur un titre ou un album.', textAlign: TextAlign.center),
+          );
+        }
+        final c = ref.read(playbackControllerProvider);
+        return RefreshIndicator(
+          onRefresh: () => ref.refresh(favoriteListsProvider.future),
+          child: CustomScrollView(
+            slivers: [
+              if (albums.isNotEmpty) ...[
+                const SliverToBoxAdapter(child: _Section('Albums')),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 210,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      itemCount: albums.length,
+                      itemBuilder: (_, i) => AlbumCard(albums[i], size: 160),
+                    ),
+                  ),
+                ),
+              ],
+              if (tracks.isNotEmpty) ...[
+                SliverToBoxAdapter(child: _Section('Titres (${tracks.length})')),
+                SliverToBoxAdapter(
+                  child: ListTile(
+                    leading: const Icon(Icons.shuffle),
+                    title: const Text('Lire en aléatoire'),
+                    onTap: () => c.playTracks(tracks, shuffle: true, contextKind: 'favorites'),
+                  ),
+                ),
+                SliverList.builder(
+                  itemCount: tracks.length,
+                  itemBuilder: (_, i) => TrackTile(
+                    tracks[i],
+                    onTap: () => c.playTracks(tracks, index: i, contextKind: 'favorites'),
+                  ),
+                ),
+              ],
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Section extends StatelessWidget {
+  const _Section(this.title);
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+    child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+  );
 }
