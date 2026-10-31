@@ -5,6 +5,9 @@ services:
       context: ./server
       args:
         VERSION: ${VERSION:-dev}
+    # The NAS is x86_64; pinning the platform also makes builds on Apple
+    # Silicon produce the right image.
+    platform: linux/amd64
     image: ${APP_NAME:-selfstream}:latest
     container_name: ${APP_NAME:-selfstream}
     restart: unless-stopped
@@ -16,6 +19,7 @@ services:
       SELFSTREAM_ADMIN_USER: ${ADMIN_USER:-admin}
       SELFSTREAM_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
       SELFSTREAM_WATCH: ${WATCH:-true}
+      SELFSTREAM_WATCH_DEBOUNCE: ${WATCH_DEBOUNCE:-10s}
       SELFSTREAM_SCAN_INTERVAL: ${SCAN_INTERVAL:-1h}
       SELFSTREAM_TRANSCODE_CACHE_MB: ${TRANSCODE_CACHE_MB:-2048}
       SELFSTREAM_LOG_LEVEL: ${LOG_LEVEL:-info}

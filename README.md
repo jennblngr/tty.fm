@@ -48,6 +48,16 @@ Prérequis : Docker activé dans UGOS Pro, accès SSH activé (Panneau de config
 
 **Mise à jour** : recopier le dépôt, puis `sudo docker compose up -d --build`.
 
+**Variante sans build sur le NAS** : construire l'image sur le Mac (Apple Silicon, émulation x86_64 via Colima + Rosetta, environ 3 min), puis l'envoyer au NAS :
+```bash
+colima start --vm-type vz --vz-rosetta --cpu 4 --memory 4   # une fois par session
+docker buildx build --platform linux/amd64 --load -t selfstream:latest server/
+docker save selfstream:latest | gzip | ssh admin@nas 'gunzip | sudo docker load'
+ssh admin@nas 'cd /volume1/docker/selfstream-src && sudo docker compose up -d'
+```
+
+**Tester localement avec Docker** : créer un `.env` de test (chemins sous `$HOME`, que Colima partage avec la VM), puis lancer `docker compose --env-file <fichier> up -d`. Sur Mac, fsnotify ne voit pas les fichiers ajoutés depuis macOS (limite du partage virtiofs) : le scan périodique ou `POST /api/v1/admin/scan` prend le relais. Sur le NAS, la surveillance fonctionne normalement.
+
 **Sauvegarde** : le dossier `DATA_DIR` suffit (la base `selfstream.db`, plus les caches, qui sont régénérables).
 
 ### Configuration (variables d'environnement)
