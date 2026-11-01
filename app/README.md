@@ -30,7 +30,68 @@ Depuis un émulateur Android, le Mac s'appelle `10.0.2.2`.
 
 ## Builds
 
-### macOS
+### Releases automatiques (GitHub Actions)
+
+Le workflow `.github/workflows/release.yml` construit l'APK Android et l'app macOS pour chaque tag `v*`, puis publie une Release GitHub avec :
+- `ttyfm-<version>-arm64-v8a.apk` (et les APK `armeabi-v7a` et `x86_64`) ;
+- `ttyfm-<version>-macos.zip`.
+
+Publier une version :
+
+```bash
+# 1. mettre à jour `version:` dans app/pubspec.yaml (ex. 1.0.1+10001), committer, pousser
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+Le workflow échoue si `version:` dans `pubspec.yaml` ne correspond pas au tag. Le numéro de build (le `versionCode` Android) est calculé à partir du tag : `1.2.3` donne `10203`. Il augmente donc à chaque version, sinon Android refuserait la mise à jour.
+
+### Android : clé de signature (à faire une fois)
+
+Les APK de la Release sont signés avec une clé dédiée, pas avec la clé de debug du Mac. Android refuse d'installer une mise à jour signée avec une autre clé.
+
+1. Utiliser une clé existante, par exemple celle de Habits (`~/secrets/habits-release.jks`, alias `habits`). Plusieurs apps peuvent partager la même clé. Ou en générer une nouvelle (hors du dépôt), qui ne demande que le mot de passe :
+   ```bash
+   keytool -genkeypair -v -keystore ~/secrets/ttyfm-release.jks -alias ttyfm -keyalg RSA -keysize 4096 -validity 36500 -dname "CN=tty.fm"
+   ```
+   **En garder une copie de sauvegarde** (gestionnaire de mots de passe, par exemple) : sans ce fichier, on ne peut plus publier de mise à jour installable par-dessus.
+2. Ajouter les secrets du dépôt (GitHub → Settings → Secrets and variables → Actions), avec les mêmes noms que dans Habits :
+   - `KEYSTORE_BASE64` : le résultat de `base64 -i ~/secrets/<clé>.jks | pbcopy` ;
+   - `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
+
+   Les secrets sont propres à chaque dépôt et ne peuvent pas être relus : il faut les recréer ici à partir du gestionnaire de mots de passe.
+3. Pour signer aussi les builds faits sur le Mac avec cette clé, créer `android/key.properties` (ignoré par git) :
+   ```properties
+   storeFile=/Users/<moi>/secrets/<clé>.jks
+   storePassword=...
+   keyAlias=<alias>
+   keyPassword=...
+   ```
+   Sans ce fichier, `flutter build apk --release` signe avec la clé de debug, comme avant.
+4. Sur le téléphone, **désinstaller une fois** l'app signée avec la clé de debug, puis installer l'APK de la Release. Il faudra se reconnecter, et les téléchargements hors ligne seront perdus.
+
+### Android : mises à jour avec Obtainium
+
+[Obtainium](https://github.com/ImranR98/Obtainium) installe les APK des Releases GitHub et prévient des nouvelles versions.
+
+1. Si le dépôt est privé : créer un jeton GitHub *fine-grained* en lecture seule, limité à ce dépôt (permission *Contents: Read-only*), puis le renseigner dans Obtainium → Réglages → GitHub (*Personal Access Token*).
+2. Obtainium → Ajouter une app → `https://github.com/jennblngr/tty.fm`.
+3. Dans les options de l'app, filtre des APK (*Filter APKs by regular expression*) : `arm64-v8a`.
+4. Installer. Obtainium vérifie ensuite les nouvelles Releases tout seul.
+
+### macOS : mise à jour avec `tools/update-mac.sh`
+
+```bash
+tools/update-mac.sh
+```
+
+Le script récupère la dernière Release, quitte l'app si elle tourne, remplace `/Applications/tty.fm.app`, retire la quarantaine (l'app n'est ni signée ni notarisée par Apple) et affiche la version installée. Il ne fait rien si la version installée est déjà la dernière.
+
+Il utilise `gh` s'il est installé et connecté (`gh auth login`). Sinon, il passe par l'API GitHub avec curl ; si le dépôt est privé, lui donner un jeton en lecture seule : `GITHUB_TOKEN=... tools/update-mac.sh`.
+
+### Builds à la main
+
+#### macOS
 
 ```bash
 flutter build macos --release
@@ -39,7 +100,7 @@ cp -R build/macos/Build/Products/Release/tty.fm.app /Applications/
 
 L'app est signée « ad hoc » : elle tourne sur le Mac qui l'a construite. Pour un autre Mac : clic droit → Ouvrir la première fois, ou signature avec un compte développeur Apple.
 
-### Android
+#### Android
 
 ```bash
 flutter build apk --release --split-per-abi
@@ -47,7 +108,7 @@ flutter build apk --release --split-per-abi
 adb install -r build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
 ```
 
-On peut aussi copier l'APK sur le téléphone et l'ouvrir, en autorisant l'installation depuis cette source. L'APK est signé avec la clé de debug : suffisant pour un usage personnel. Une clé dédiée (`key.properties`) ne sera utile que pour une distribution.
+On peut aussi copier l'APK sur le téléphone et l'ouvrir, en autorisant l'installation depuis cette source. L'APK est signé avec la clé de `android/key.properties` si le fichier existe, sinon avec la clé de debug. Une fois l'app de la Release installée, un APK signé avec la clé de debug ne s'installe plus par-dessus.
 
 ## Tests
 
