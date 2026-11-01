@@ -37,7 +37,7 @@ class SettingsScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('réglages')),
       body: ListView(
         children: [
-          const _Header('Serveur'),
+          _Header('Serveur', action: 'éditer', onAction: () => _editAddresses(context)),
           ListTile(
             leading: Icon(route.link == LinkType.local ? Icons.home_outlined : Icons.public),
             title: Text(route.baseUrl),
@@ -58,15 +58,11 @@ class SettingsScreen extends ConsumerWidget {
             dense: true,
             title: const Text('Adresse distante'),
             subtitle: Text(s.remoteUrl),
-            trailing: const Icon(Icons.edit_outlined, size: 18),
-            onTap: () => _editAddresses(context),
           ),
           ListTile(
             dense: true,
             title: const Text('Adresse locale'),
             subtitle: Text(s.lanUrl.isEmpty ? 'Aucune' : s.lanUrl),
-            trailing: const Icon(Icons.edit_outlined, size: 18),
-            onTap: () => _editAddresses(context),
           ),
           ListTile(
             leading: const Icon(Icons.sync),
@@ -276,23 +272,42 @@ class _AddressDialogState extends ConsumerState<_AddressDialog> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header(this.title);
+  const _Header(this.title, {this.action, this.onAction});
   final String title;
 
+  /// Optional action shown as `[action]` at the end of the line.
+  final String? action;
+  final VoidCallback? onAction;
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-    child: Text.rich(
-      TextSpan(
-        children: [
-          TextSpan(
-            text: '\$ ',
-            style: TextStyle(color: Theme.of(context).colorScheme.primary),
-          ),
-          TextSpan(text: title.toLowerCase()),
-        ],
-      ),
-      style: const TextStyle(fontWeight: FontWeight.w700),
+  Widget build(BuildContext context) {
+    final header = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+      child: _title(context),
+    );
+    if (action == null) return header;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(child: header),
+        Padding(
+          padding: const EdgeInsets.only(right: 4),
+          child: TextButton(onPressed: onAction, child: Text('[$action]')),
+        ),
+      ],
+    );
+  }
+
+  Widget _title(BuildContext context) => Text.rich(
+    TextSpan(
+      children: [
+        TextSpan(
+          text: '\$ ',
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+        ),
+        TextSpan(text: title.toLowerCase()),
+      ],
     ),
+    style: const TextStyle(fontWeight: FontWeight.w700),
   );
 }
