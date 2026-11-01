@@ -15,10 +15,12 @@ import 'state/playback.dart';
 import 'offline/downloads.dart';
 import 'state/remote.dart';
 import 'ui/app.dart';
+import 'ui/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
+  registerThemeLicenses();
 
   final prefs = await SharedPreferences.getInstance();
   final cache = await JsonCache.open();
