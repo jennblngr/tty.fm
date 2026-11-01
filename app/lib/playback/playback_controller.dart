@@ -259,10 +259,20 @@ class PlaybackController {
       _completed = false;
       return jumpTo(0);
     }
+    _pauseRequested = false;
     await _engine.play();
   }
 
-  Future<void> pause() => _engine.pause();
+  Future<void> pause() {
+    _pauseRequested = true;
+    return _engine.pause();
+  }
+
+  /// True after an explicit [pause] or [clear], until playback is asked to
+  /// start again. Lets the system integration tell a deliberate pause from
+  /// a transient one (source reopened, track change, buffering).
+  bool get pauseRequested => _pauseRequested;
+  var _pauseRequested = false;
 
   Future<void> togglePlay() => _playing ? pause() : play();
 
@@ -306,6 +316,7 @@ class PlaybackController {
   }
 
   Future<void> clear() async {
+    _pauseRequested = true;
     _finishSession(byUser: true);
     _queue = [];
     _original = [];
@@ -327,6 +338,7 @@ class PlaybackController {
   /// Opens the engine playlist, ignoring the index events it emits while
   /// loading (they reflect our own state, not a track change).
   Future<void> _open({required int index, Duration start = Duration.zero, bool play = true}) async {
+    if (play) _pauseRequested = false;
     _opening++;
     try {
       await _engine.open(_sources(), index: index, start: start, play: play);

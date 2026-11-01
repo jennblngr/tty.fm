@@ -23,6 +23,24 @@ class SystemAudioHandler extends svc.BaseAudioHandler with svc.SeekHandler {
   int? _lastTrackId;
   int _lastQueueLength = -1;
 
+  /// Playing state as last reported to the OS.
+  bool _reportedPlaying = false;
+
+  /// Running while a drop of `playing` that nobody asked for is held back.
+  Timer? _graceTimer;
+
+  /// How long a pause nobody asked for (source reopened after a network
+  /// change, track transition, rebuffering) is reported as still playing.
+  ///
+  /// On Android, reporting `playing: false` makes audio_service leave the
+  /// foreground (`androidStopForegroundOnPause`). With another app in front,
+  /// the process is then cached and frozen within seconds: the sound stops,
+  /// and resumes where it was when the app is brought back. Android 12+ also
+  /// refuses to re-enter the foreground from the background, so playing
+  /// again does not help. A locked screen is not affected: the app is still
+  /// the top activity and is never frozen.
+  static const transientPauseGrace = Duration(seconds: 10);
+
   svc.MediaItem _item(Track t) => svc.MediaItem(
     id: '${t.id}',
     title: t.title,
@@ -32,7 +50,27 @@ class SystemAudioHandler extends svc.BaseAudioHandler with svc.SeekHandler {
     artUri: _artUri(t),
   );
 
+  /// Whether to report the session as playing to the OS.
+  bool _playingForSystem(PlaybackState s) {
+    if (s.playing || s.current == null || _c.pauseRequested) {
+      _graceTimer?.cancel();
+      _graceTimer = null;
+      return s.playing;
+    }
+    if (!_reportedPlaying) return false;
+    // Unrequested stop while playing: hold the foreground for a while, then
+    // report the pause if playback did not come back by itself.
+    _graceTimer ??= Timer(transientPauseGrace, () {
+      _graceTimer = null;
+      _reportedPlaying = false;
+      _publish(_c.state);
+    });
+    return _graceTimer != null;
+  }
+
   void _publish(PlaybackState s) {
+    final playing = _playingForSystem(s);
+    _reportedPlaying = playing;
     final cur = s.current;
     if (cur?.id != _lastTrackId) {
       _lastTrackId = cur?.id;
@@ -46,7 +84,7 @@ class SystemAudioHandler extends svc.BaseAudioHandler with svc.SeekHandler {
       svc.PlaybackState(
         controls: [
           svc.MediaControl.skipToPrevious,
-          s.playing ? svc.MediaControl.pause : svc.MediaControl.play,
+          playing ? svc.MediaControl.pause : svc.MediaControl.play,
           svc.MediaControl.skipToNext,
         ],
         systemActions: const {svc.MediaAction.seek, svc.MediaAction.seekForward, svc.MediaAction.seekBackward},
@@ -56,7 +94,7 @@ class SystemAudioHandler extends svc.BaseAudioHandler with svc.SeekHandler {
             : s.buffering
             ? svc.AudioProcessingState.buffering
             : svc.AudioProcessingState.ready,
-        playing: s.playing,
+        playing: playing,
         updatePosition: _c.position,
         queueIndex: s.index < 0 ? null : s.index,
         shuffleMode: s.shuffle ? svc.AudioServiceShuffleMode.all : svc.AudioServiceShuffleMode.none,
