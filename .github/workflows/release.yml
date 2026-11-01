@@ -1,0 +1,135 @@
+# Builds the Android APK and the macOS app for a version tag (v1.2.3) and
+# publishes them as a GitHub Release. Obtainium (Android) and
+# tools/update-mac.sh (macOS) install updates from that Release.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.v.outputs.name }}
+      number: ${{ steps.v.outputs.number }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        name: Derive version from tag and check pubspec.yaml
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          if ! [[ "$tag" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME must look like v1.2.3"; exit 1
+          fi
+          # Monotonic build number (Android versionCode): 1.2.3 -> 10203.
+          number=$(( BASH_REMATCH[1] * 10000 + BASH_REMATCH[2] * 100 + BASH_REMATCH[3] ))
+          pubspec=$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' app/pubspec.yaml)
+          if [ "$pubspec" != "$tag" ]; then
+            echo "::error::app/pubspec.yaml has version $pubspec, tag is $GITHUB_REF_NAME"; exit 1
+          fi
+          echo "name=$tag" >> "$GITHUB_OUTPUT"
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+  android:
+    needs: version
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::Secret ANDROID_KEYSTORE_BASE64 is missing (see app/README.md)"; exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.jks
+          cat > android/key.properties <<PROPS
+          storeFile=release.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          PROPS
+      - run: flutter pub get
+      - run: >
+          flutter build apk --release --split-per-abi
+          --build-name=${{ needs.version.outputs.name }}
+          --build-number=${{ needs.version.outputs.number }}
+      - name: Rename APKs
+        run: |
+          mkdir -p ../dist
+          for f in build/app/outputs/flutter-apk/app-*-release.apk; do
+            abi=$(basename "$f" | sed 's/^app-\(.*\)-release\.apk$/\1/')
+            cp "$f" "../dist/ttyfm-${{ needs.version.outputs.name }}-$abi.apk"
+          done
+          ls -l ../dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: dist/*.apk
+          if-no-files-found: error
+
+  macos:
+    needs: version
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: >
+          flutter build macos --release
+          --build-name=${{ needs.version.outputs.name }}
+          --build-number=${{ needs.version.outputs.number }}
+      - name: Zip the app
+        run: |
+          mkdir -p ../dist
+          ditto -c -k --keepParent build/macos/Build/Products/Release/tty.fm.app \
+            "../dist/ttyfm-${{ needs.version.outputs.name }}-macos.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/*.zip
+          if-no-files-found: error
+
+  release:
+    needs: [version, android, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -l dist
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "tty.fm ${{ needs.version.outputs.name }}" \
+            --generate-notes
