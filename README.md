@@ -2,7 +2,7 @@
 
 Lecteur de musique auto-hébergé : un serveur Go + SQLite tourne sur le NAS, le client Flutter natif tourne sur macOS et Android (Windows et iOS plus tard).
 
-> Le nom affiché est *tty.fm* (`app.Title` dans `server/internal/app/app.go`, `appDisplayName` dans `app/lib/app_info.dart`). L’identifiant technique est `ttyfm` : module Go, binaire, image Docker, préfixe `TTYFM_` des variables, base `ttyfm.db`. Les identifiants de bundle sont `fm.tty.app`. Au démarrage, le serveur renomme une ancienne base `selfstream.db` en `ttyfm.db`.
+> Le nom affiché est *tty.fm* (`app.Title` dans `server/internal/app/app.go`, `appDisplayName` dans `app/lib/app_info.dart`). L’identifiant technique est `ttyfm` : module Go, binaire, image Docker, préfixe `TTYFM_` des variables, base `ttyfm.db`. Les identifiants de bundle sont `fm.tty.app`.
 
 ```
 server/       API REST + streaming (Go, SQLite WAL + FTS5, ffmpeg)

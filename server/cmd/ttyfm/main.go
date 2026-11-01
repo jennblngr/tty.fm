@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strings"
 	"sync"
 	"syscall"
@@ -53,11 +52,6 @@ func run() error {
 
 	if err := os.MkdirAll(cfg.DataDir, 0o755); err != nil {
 		return err
-	}
-	if moved, err := cfg.MigrateLegacyDB(); err != nil {
-		return err
-	} else if moved {
-		log.Info("renamed legacy database", "from", app.LegacyName+".db", "to", filepath.Base(cfg.DBPath()))
 	}
 	db, err := store.Open(cfg.DBPath())
 	if err != nil {
