@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Vignettes de playlist — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#181825}
+a{color:#A6E3A1;text-decoration:none}a:hover{color:#C8F0C4}
+</style>
+</helmet>
+<div style="width: 1400px; height: 1820px; box-sizing: border-box; padding: 64px; background: #181825; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; gap: 48px">
+
+  <header style="display: flex; flex-direction: column; gap: 8px; max-width: 900px">
+    <h1 style="margin: 0; font-size: 26px; font-weight: 700"><span style="color: #A6E3A1">$</span> playlist <span style="color: #9091AB">--vignette</span></h1>
+    <p style="margin: 0; color: #9091AB">// comment la vignette d'une playlist est construite à partir des pochettes de ses titres. s'applique partout où une playlist apparaît : biblio, écouté récemment, recherche, barre latérale.</p>
+  </header>
+
+  <section style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px">
+    <sc-for list="{{cases}}" as="c" hint-placeholder-count="4">
+      <article style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 700; color: {{c.color}}">{{c.title}}</h2>
+          <span style="color: #9091AB">{{c.rule}}</span>
+        </div>
+        <div style="height: 180px; display: flex; align-items: center; justify-content: center; background: #1E1E2E; border-radius: 6px">
+          <sc-if value="{{c.isMosaic}}" hint-placeholder-val="{{ true }}">
+            <span style="width: 140px; height: 140px; border-radius: 6px; overflow: hidden; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr))">
+              <sc-for list="{{c.imgs}}" as="u" hint-placeholder-count="4"><img src="{{u}}" alt="" width="70" height="70" style="width: 100%; height: 100%; object-fit: cover; display: block"></sc-for>
+            </span>
+          </sc-if>
+          <sc-if value="{{c.isSingle}}" hint-placeholder-val="{{ false }}">
+            <img src="{{c.single}}" alt="" width="140" height="140" style="width: 140px; height: 140px; border-radius: 6px; object-fit: cover">
+          </sc-if>
+          <sc-if value="{{c.isEmpty}}" hint-placeholder-val="{{ false }}">
+            <span style="width: 140px; height: 140px; border-radius: 6px; border: 2px dashed #45475A; color: #9091AB; font-size: 30px; display: flex; align-items: center; justify-content: center; box-sizing: border-box">≡</span>
+          </sc-if>
+          <sc-if value="{{c.isCustom}}" hint-placeholder-val="{{ false }}">
+            <span style="position: relative; width: 140px; height: 140px; display: block">
+              <img src="{{c.single}}" alt="" width="140" height="140" style="width: 140px; height: 140px; border-radius: 6px; object-fit: cover; display: block">
+              <span style="position: absolute; right: 6px; bottom: 6px; background: #1E1E2E; color: #CBA6F7; border-radius: 4px; padding: 0 8px; font-size: 11px">✎ perso</span>
+            </span>
+          </sc-if>
+        </div>
+        <p style="margin: 0">{{c.text}}</p>
+        <p style="margin: 0; color: #9091AB">{{c.example}}</p>
+      </article>
+    </sc-for>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-size: 15px; font-weight: 700"><span style="color: #FAB387">∿</span> tailles utilisées</h2>
+    <div style="display: flex; align-items: flex-end; gap: 48px; flex-wrap: wrap">
+      <sc-for list="{{sizes}}" as="s" hint-placeholder-count="5">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+          <span style="width: {{s.px}}; height: {{s.px}}; border-radius: {{s.r}}; overflow: hidden; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr))">
+            <img src="../covers/basse-ville.svg" alt="" width="52" height="52" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/maree-basse.svg" alt="" width="52" height="52" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/halo.svg" alt="" width="52" height="52" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/cassette-92.svg" alt="" width="52" height="52" style="width: 100%; height: 100%; object-fit: cover; display: block">
+          </span>
+          <span style="color: #F9E2AF">{{s.label}}</span>
+          <span style="color: #9091AB; font-size: 12px">{{s.where}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+    <section style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0 0 8px; font-size: 15px; font-weight: 700"><span style="color: #CBA6F7">≡</span> règles de choix des pochettes</h2>
+      <div><span style="color: #CBA6F7">00</span> une pochette <span style="color: #CBA6F7">perso</span> passe avant tout le reste. elle reste en place si la playlist change ; seul [revenir à l'auto] la retire.</div>
+      <div><span style="color: #9091AB">01</span> sinon, on prend les albums <span style="color: #A6E3A1">distincts</span>, dans l'ordre de la playlist.</div>
+      <div><span style="color: #9091AB">02</span> ≥ 4 albums distincts → mosaïque des 4 premiers.</div>
+      <div><span style="color: #9091AB">03</span> 1 à 3 albums distincts → pochette du 1er titre, même si la playlist a 4 titres ou plus.</div>
+      <div><span style="color: #9091AB">04</span> 0 titre → cadre en pointillés avec ≡.</div>
+      <div><span style="color: #9091AB">05</span> la vignette se recalcule quand l'un des 4 premiers albums change (ajout, retrait, réordonnancement).</div>
+      <div><span style="color: #9091AB">06</span> titre sans pochette → carré de la couleur d'accent avec ses initiales.</div>
+    </section>
+    <section style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0 0 8px; font-size: 15px; font-weight: 700"><span style="color: #94E2D5">▤</span> exceptions &amp; implémentation</h2>
+      <div><span style="color: #F38BA8">♥ titres likés</span> garde son icône, pas de mosaïque.</div>
+      <div><span style="color: #89B4FA">mix du jour / radar</span> gardent leur visuel en barres : ce sont des mix générés, pas des playlists de l'utilisateur.</div>
+      <div style="margin-top: 8px; color: #9091AB">// interface (à ajouter)</div>
+      <div>menu <span style="color: #9091AB">[···]</span> de la playlist › <span style="color: #CBA6F7">$ changer la pochette</span></div>
+      <div style="padding-left: 16px"><span style="color: #A6E3A1">[importer une image]</span> · <span style="color: #A6E3A1">[choisir une pochette de la playlist]</span> · <span style="color: #9091AB">[revenir à l'auto]</span></div>
+      <div style="color: #9091AB; padding-left: 16px">// recadrage carré centré à l'import, ajustable avant de valider</div>
+      <div style="margin-top: 8px; color: #9091AB">// css</div>
+      <div style="background: #1E1E2E; border-radius: 6px; padding: 12px; color: #F9E2AF; white-space: pre-line">.vignette { display: grid; grid-template: repeat(2, 1fr) / repeat(2, 1fr);
+  overflow: hidden; border-radius: 4px; }
+.vignette img { width: 100%; height: 100%; object-fit: cover; }
+/* pas d'espace entre les 4 pochettes */</div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1400,"height":1820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const BV = '../covers/basse-ville.svg';
+    const HA = '../covers/halo.svg';
+    const K7 = '../covers/cassette-92.svg';
+    const RA = '../covers/racines.svg';
+    const MB = '../covers/maree-basse.svg';
+    const cases = [
+      { title: 'pochette perso', rule: 'prioritaire', color: '#CBA6F7', isMosaic: false, isSingle: false, isEmpty: false, isCustom: true, imgs: [], single: '../covers/road-trip.svg', text: 'Une image choisie par l’utilisateur remplace toujours la vignette automatique, quel que soit le contenu.', example: '// ex. road trip 2026 · image importée' },
+      { title: 'mosaïque 2 × 2', rule: '≥ 4 albums distincts', color: '#A6E3A1', isMosaic: true, isSingle: false, isEmpty: false, isCustom: false, imgs: [BV, MB, HA, K7], single: '', text: 'Les pochettes des 4 premiers albums distincts, chacune sur un quart exact de la vignette.', example: '// ex. nuits blanches · 48 titres' },
+      { title: 'pochette unique', rule: '1 – 3 albums distincts', color: '#FAB387', isMosaic: false, isSingle: true, isEmpty: false, isCustom: false, imgs: [], single: RA, text: 'La pochette du premier titre, en plein cadre. Pas de mosaïque incomplète ni de case vide.', example: '// ex. à découvrir · 3 titres' },
+      { title: 'playlist vide', rule: '0 titre', color: '#9091AB', isMosaic: false, isSingle: false, isEmpty: true, isCustom: false, imgs: [], single: '', text: 'Un cadre en pointillés avec l’icône ≡ invite à ajouter des titres.', example: '// ex. nouvelle playlist' }
+    ];
+    const sizes = [
+      { px: '40px', r: '4px', label: '40 px', where: 'barre latérale' },
+      { px: '44px', r: '4px', label: '44 px', where: 'listes (biblio)' },
+      { px: '48px', r: '0px', label: '48 px', where: 'écouté récemment (mobile)' },
+      { px: '52px', r: '0px', label: '52 px', where: 'écouté récemment (desktop)' },
+      { px: '160px', r: '6px', label: '160 px', where: 'en-tête de playlist' }
+    ];
+    return { cases: cases, sizes: sizes };
+  }
+}
+</script>
+</body>
+</html>

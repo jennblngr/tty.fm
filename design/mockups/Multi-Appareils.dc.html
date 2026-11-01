@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Lecture multi-appareils — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#181825}
+button{font:inherit}
+</style>
+</helmet>
+<div style="width: 1400px; height: 1800px; box-sizing: border-box; padding: 64px; background: #181825; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; gap: 48px">
+
+  <header style="display: flex; flex-direction: column; gap: 8px; max-width: 920px">
+    <h1 style="margin: 0; font-size: 26px; font-weight: 700"><span style="color: #A6E3A1">$</span> lecture <span style="color: #9091AB">--appareil</span></h1>
+    <p style="margin: 0; color: #9091AB">// indiquer quand la musique joue sur un autre appareil du même compte, et garantir qu'un seul appareil joue à la fois.</p>
+  </header>
+
+  <section style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+    <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <span style="color: #A6E3A1; font-weight: 700">règle 1 · un seul appareil</span>
+      <span>Un seul appareil joue à la fois. Les autres affichent l'état de lecture mais ne produisent aucun son.</span>
+    </div>
+    <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <span style="color: #A6E3A1; font-weight: 700">règle 2 · télécommande</span>
+      <span>Si la lecture est ailleurs, ⏯ ⏮ ⏭ ♥ et la barre de progression pilotent l'appareil qui joue, sans lancer de lecture ici.</span>
+    </div>
+    <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <span style="color: #A6E3A1; font-weight: 700">règle 3 · transfert</span>
+      <span>[écouter ici], ou lancer un nouveau titre sur cet appareil, transfère la lecture : l'autre se met en pause à la même position.</span>
+    </div>
+    <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <span style="color: #A6E3A1; font-weight: 700">règle 4 · emplacement</span>
+      <span>Le bandeau s'ajoute toujours au-dessus du lecteur. Les boutons de lecture et le menu ne bougent jamais.</span>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 32px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700"><span style="color: #FAB387">▮</span> mobile · au-dessus du mini-lecteur</h2>
+      <div style="background: #1E1E2E; border-radius: 8px; padding: 16px 12px 12px">
+        <div style="background: #2A2A3C; border-radius: 8px; padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 8px">
+          <div style="margin: -8px -12px 0 -12px; padding: 8px 12px; background: #26332B; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; color: #A6E3A1; font-size: 12px">
+            <span style="display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="4.5" width="16" height="11.5" rx="1.5"></rect><rect x="2" y="18" width="20" height="2" rx="1"></rect></svg>lecture sur macbook de jenny</span>
+            <span style="font-weight: 700">[écouter ici]</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#E2E2EE" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"></rect><rect x="14" y="4.5" width="4" height="15" rx="1"></rect></svg>
+            <img src="../covers/basse-ville.svg" alt="" width="40" height="40" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover">
+            <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #89B4FA">néons</span><span style="color: #9091AB; font-size: 12px">// nova kid</span></span>
+            <span style="color: #F38BA8; font-size: 18px">♥</span><span style="color: #9091AB">⏮ ⏭</span>
+          </div>
+          <span style="height: 2px; background: #3A3A50; display: block"><span style="display: block; height: 2px; width: 48%; background: #A6E3A1"></span></span>
+        </div>
+        <div style="margin-top: 12px; border-top: 1px solid #34344A; padding-top: 8px; display: flex; justify-content: space-around; color: #9091AB"><span style="color: #A6E3A1">accueil</span><span>recherche</span><span>biblio</span><span>stats</span></div>
+      </div>
+      <span style="color: #9091AB">// pleine largeur du mini-lecteur, coins arrondis en haut</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700"><span style="color: #FAB387">▬</span> desktop · au-dessus de la barre de lecture</h2>
+      <div style="background: #1E1E2E; border-radius: 8px; overflow: hidden">
+        <div style="height: 60px; display: flex; align-items: center; padding: 0 24px; color: #45475A">// contenu de la page</div>
+        <div style="border-top: 1px solid #34344A; background: #26332B; color: #A6E3A1; display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-size: 12px; padding: 8px 24px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M9 2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 17.5a1 1 0 0 0 0 2h2a1 1 0 0 0 0-2z"></path></svg>
+          <span>lecture sur iphone de jenny</span><span style="font-weight: 700">[écouter ici]</span>
+        </div>
+        <div style="border-top: 1px solid #34344A; background: #181825; padding: 12px 24px; display: flex; align-items: center; gap: 24px">
+          <span style="flex: 1; display: flex; align-items: center; gap: 12px"><img src="../covers/basse-ville.svg" alt="" width="48" height="48" style="width: 48px; height: 48px; border-radius: 4px; object-fit: cover"><span style="display: flex; flex-direction: column"><span style="color: #89B4FA">néons</span><span style="color: #9091AB">// nova kid</span></span></span>
+          <span style="flex: 2; display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="color: #E2E2EE">⇄ &nbsp;⏮ &nbsp;<span style="background: #A6E3A1; color: #1E1E2E; border-radius: 12px; padding: 0 8px">❚❚</span>&nbsp; ⏭ &nbsp;↻</span><span style="width: 80%; height: 4px; background: #3A3A50; border-radius: 2px; display: block"><span style="display: block; width: 48%; height: 4px; background: #A6E3A1; border-radius: 2px"></span></span></span>
+          <span style="flex: 1; text-align: right; color: #FAB387">118 bpm · 8A</span>
+        </div>
+      </div>
+      <span style="color: #9091AB">// bandeau sur toute la largeur, texte aligné à droite, 1 ligne</span>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-size: 15px; font-weight: 700"><span style="color: #CBA6F7">◇</span> icônes · elles décrivent l'appareil qui joue, pas celui qu'on tient</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+      <sc-for list="{{icons}}" as="i" hint-placeholder-count="4">
+        <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+          <span style="display: flex; align-items: center; gap: 12px; color: #A6E3A1; font-weight: 700"><span style="width: 36px; height: 36px; border-radius: 6px; background: #26332B; display: flex; align-items: center; justify-content: center">
+            <sc-if value="{{i.isLaptop}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="4.5" width="16" height="11.5" rx="1.5"></rect><rect x="2" y="18" width="20" height="2" rx="1"></rect></svg></sc-if>
+            <sc-if value="{{i.isPhone}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M9 2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 17.5a1 1 0 0 0 0 2h2a1 1 0 0 0 0-2z"></path></svg></sc-if>
+            <sc-if value="{{i.isTablet}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 17.5a1 1 0 0 0 0 2h2a1 1 0 0 0 0-2z"></path></svg></sc-if>
+            <sc-if value="{{i.isSpeaker}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM12 10.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zM12 5.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"></path></svg></sc-if>
+          </span>{{i.name}}</span>
+          <span>{{i.when}}</span>
+          <span style="color: #9091AB">{{i.example}}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="color: #9091AB">// en pratique : sur mobile on voit surtout l'ordinateur, sur desktop surtout le téléphone. icônes pleines, 16 px dans les bandeaux, couleur #A6E3A1 sur fond #26332B.</div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+    <div style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0 0 8px; font-size: 15px; font-weight: 700"><span style="color: #F9E2AF">≡</span> textes</h2>
+      <div><span style="color: #9091AB">bandeau</span> &nbsp;<span style="color: #F9E2AF">lecture sur {nom de l'appareil}</span></div>
+      <div><span style="color: #9091AB">action</span> &nbsp;&nbsp;<span style="color: #F9E2AF">[écouter ici]</span></div>
+      <div><span style="color: #9091AB">transfert</span> <span style="color: #F9E2AF">// lecture transférée sur ce téléphone.</span> <span style="color: #9091AB">(toast 2 s)</span></div>
+      <div><span style="color: #9091AB">nom</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;en minuscules, tronqué avec … si trop long</div>
+    </div>
+    <div style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0 0 8px; font-size: 15px; font-weight: 700"><span style="color: #F38BA8">!</span> cas limites</h2>
+      <div><span style="color: #9091AB">·</span> appareil distant hors ligne &gt; 30 s → bandeau retiré, lecteur en pause sur la dernière position.</div>
+      <div><span style="color: #9091AB">·</span> deux appareils lancent la lecture au même moment → le dernier gagne, l'autre passe en pause.</div>
+      <div><span style="color: #9091AB">·</span> lecture hors-ligne sans connexion → pas de synchronisation, pas de bandeau.</div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1400,"height":1800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const base = { isLaptop: false, isPhone: false, isTablet: false, isSpeaker: false };
+    return {
+      icons: [
+        { ...base, isLaptop: true, name: 'ordinateur', when: "app desktop (mac, windows, linux)", example: '// vu sur mobile : lecture sur macbook de jenny' },
+        { ...base, isPhone: true, name: 'téléphone', when: 'app mobile (ios, android)', example: '// vu sur desktop : lecture sur iphone de jenny' },
+        { ...base, isTablet: true, name: 'tablette', when: 'app mobile sur grand écran', example: '// lecture sur ipad du salon' },
+        { ...base, isSpeaker: true, name: 'enceinte', when: 'enceinte ou chaîne connectée', example: '// lecture sur enceinte cuisine' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

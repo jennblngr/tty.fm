@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Profil et stats — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+html,body{overflow-x:hidden}
+body{margin:0;background:#1E1E2E}
+a{color:#A6E3A1;text-decoration:none}a:hover{color:#C8F0C4}
+button{font:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 1720px; box-sizing: border-box; overflow-x: clip; background: #1E1E2E; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; padding-top: 48px">
+
+  <div style="padding: 16px 16px 32px; display: flex; flex-direction: column; gap: 24px">
+    <div><span style="color: #CBA6F7">tty.fm</span> <span style="color: #A6E3A1">$</span> whoami</div>
+
+    <section style="display: flex; flex-direction: column; gap: 4px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #89B4FA" aria-hidden="true">▮</span>temps d'écoute [30j]</h2>
+      <div style="color: #9091AB">// minutes moyennes par jour de la semaine</div>
+      <div style="display: flex; gap: 4px; margin: 2px 0 8px">
+        <button style="background: none; border: 0; padding: 4px 2px; color: #9091AB; cursor: pointer">[7j]</button>
+        <button style="background: none; border: 0; padding: 4px 2px; color: #A6E3A1; font-weight: 700; cursor: pointer">[30j]</button>
+        <button style="background: none; border: 0; padding: 4px 2px; color: #9091AB; cursor: pointer">[90j]</button>
+        <button style="background: none; border: 0; padding: 4px 2px; color: #9091AB; cursor: pointer">[tout]</button>
+      </div>
+      <div style="display: grid; grid-template-columns: 24px 1fr 56px; gap: 8px 8px; align-items: center">
+        <span style="color: #9091AB">lu</span><span style="height: 16px; background: repeating-linear-gradient(90deg, #34344A 0 2px, transparent 2px 4px); position: relative"><span style="position: absolute; inset: 0 30% 0 0; background: #89B4FA"></span></span><span>98 min</span>
+        <span style="color: #9091AB">ma</span><span style="height: 16px; background: repeating-linear-gradient(90deg, #34344A 0 2px, transparent 2px 4px); position: relative"><span style="position: absolute; inset: 0 22% 0 0; background: #89B4FA"></span></span><span>110 min</span>
+        <span style="color: #9091AB">me</span><span style="height: 16px; background: repeating-linear-gradient(90deg, #34344A 0 2px, transparent 2px 4px); position: relative"><span style="position: absolute; inset: 0 0 0 0; background: #A6E3A1"></span></span><span>141 min</span>
+        <span style="color: #9091AB">je</span><span style="height: 16px; background: repeating-linear-gradient(90deg, #34344A 0 2px, transparent 2px 4px); position: relative"><span style="position: absolute; inset: 0 26% 0 0; background: #89B4FA"></span></span><span>104 min</span>
+        <span style="color: #9091AB">ve</span><span style="height: 16px; background: repeating-linear-gradient(90deg, #34344A 0 2px, transparent 2px 4px); position: relative"><span style="position: absolute; inset: 0 14% 0 0; background: #89B4FA"></span></span><span>121 min</span>
+        <span style="color: #9091AB">sa</span><span style="height: 16px; background: repeating-linear-gradient(90deg, #34344A 0 2px, transparent 2px 4px); position: relative"><span style="position: absolute; inset: 0 52% 0 0; background: #89B4FA"></span></span><span>68 min</span>
+        <span style="color: #9091AB">di</span><span style="height: 16px; background: repeating-linear-gradient(90deg, #34344A 0 2px, transparent 2px 4px); position: relative"><span style="position: absolute; inset: 0 44% 0 0; background: #89B4FA"></span></span><span>79 min</span>
+      </div>
+      <div style="margin-top: 8px"><span style="color: #9091AB">total:</span> <span style="color: #A6E3A1">51h</span> <span style="color: #A6E3A1">↑8%</span></div>
+      <div><span style="color: #9091AB">titres différents:</span> <span style="color: #A6E3A1">684</span></div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 4px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #94E2D5" aria-hidden="true">▦</span>activité [6 mois]</h2>
+      <div style="color: #9091AB; margin-bottom: 8px">// une case = un jour. 142 jours d'écoute sur 182</div>
+      <div style="display: flex; justify-content: space-between; color: #9091AB; font-size: 11px; padding-left: 16px"><span>mai</span><span>juin</span><span>juil</span><span>août</span><span>sept</span><span>oct</span></div>
+      <div style="display: flex; gap: 4px">
+        <div aria-hidden="true" style="display: grid; grid-template-rows: repeat(7, 11px); gap: 2px; color: #9091AB; font-size: 9px; line-height: 11px; width: 12px"><span>l</span><span></span><span>m</span><span></span><span>v</span><span></span><span></span></div>
+        <div role="img" aria-label="Activité d'écoute jour par jour sur 6 mois" style="display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 11px); grid-auto-columns: 11px; gap: 2px">
+          <sc-for list="{{daysM}}" as="d" hint-placeholder-count="182"><span style="border-radius: 2px; background: {{d.bg}}"></span></sc-for>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; color: #9091AB; font-size: 11px">
+        <span>série actuelle : <span style="color: #A6E3A1">9 j</span> · record : 23 j</span>
+        <span style="display: flex; align-items: center; gap: 2px">moins <span style="width: 9px; height: 9px; border-radius: 2px; background: #2A2A3C"></span><span style="width: 9px; height: 9px; border-radius: 2px; background: #2B3A55"></span><span style="width: 9px; height: 9px; border-radius: 2px; background: #3E5A8C"></span><span style="width: 9px; height: 9px; border-radius: 2px; background: #5F86C6"></span><span style="width: 9px; height: 9px; border-radius: 2px; background: #89B4FA"></span> plus</span>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 4px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #89B4FA" aria-hidden="true">▮</span>par mois [12 mois]</h2>
+      <div style="color: #9091AB; margin-bottom: 8px">// heures d'écoute. record en vert</div>
+      <div role="img" aria-label="Heures d'écoute par mois, record en juillet avec 61 heures" style="display: flex; gap: 6px; height: 120px">
+        <sc-for list="{{months}}" as="m" hint-placeholder-count="12">
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+            <span style="font-size: 10px; color: {{m.valColor}}">{{m.val}}</span>
+            <div style="flex: 1; width: 100%; display: flex; align-items: flex-end"><span style="width: 100%; height: {{m.h}}; background: {{m.color}}; border-radius: 2px 2px 0 0"></span></div>
+            <span style="color: #9091AB; font-size: 11px">{{m.label}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top: 8px"><span style="color: #9091AB">total 12 mois:</span> <span style="color: #A6E3A1">561h</span> <span style="color: #9091AB">· moyenne 47h/mois</span></div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 4px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #CBA6F7" aria-hidden="true">✦</span>top artistes [30j]</h2>
+      <div style="display: flex; justify-content: space-between"><span>01 <span style="color: #89B4FA">nova kid</span></span><span style="color: #9091AB">[<span style="color: #89B4FA"><svg aria-hidden="true" viewBox="0 0 79 8" preserveAspectRatio="none" style="width: 6em; height: 0.75em"><path fill="currentColor" d="M0 0h7v8h-7zM8 0h7v8h-7zM16 0h7v8h-7zM24 0h7v8h-7zM32 0h7v8h-7zM40 0h7v8h-7zM48 0h7v8h-7zM56 0h7v8h-7z"></path><path fill="#45475A" d="M64 0h7v8h-7zM72 0h7v8h-7z"></path></svg></span>] 412 min</span></div>
+      <div style="display: flex; justify-content: space-between"><span>02 <span style="color: #94E2D5">les échos</span></span><span style="color: #9091AB">[<span style="color: #94E2D5"><svg aria-hidden="true" viewBox="0 0 79 8" preserveAspectRatio="none" style="width: 6em; height: 0.75em"><path fill="currentColor" d="M0 0h7v8h-7zM8 0h7v8h-7zM16 0h7v8h-7zM24 0h7v8h-7zM32 0h7v8h-7zM40 0h7v8h-7z"></path><path fill="#45475A" d="M48 0h7v8h-7zM56 0h7v8h-7zM64 0h7v8h-7zM72 0h7v8h-7z"></path></svg></span>] 301 min</span></div>
+      <div style="display: flex; justify-content: space-between"><span>03 <span style="color: #FAB387">mira sol</span></span><span style="color: #9091AB">[<span style="color: #FAB387"><svg aria-hidden="true" viewBox="0 0 79 8" preserveAspectRatio="none" style="width: 6em; height: 0.75em"><path fill="currentColor" d="M0 0h7v8h-7zM8 0h7v8h-7zM16 0h7v8h-7zM24 0h7v8h-7z"></path><path fill="#45475A" d="M32 0h7v8h-7zM40 0h7v8h-7zM48 0h7v8h-7zM56 0h7v8h-7zM64 0h7v8h-7zM72 0h7v8h-7z"></path></svg></span>] 196 min</span></div>
+      <div style="display: flex; justify-content: space-between"><span>04 <span style="color: #F9E2AF">faune</span></span><span style="color: #9091AB">[<span style="color: #F9E2AF"><svg aria-hidden="true" viewBox="0 0 79 8" preserveAspectRatio="none" style="width: 6em; height: 0.75em"><path fill="currentColor" d="M0 0h7v8h-7zM8 0h7v8h-7zM16 0h7v8h-7z"></path><path fill="#45475A" d="M24 0h7v8h-7zM32 0h7v8h-7zM40 0h7v8h-7zM48 0h7v8h-7zM56 0h7v8h-7zM64 0h7v8h-7zM72 0h7v8h-7z"></path></svg></span>] 150 min</span></div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 4px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #FAB387" aria-hidden="true">∿</span>tempo [30j]</h2>
+      <div style="color: #9091AB">// répartition de tes écoutes par bpm</div>
+      <div style="display: grid; grid-template-columns: 72px 1fr 40px; gap: 2px 8px; align-items: center; margin-top: 4px">
+        <span style="color: #9091AB">&lt; 80</span><span style="color: #FAB387"><svg aria-hidden="true" viewBox="0 0 15 8" preserveAspectRatio="none" fill="currentColor" style="width: 1.2em; height: 0.75em"><path d="M0 1h7v7h-7zM8 1h7v7h-7z"></path></svg></span><span style="color: #9091AB">6%</span>
+        <span style="color: #9091AB">80–100</span><span style="color: #FAB387"><svg aria-hidden="true" viewBox="0 0 39 8" preserveAspectRatio="none" fill="currentColor" style="width: 3em; height: 0.75em"><path d="M0 1h7v7h-7zM8 1h7v7h-7zM16 1h7v7h-7zM24 1h7v7h-7zM32 1h7v7h-7z"></path></svg></span><span style="color: #9091AB">18%</span>
+        <span style="color: #9091AB">100–120</span><span style="color: #FAB387"><svg aria-hidden="true" viewBox="0 0 79 8" preserveAspectRatio="none" fill="currentColor" style="width: 6em; height: 0.75em"><path d="M0 1h7v7h-7zM8 1h7v7h-7zM16 1h7v7h-7zM24 1h7v7h-7zM32 1h7v7h-7zM40 1h7v7h-7zM48 1h7v7h-7zM56 1h7v7h-7zM64 1h7v7h-7zM72 1h7v7h-7z"></path></svg></span><span style="color: #9091AB">38%</span>
+        <span style="color: #9091AB">120–140</span><span style="color: #FAB387"><svg aria-hidden="true" viewBox="0 0 55 8" preserveAspectRatio="none" fill="currentColor" style="width: 4.2em; height: 0.75em"><path d="M0 1h7v7h-7zM8 1h7v7h-7zM16 1h7v7h-7zM24 1h7v7h-7zM32 1h7v7h-7zM40 1h7v7h-7zM48 1h7v7h-7z"></path></svg></span><span style="color: #9091AB">26%</span>
+        <span style="color: #9091AB">&gt; 140</span><span style="color: #FAB387"><svg aria-hidden="true" viewBox="0 0 23 8" preserveAspectRatio="none" fill="currentColor" style="width: 1.8em; height: 0.75em"><path d="M0 1h7v7h-7zM8 1h7v7h-7zM16 1h7v7h-7z"></path></svg></span><span style="color: #9091AB">12%</span>
+      </div>
+      <div style="margin-top: 8px"><span style="color: #9091AB">bpm moyen:</span> <span style="color: #FAB387; font-weight: 700">112</span> <span style="color: #A6E3A1">↑4</span></div>
+      <div><span style="color: #9091AB">le + rapide:</span> sprint — 172 bpm</div>
+      <div style="color: #9091AB">// plus rapide le matin (124) que le soir (98)</div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 4px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #F9E2AF" aria-hidden="true">★</span>temps forts [30j]</h2>
+      <div><span style="color: #9091AB">titre le + écouté:</span> <span style="color: #89B4FA">néons — 37 fois</span></div>
+      <div><span style="color: #9091AB">genre n°1:</span> <span style="color: #CBA6F7">électro (34%)</span></div>
+      <div><span style="color: #9091AB">heure favorite:</span> <span style="color: #FAB387">23h</span> <span style="color: #9091AB">// oiseau de nuit</span></div>
+      <div><span style="color: #9091AB">découverte:</span> <span style="color: #94E2D5">kassette</span> <span style="color: #9091AB">// via radar</span></div>
+    </section>
+
+    <a href="Main.dc.html" style="background: #2E2840; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 2px; color: #E2E2EE">
+      <span style="color: #CBA6F7; font-weight: 700">$ rétro --2026</span>
+      <span style="color: #9091AB">// ton année en musique, dispo le 1er décembre</span>
+    </a>
+  </div>
+
+  <nav aria-label="Navigation principale" style="margin-top: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid #34344A; padding-bottom: 24px">
+    <a href="Main.dc.html" style="text-align: center; padding: 12px 0; color: #9091AB">accueil</a>
+    <a href="Recherche.dc.html" style="text-align: center; padding: 12px 0; color: #9091AB">recherche</a>
+    <a href="Bibliotheque.dc.html" style="text-align: center; padding: 12px 0; color: #9091AB">biblio</a>
+    <a href="Profil.dc.html" style="text-align: center; padding: 12px 0; color: #A6E3A1; font-weight: 500; border-top: 2px solid #A6E3A1; margin-top: -1px">stats</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const levels = ['#2A2A3C', '#2B3A55', '#3E5A8C', '#5F86C6', '#89B4FA'];
+    const days = (weeks) => Array.from({ length: weeks * 7 }, (_, i) => {
+      const r = (i * 7919 + 13) % 17;
+      let l = r < 4 ? 0 : r < 8 ? 1 : r < 12 ? 2 : r < 15 ? 3 : 4;
+      if (i % 7 >= 5 && l > 1) l -= 1;
+      return { bg: levels[l] };
+    });
+    const hours = [38, 52, 47, 41, 44, 39, 35, 58, 61, 49, 46, 51];
+    const labels = ['n', 'd', 'j', 'f', 'm', 'a', 'm', 'j', 'j', 'a', 's', 'o'];
+    const max = Math.max(...hours);
+    return {
+      daysM: days(26),
+      months: hours.map((h, i) => ({
+        h: Math.round(h / max * 100) + '%',
+        label: labels[i],
+        val: h + 'h',
+        color: h === max ? '#A6E3A1' : '#89B4FA',
+        valColor: h === max ? '#A6E3A1' : '#6C6C8A'
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

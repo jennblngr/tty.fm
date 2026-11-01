@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Bibliothèque desktop — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#1E1E2E}
+a{color:#A6E3A1;text-decoration:none}a:hover{color:#C8F0C4}
+button,input{font:inherit}
+</style>
+</helmet>
+<div style="min-height: 100vh; box-sizing: border-box; background: #1E1E2E; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column">
+  <div style="flex: 1; display: flex; flex-wrap: wrap; min-height: 0">
+
+    <aside aria-label="Navigation" style="flex: 1 1 240px; box-sizing: border-box; padding: 24px; border-right: 1px solid #34344A; display: flex; flex-direction: column; gap: 24px; background: #1A1A28">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <span style="font-weight: 700; font-size: 15px; color: #CBA6F7">tty.fm</span>
+        <span style="display: flex; margin-right: -8px">
+          <a href="Desktop-Notifications.dc.html" aria-label="Notifications, 3 non lues" style="position: relative; color: #9091AB; padding: 8px; display: flex"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5a6 6 0 0 0-6 6c0 4.2-1.2 6.4-2.2 7.6-.5.6-.1 1.4.7 1.4h15c.8 0 1.2-.8.7-1.4-1-1.2-2.2-3.4-2.2-7.6a6 6 0 0 0-6-6z"></path><path d="M9.5 19.5h5a2.5 2.5 0 0 1-5 0z"></path></svg><span style="position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 4px; background: #FAB387"></span></a>
+          <a href="Desktop-Reglages.dc.html" aria-label="Réglages" style="color: #9091AB; padding: 8px; display: flex"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2zM12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"></path></svg></a>
+        </span>
+      </div>
+      <nav aria-label="Navigation principale" style="display: flex; flex-direction: column">
+        <a href="Desktop-Accueil.dc.html" style="padding: 8px 0; color: #9091AB">&nbsp; accueil</a>
+        <a href="Desktop-Recherche.dc.html" style="padding: 8px 0; color: #9091AB">&nbsp; recherche</a>
+        <a href="Desktop-Biblio.dc.html" style="padding: 8px 0; color: #A6E3A1; font-weight: 700">&gt; biblio</a>
+        <a href="Desktop-Stats.dc.html" style="padding: 8px 0; color: #9091AB">&nbsp; stats</a>
+      </nav>
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 8px; border-bottom: 1px solid #34344A; margin-bottom: 4px">
+          <span style="font-weight: 700; color: #CBA6F7">≡ playlists</span>
+          <button aria-label="Nouvelle playlist" style="background: none; border: 0; color: #9091AB; padding: 4px; cursor: pointer">[+]</button>
+        </div>
+        <a href="Desktop-Bibliotheque.dc.html" style="padding: 8px 0; color: #F38BA8; font-weight: 700">♥ titres likés <span style="color: #9091AB; font-weight: 400">612</span></a>
+        <a href="Desktop-Bibliotheque.dc.html" style="padding: 8px 0; color: #89B4FA">▸ nuits blanches</a>
+        <a href="Desktop-Bibliotheque.dc.html" style="padding: 8px 0; color: #FAB387">▸ road trip 2026</a>
+        <a href="Desktop-Bibliotheque.dc.html" style="padding: 8px 0; color: #A6E3A1">▸ salle de sport</a>
+        <a href="Desktop-Bibliotheque.dc.html" style="padding: 8px 0; color: #94E2D5">▸ lo-fi pour coder</a>
+      </div>
+      <div style="margin-top: auto; color: #9091AB">// 4 812 titres · 38 Go</div>
+    </aside>
+
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 32px; display: flex; flex-direction: column; gap: 24px">
+      <div style="display: flex; gap: 24px; align-items: flex-end">
+        <span style="width: 120px; height: 120px; flex: none; border-radius: 8px; background: #3D2633; color: #F38BA8; display: flex; align-items: center; justify-content: center; font-size: 48px">♥</span>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <a href="Desktop-Biblio.dc.html" style="color: #9091AB">[‹ biblio]</a>
+          <div style="font-size: 22px; font-weight: 700"><span style="color: #A6E3A1">$</span> <span style="color: #F38BA8">titres likés</span></div>
+          <div style="color: #9091AB">// playlist · 612 titres · 38h · {{countLabel}}</div>
+          <div style="display: flex; gap: 12px; margin-top: 4px">
+            <button style="background: #A6E3A1; color: #1E1E2E; border: 0; border-radius: 6px; padding: 8px 16px; font-weight: 700; cursor: pointer">▶ lire</button>
+            <button style="background: #2A2A3C; color: #E2E2EE; border: 0; border-radius: 6px; padding: 8px 16px; cursor: pointer">⤨ aléatoire</button>
+            <button style="background: none; border: 0; color: #9091AB; padding: 8px 0; cursor: pointer">[···]</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center">
+        <span style="color: #9091AB">bpm:</span>
+        <sc-for list="{{presets}}" as="p" hint-placeholder-count="4">
+          <button onClick="{{p.pick}}" style="background: none; border: 0; padding: 8px 0; cursor: pointer; color: {{p.color}}; font-weight: {{p.weight}}">[{{p.label}}]</button>
+        </sc-for>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; color: #9091AB; margin-top: -12px">
+        <span>{{minLabel}}</span>
+        <span style="flex: 0 1 320px; height: 4px; background: #3A3A50; border-radius: 2px; position: relative"><span style="position: absolute; top: 0; bottom: 0; left: {{barLeft}}; right: {{barRight}}; background: #FAB387; border-radius: 2px"></span></span>
+        <span>{{maxLabel}}</span>
+        <span>// glisse pour filtrer par tempo</span>
+      </div>
+
+      <div style="overflow-x: auto; border-top: 1px solid #34344A">
+        <table style="width: 100%; min-width: 860px; border-collapse: collapse; text-align: left">
+          <thead>
+            <tr style="color: #9091AB">
+              <th scope="col" style="font-weight: 400; padding: 12px 8px; width: 24px">#</th>
+              <th scope="col" style="font-weight: 400; padding: 12px 8px">titre</th>
+              <th scope="col" style="font-weight: 400; padding: 12px 8px">album</th>
+              <th scope="col" style="font-weight: 400; padding: 12px 8px">genre</th>
+              <th scope="col" style="font-weight: 400; padding: 12px 8px; color: #FAB387">bpm ▾</th>
+              <th scope="col" style="font-weight: 400; padding: 12px 8px">ton.</th>
+              <th scope="col" style="font-weight: 400; padding: 12px 8px">énergie</th>
+              <th scope="col" style="font-weight: 400; padding: 12px 8px">ajouté</th>
+              <th scope="col" style="font-weight: 400; padding: 12px 8px; text-align: right">durée</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+              <tr style="border-top: 1px solid #2A2A3C">
+                <td style="padding: 8px; color: #9091AB"><span style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center"><sc-if value="{{r.playing}}"><svg aria-label="en cours" width="18" height="18" viewBox="0 0 24 24" fill="#A6E3A1"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.6-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"></path></svg></sc-if><sc-if value="{{r.idle}}">{{r.n}}</sc-if></span></td>
+                <td style="padding: 8px"><span style="display: flex; flex-direction: column"><span style="color: {{r.color}}">{{r.title}}</span><span style="color: #9091AB">{{r.artist}}</span></span></td>
+                <td style="padding: 8px; color: #9091AB">{{r.album}}</td>
+                <td style="padding: 8px; color: {{r.color}}">{{r.genre}} <span aria-hidden="true" style="display: inline-flex; align-items: flex-end; gap: 1px; width: 2.4em; height: 0.75em"><sc-for list="{{r.bars}}" as="b" hint-placeholder-count="4"><span style="flex: 1; height: {{b.h}}; background: currentColor"></span></sc-for></span></td>
+                <td style="padding: 8px; color: #FAB387">{{r.bpm}}</td>
+                <td style="padding: 8px; color: #9091AB">{{r.key}}</td>
+                <td style="padding: 8px; color: #9091AB">{{r.energy}}</td>
+                <td style="padding: 8px; color: #9091AB">{{r.added}}</td>
+                <td style="padding: 8px; color: #9091AB; text-align: right">{{r.dur}}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <footer aria-label="Lecteur" style="border-top: 1px solid #34344A; background: #181825; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px">
+    <div style="flex: 1 1 240px; display: flex; align-items: center; gap: 12px; min-width: 0">
+      <img src="../covers/basse-ville.svg" alt="" width="48" height="48" style="width: 48px; height: 48px; flex: none; border-radius: 4px; object-fit: cover">
+      <span style="display: flex; flex-direction: column; min-width: 0"><span style="color: #89B4FA">néons</span><span style="color: #9091AB">// nova kid</span></span>
+      <span style="color: #F38BA8" aria-label="Titre liké">♥</span>
+    </div>
+    <div style="flex: 2 1 420px; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <button aria-label="Lecture aléatoire" style="background: none; border: 0; color: #9091AB; width: 36px; height: 36px; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path></svg></button>
+        <button aria-label="Précédent" style="background: none; border: 0; color: #E2E2EE; width: 36px; height: 36px; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.5 5.2v13.6a.8.8 0 0 1-1.25.66L9 13a1.2 1.2 0 0 1 0-2l9.25-6.46a.8.8 0 0 1 1.25.66z"></path><rect x="4.5" y="5" width="3" height="14" rx="1"></rect></svg></button>
+        <button aria-label="Pause" style="background: #A6E3A1; border: 0; color: #1E1E2E; width: 40px; height: 40px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"></rect><rect x="14" y="4.5" width="4" height="15" rx="1"></rect></svg></button>
+        <button aria-label="Suivant" style="background: none; border: 0; color: #E2E2EE; width: 36px; height: 36px; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.5 5.2v13.6a.8.8 0 0 0 1.25.66L15 13a1.2 1.2 0 0 0 0-2L5.75 4.54a.8.8 0 0 0-1.25.66z"></path><rect x="16.5" y="5" width="3" height="14" rx="1"></rect></svg></button>
+        <button aria-label="Répéter" style="background: none; border: 0; color: #9091AB; width: 36px; height: 36px; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"></path><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"></path><path d="M21 13v2a3 3 0 0 1-3 3H3"></path></svg></button>
+      </div>
+      <div style="width: 100%; max-width: 560px; display: flex; align-items: center; gap: 8px; font-size: 12px">
+        <span>1:46</span><span style="flex: 1; height: 4px; background: #3A3A50; border-radius: 2px; position: relative"><span style="position: absolute; inset: 0 52% 0 0; background: #A6E3A1; border-radius: 2px"></span></span><span style="color: #9091AB">3:41</span>
+      </div>
+    </div>
+    <div style="flex: 1 1 240px; display: flex; justify-content: flex-end; align-items: center; gap: 16px; flex-wrap: wrap; color: #9091AB">
+      <span style="color: #FAB387">118 bpm · 8A</span>
+      <a href="Desktop-Lecteur.dc.html" aria-label="Agrandir le lecteur" style="display: inline-block; width: 10ch; text-align: center; color: #9091AB">[agrandir]</a>
+      <span>vol [<span style="color: #A6E3A1"><svg aria-hidden="true" viewBox="0 0 63 8" preserveAspectRatio="none" style="width: 4.8em; height: 0.75em"><path fill="currentColor" d="M0 0h7v8h-7zM8 0h7v8h-7zM16 0h7v8h-7zM24 0h7v8h-7zM32 0h7v8h-7zM40 0h7v8h-7z"></path><path fill="#45475A" d="M48 0h7v8h-7zM56 0h7v8h-7z"></path></svg></span>]</span>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { preset: 'tout' };
+  }
+  renderVals() {
+    const tracks = [
+      { title: 'néons', artist: 'nova kid', album: 'basse ville', genre: 'électro', graph: '▅▅▅▅', color: '#CBA6F7', bpm: 118, key: '8A', energy: '72%', added: 'auj.', dur: '3:41' },
+      { title: 'marée basse', artist: 'les échos', album: 'marée basse', genre: 'indie', graph: '▃▅▂▆', color: '#94E2D5', bpm: 120, key: '9A', energy: '64%', added: 'hier', dur: '4:12' },
+      { title: 'cassette 92', artist: 'kassette', album: 'cassette 92', genre: 'synthwave', graph: '▂▅▃▆', color: '#F5A3C7', bpm: 96, key: '5B', energy: '58%', added: 'hier', dur: '3:54' },
+      { title: 'halo', artist: 'mira sol', album: 'halo', genre: 'pop', graph: '▂▅▃▆', color: '#FAB387', bpm: 104, key: '11B', energy: '66%', added: '3 j', dur: '3:05' },
+      { title: 'racines', artist: 'faune', album: 'racines', genre: 'folk', graph: '▃▂▃▂', color: '#F9E2AF', bpm: 84, key: '2A', energy: '31%', added: '2 j', dur: '4:40' },
+      { title: 'sprint', artist: 'nova kid', album: 'basse ville', genre: 'drum & bass', graph: '▇▃▇▃', color: '#89B4FA', bpm: 172, key: '6A', energy: '91%', added: '12 j', dur: '3:22' },
+      { title: 'pluie fine', artist: 'kassette', album: 'k7 vol. 2', genre: 'lo-fi', graph: '▂▃▂▃', color: '#94E2D5', bpm: 78, key: '4A', energy: '22%', added: '20 j', dur: '2:48' },
+      { title: 'béton', artist: 'les échos', album: 'béton', genre: 'rock', graph: '▇▆▇▅', color: '#89B4FA', bpm: 138, key: '10B', energy: '84%', added: '1 mois', dur: '3:58' },
+      { title: 'tard le soir', artist: 'mira sol', album: 'halo', genre: 'r&b', graph: '▃▅▃▅', color: '#FAB387', bpm: 92, key: '7A', energy: '45%', added: '1 mois', dur: '3:30' }
+    ];
+    const ranges = { 'tout': [0, 999], '< 90': [0, 89], '90–120': [90, 120], '> 120': [121, 999] };
+    const bars = { 'tout': ['0%', '0%', '60', '180'], '< 90': ['0%', '75%', '60', '90'], '90–120': ['25%', '50%', '90', '120'], '> 120': ['50%', '0%', '120', '180'] };
+    const [lo, hi] = ranges[this.state.preset];
+    const rows = tracks.filter((t) => t.bpm >= lo && t.bpm <= hi).map((t, i) => ({ ...t, n: String(i + 1).padStart(2, '0'), playing: t.title === 'néons', idle: t.title !== 'néons', bars: t.graph.split('').map((c) => ({ h: (('▁▂▃▄▅▆▇█'.indexOf(c) + 1) * 12.5) + '%' })) }));
+    const b = bars[this.state.preset];
+    return {
+      rows: rows,
+      countLabel: this.state.preset === 'tout' ? 'tous les tempos' : 'filtre bpm ' + this.state.preset,
+      barLeft: b[0],
+      barRight: b[1],
+      minLabel: b[2],
+      maxLabel: b[3],
+      presets: Object.keys(ranges).map((label) => ({
+        label: label,
+        color: this.state.preset === label ? '#FAB387' : '#9091AB',
+        weight: this.state.preset === label ? 700 : 400,
+        pick: () => this.setState({ preset: label })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

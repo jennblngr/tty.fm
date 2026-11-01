@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Recherche desktop — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#1E1E2E}
+a{color:#A6E3A1;text-decoration:none}a:hover{color:#C8F0C4}
+button,input{font:inherit}
+input::placeholder{color:#9091AB}
+</style>
+</helmet>
+<div style="min-height: 100vh; box-sizing: border-box; background: #1E1E2E; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column">
+  <div style="flex: 1; display: flex; flex-wrap: wrap; min-height: 0">
+
+    <aside aria-label="Navigation" style="flex: 1 1 240px; box-sizing: border-box; padding: 24px; border-right: 1px solid #34344A; display: flex; flex-direction: column; gap: 24px; background: #1A1A28">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <span style="font-weight: 700; font-size: 15px; color: #CBA6F7">tty.fm</span>
+        <span style="display: flex; margin-right: -8px">
+          <a href="Desktop-Notifications.dc.html" aria-label="Notifications, 3 non lues" style="position: relative; color: #9091AB; padding: 8px; display: flex"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5a6 6 0 0 0-6 6c0 4.2-1.2 6.4-2.2 7.6-.5.6-.1 1.4.7 1.4h15c.8 0 1.2-.8.7-1.4-1-1.2-2.2-3.4-2.2-7.6a6 6 0 0 0-6-6z"></path><path d="M9.5 19.5h5a2.5 2.5 0 0 1-5 0z"></path></svg><span style="position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 4px; background: #FAB387"></span></a>
+          <a href="Desktop-Reglages.dc.html" aria-label="Réglages" style="color: #9091AB; padding: 8px; display: flex"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2zM12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"></path></svg></a>
+        </span>
+      </div>
+      <nav aria-label="Navigation principale" style="display: flex; flex-direction: column">
+        <a href="Desktop-Accueil.dc.html" style="padding: 8px 0; color: #9091AB">&nbsp; accueil</a>
+        <a href="Desktop-Recherche.dc.html" style="padding: 8px 0; color: #A6E3A1; font-weight: 700">&gt; recherche</a>
+        <a href="Desktop-Biblio.dc.html" style="padding: 8px 0; color: #9091AB">&nbsp; biblio</a>
+        <a href="Desktop-Stats.dc.html" style="padding: 8px 0; color: #9091AB">&nbsp; stats</a>
+      </nav>
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 8px; border-bottom: 1px solid #34344A; margin-bottom: 4px">
+          <span style="font-weight: 700; color: #CBA6F7">≡ playlists</span>
+          <button aria-label="Nouvelle playlist" style="background: none; border: 0; color: #9091AB; padding: 4px; cursor: pointer">[+]</button>
+        </div>
+        <a href="Desktop-Bibliotheque.dc.html" style="padding: 8px 0; color: #F38BA8">♥ titres likés <span style="color: #9091AB">612</span></a>
+        <a href="Desktop-Bibliotheque.dc.html" style="padding: 8px 0; color: #89B4FA">▸ nuits blanches</a>
+        <a href="Desktop-Bibliotheque.dc.html" style="padding: 8px 0; color: #FAB387">▸ road trip 2026</a>
+        <a href="Desktop-Bibliotheque.dc.html" style="padding: 8px 0; color: #A6E3A1">▸ salle de sport</a>
+        <a href="Desktop-Bibliotheque.dc.html" style="padding: 8px 0; color: #94E2D5">▸ lo-fi pour coder</a>
+      </div>
+      <div style="margin-top: auto; color: #9091AB">// 4 812 titres · 38 Go</div>
+    </aside>
+
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 32px; display: flex; flex-direction: column; gap: 32px">
+      <div style="display: flex; flex-direction: column; gap: 8px; max-width: 720px">
+        <label for="q" style="font-size: 15px"><span style="color: #A6E3A1">$</span> recherche</label>
+        <div style="display: flex; align-items: center; gap: 8px; background: #2A2A3C; border-radius: 6px; padding: 0 16px">
+          <span style="color: #A6E3A1" aria-hidden="true">&gt;</span>
+          <input id="q" type="search" placeholder="titre, artiste, album, paroles…" style="flex: 1; min-width: 0; background: none; border: 0; outline: none; color: #E2E2EE; padding: 12px 0">
+          <span style="color: #9091AB">[⌘K]</span>
+        </div>
+        <div role="group" aria-label="Ajouter un filtre" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+          <span style="color: #9091AB">filtres :</span>
+          <button style="background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #E2E2EE; cursor: pointer">paroles<span style="color: #9091AB">:</span></button>
+          <button style="background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #E2E2EE; cursor: pointer">artiste<span style="color: #9091AB">:</span></button>
+          <button style="background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #E2E2EE; cursor: pointer">album<span style="color: #9091AB">:</span></button>
+          <button style="background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #E2E2EE; cursor: pointer">genre<span style="color: #9091AB">:</span></button>
+          <button style="background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #FAB387; cursor: pointer">bpm ▾</button>
+          <button style="background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #E2E2EE; cursor: pointer">ton<span style="color: #9091AB">:</span></button>
+          <button style="background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #E2E2EE; cursor: pointer">ajouté ▾</button>
+          <span style="color: #9091AB">// ou tape genre:électro bpm:&gt;120</span>
+        </div>
+      </div>
+
+      <section style="display: flex; flex-direction: column; gap: 2px; max-width: 720px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px">
+          <h2 style="margin: 0; font-size: 13px; font-weight: 700"><span style="color: #9091AB" aria-hidden="true">↺ </span>historique</h2>
+          <button style="background: none; border: 0; color: #9091AB; padding: 8px 0; cursor: pointer">[effacer]</button>
+        </div>
+        <a href="Desktop-Recherche-Resultats.dc.html" style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #2A2A3C; color: #E2E2EE"><span><span style="color: #9091AB">$ </span>nova</span><span style="color: #9091AB">13 résultats ×</span></a>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #2A2A3C"><span><span style="color: #9091AB">$ </span>« sous les néons »</span><span style="color: #9091AB">paroles ×</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #2A2A3C"><span><span style="color: #9091AB">$ </span>bpm:&gt;140 électro</span><span style="color: #9091AB">filtre ×</span></div>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 700"><span style="color: #CBA6F7" aria-hidden="true">▦ </span>parcourir</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px">
+          <a href="Desktop-Bibliotheque.dc.html" style="height: 96px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #3D2633; color: #F5A3C7; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">pop<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #F5A3C7"><path d="M0 6h7v2h-7zM8 3h7v5h-7zM16 5h7v3h-7zM24 2h7v6h-7z"></path></svg> · ~110 bpm</span></a>
+          <a href="Desktop-Bibliotheque.dc.html" style="height: 96px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #3D2E26; color: #FAB387; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">rap fr<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #FAB387"><path d="M0 1h7v7h-7zM8 5h7v3h-7zM16 1h7v7h-7zM24 5h7v3h-7z"></path></svg> · ~90 bpm</span></a>
+          <a href="Desktop-Bibliotheque.dc.html" style="height: 96px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #2E2840; color: #CBA6F7; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">électro<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #CBA6F7"><path d="M0 3h7v5h-7zM8 3h7v5h-7zM16 3h7v5h-7zM24 3h7v5h-7z"></path></svg> · ~124 bpm</span></a>
+          <a href="Desktop-Bibliotheque.dc.html" style="height: 96px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #263A34; color: #94E2D5; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">lo-fi / chill<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #94E2D5"><path d="M0 6h7v2h-7zM8 5h7v3h-7zM16 6h7v2h-7zM24 5h7v3h-7z"></path></svg> · ~80 bpm</span></a>
+          <a href="Desktop-Bibliotheque.dc.html" style="height: 96px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #3A3526; color: #F9E2AF; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">jazz<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #F9E2AF"><path d="M0 5h7v3h-7zM8 2h7v6h-7zM16 6h7v2h-7zM24 3h7v5h-7z"></path></svg> · ~100 bpm</span></a>
+          <a href="Desktop-Bibliotheque.dc.html" style="height: 96px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #23324A; color: #89B4FA; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">rock<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #89B4FA"><path d="M0 1h7v7h-7zM8 2h7v6h-7zM16 1h7v7h-7zM24 3h7v5h-7z"></path></svg> · ~130 bpm</span></a>
+          <a href="Desktop-Bibliotheque.dc.html" style="height: 96px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #26332B; color: #A6E3A1; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">classique<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #A6E3A1"><path d="M0 7h7v1h-7zM8 5h7v3h-7zM16 3h7v5h-7zM24 1h7v7h-7z"></path></svg> · variable</span></a>
+          <a href="Desktop-Bibliotheque.dc.html" style="height: 96px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #2A2A3C; color: #E2E2EE; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">[plus]<span style="font-weight: 400; color: #9091AB">// humeurs, décennies</span></a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer aria-label="Lecteur" style="border-top: 1px solid #34344A; background: #181825; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px">
+    <div style="flex: 1 1 240px; display: flex; align-items: center; gap: 12px; min-width: 0">
+      <img src="../covers/basse-ville.svg" alt="" width="48" height="48" style="width: 48px; height: 48px; flex: none; border-radius: 4px; object-fit: cover">
+      <span style="display: flex; flex-direction: column; min-width: 0"><span style="color: #89B4FA">néons</span><span style="color: #9091AB">// nova kid</span></span>
+      <span style="color: #F38BA8" aria-label="Titre liké">♥</span>
+    </div>
+    <div style="flex: 2 1 420px; display: flex; flex-direction: column; align-items: center; gap: 4px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <button aria-label="Lecture aléatoire" style="background: none; border: 0; color: #9091AB; width: 36px; height: 36px; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path></svg></button>
+        <button aria-label="Précédent" style="background: none; border: 0; color: #E2E2EE; width: 36px; height: 36px; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.5 5.2v13.6a.8.8 0 0 1-1.25.66L9 13a1.2 1.2 0 0 1 0-2l9.25-6.46a.8.8 0 0 1 1.25.66z"></path><rect x="4.5" y="5" width="3" height="14" rx="1"></rect></svg></button>
+        <button aria-label="Pause" style="background: #A6E3A1; border: 0; color: #1E1E2E; width: 40px; height: 40px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"></rect><rect x="14" y="4.5" width="4" height="15" rx="1"></rect></svg></button>
+        <button aria-label="Suivant" style="background: none; border: 0; color: #E2E2EE; width: 36px; height: 36px; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.5 5.2v13.6a.8.8 0 0 0 1.25.66L15 13a1.2 1.2 0 0 0 0-2L5.75 4.54a.8.8 0 0 0-1.25.66z"></path><rect x="16.5" y="5" width="3" height="14" rx="1"></rect></svg></button>
+        <button aria-label="Répéter" style="background: none; border: 0; color: #9091AB; width: 36px; height: 36px; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"></path><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"></path><path d="M21 13v2a3 3 0 0 1-3 3H3"></path></svg></button>
+      </div>
+      <div style="width: 100%; max-width: 560px; display: flex; align-items: center; gap: 8px; font-size: 12px">
+        <span>1:46</span><span style="flex: 1; height: 4px; background: #3A3A50; border-radius: 2px; position: relative"><span style="position: absolute; inset: 0 52% 0 0; background: #A6E3A1; border-radius: 2px"></span></span><span style="color: #9091AB">3:41</span>
+      </div>
+    </div>
+    <div style="flex: 1 1 240px; display: flex; justify-content: flex-end; align-items: center; gap: 16px; flex-wrap: wrap; color: #9091AB">
+      <span style="color: #FAB387">118 bpm · 8A</span>
+      <a href="Desktop-Lecteur.dc.html" aria-label="Agrandir le lecteur" style="display: inline-block; width: 10ch; text-align: center; color: #9091AB">[agrandir]</a>
+      <span>vol [<span style="color: #A6E3A1"><svg aria-hidden="true" viewBox="0 0 63 8" preserveAspectRatio="none" style="width: 4.8em; height: 0.75em"><path fill="currentColor" d="M0 0h7v8h-7zM8 0h7v8h-7zM16 0h7v8h-7zM24 0h7v8h-7zM32 0h7v8h-7zM40 0h7v8h-7z"></path><path fill="#45475A" d="M48 0h7v8h-7zM56 0h7v8h-7z"></path></svg></span>]</span>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Animation panneau — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#181825}
+button{font:inherit}
+</style>
+</helmet>
+<div style="width: 1400px; min-height: 100vh; box-sizing: border-box; padding: 64px; background: #181825; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; gap: 48px">
+
+  <header style="display: flex; flex-direction: column; gap: 8px; max-width: 920px">
+    <h1 style="margin: 0; font-size: 26px; font-weight: 700"><span style="color: #A6E3A1">$</span> animations <span style="color: #9091AB">› 04</span></h1>
+    <p style="margin: 0; color: #9091AB">// menu contextuel : le panneau qui s'ouvre par le bas. clique sur [···] pour le voir jouer.</p>
+  </header>
+
+  <section style="display: grid; grid-template-columns: 440px minmax(0, 1fr); gap: 48px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700"><span style="color: #A6E3A1">04</span> menu contextuel · ouverture par le bas (mobile)</h2>
+      <div style="position: relative; height: 600px; border-radius: 16px; overflow: hidden; background: #1E1E2E">
+        <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 24px 16px 8px">
+          <span style="color: #9091AB">[fermer]</span>
+          <span style="color: #CBA6F7; font-weight: 700">$ play --now</span>
+          <button onClick="{{openSheet}}" aria-expanded="{{sheetOpen}}" style="justify-self: end; background: none; border: 0; padding: 8px 0; cursor: pointer; color: {{dotsColor}}">[···]</button>
+        </div>
+        <div style="margin: 8px 16px 0; height: 300px; border-radius: 8px; overflow: hidden"><img src="../covers/basse-ville.svg" alt="" width="408" height="300" style="width: 100%; height: 100%; object-fit: cover; display: block"></div>
+        <div style="padding: 16px; display: flex; flex-direction: column"><span style="font-size: 18px; font-weight: 700; color: #89B4FA">néons</span><span style="color: #9091AB">// nova kid · album « basse ville »</span></div>
+        <div onClick="{{closeSheet}}" style="position: absolute; inset: 0; background: rgb(17, 17, 27); opacity: {{backdropOp}}; pointer-events: {{backdropEvents}}; transition: opacity {{sheetDur}} {{sheetEase}}"></div>
+        <div role="menu" aria-label="Options du titre" style="position: absolute; left: 0; right: 0; bottom: 0; background: #2A2A3C; border-radius: 16px 16px 0 0; padding: 8px 16px 24px; display: flex; flex-direction: column; transform: translateY({{sheetY}}); transition: transform {{sheetDur}} {{sheetEase}}">
+          <span style="align-self: center; width: 32px; height: 4px; border-radius: 2px; background: #45475A; margin-bottom: 12px"></span>
+          <div style="display: flex; align-items: center; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid #34344A">
+            <img src="../covers/basse-ville.svg" alt="" width="32" height="32" style="width: 32px; height: 32px; border-radius: 4px; object-fit: cover">
+            <span style="display: flex; flex-direction: column"><span style="color: #A6E3A1">néons</span><span style="color: #9091AB">// nova kid</span></span>
+          </div>
+          <span onClick="{{closeSheet}}" style="padding: 12px 0 8px; cursor: pointer">aller à l'album</span>
+          <span onClick="{{closeSheet}}" style="padding: 8px 0; cursor: pointer">lancer la radio</span>
+          <span onClick="{{closeSheet}}" style="padding: 8px 0 12px; cursor: pointer; border-bottom: 1px solid #34344A">infos du fichier</span>
+          <span onClick="{{closeSheet}}" style="padding: 12px 0 0; cursor: pointer; color: #F38BA8">retirer de la bibliothèque</span>
+        </div>
+      </div>
+      <span style="color: #9091AB">// clique sur [···] pour ouvrir, sur le fond ou une action pour fermer.</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <section style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #CBA6F7">≡ comportement</h3>
+        <div><span style="color: #9091AB">ouverture</span> le panneau monte du bas de l'écran pendant que le fond s'assombrit (0 → 72 %). ça part vite et ça se pose en douceur.</div>
+        <div><span style="color: #9091AB">fermeture</span> le panneau redescend plus vite qu'il n'est monté, et le fond s'éclaircit en même temps.</div>
+        <div><span style="color: #9091AB">fermer</span> &nbsp;&nbsp;&nbsp;tap sur le fond, tap sur une action, glisser le panneau vers le bas (au-delà de 30 % de sa hauteur ou vite), bouton retour.</div>
+        <div><span style="color: #9091AB">glisser</span> &nbsp;&nbsp;pendant le geste, le panneau suit le doigt et l'opacité du fond baisse en proportion. relâché trop tôt, il revient en place.</div>
+        <div><span style="color: #9091AB">desktop</span> &nbsp;&nbsp;pas de panneau : le menu déroulant apparaît en fondu + 4 px de glissement vers le bas, 120 ms.</div>
+      </section>
+
+      <section style="background: #232334; border-radius: 8px; padding: 24px; display: grid; grid-template-columns: 120px 1fr; gap: 8px 16px">
+        <h3 style="grid-column: 1 / -1; margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #FAB387">∿ paramètres</h3>
+        <span style="color: #9091AB">ouverture</span><span><span style="color: #A6E3A1">320ms</span> · <span style="color: #F9E2AF">cubic-bezier(0.32, 0.72, 0, 1)</span></span>
+        <span style="color: #9091AB">fermeture</span><span><span style="color: #A6E3A1">220ms</span> · <span style="color: #F9E2AF">cubic-bezier(0.4, 0, 1, 1)</span></span>
+        <span style="color: #9091AB">propriétés</span><span>transform: translateY (panneau) · opacity (fond)</span>
+        <span style="color: #9091AB">mouvement réduit</span><span>pas de glissement : panneau et fond apparaissent en fondu, 120 ms.</span>
+        <span style="color: #9091AB">accessibilité</span><span>focus placé sur la première action, piégé dans le panneau, rendu au bouton [···] à la fermeture.</span>
+      </section>
+
+      <section style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #94E2D5">▤ implémentation</h3>
+        <div style="background: #1E1E2E; border-radius: 6px; padding: 16px; color: #F9E2AF; white-space: pre-line">.sheet-backdrop { position: fixed; inset: 0; background: rgb(17 17 27);
+  opacity: 0; pointer-events: none;
+  transition: opacity 220ms cubic-bezier(0.4, 0, 1, 1); }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0;
+  transform: translateY(100%);
+  transition: transform 220ms cubic-bezier(0.4, 0, 1, 1); }
+
+.open .sheet-backdrop { opacity: 0.72; pointer-events: auto;
+  transition: opacity 320ms cubic-bezier(0.32, 0.72, 0, 1); }
+.open .sheet { transform: translateY(0);
+  transition: transform 320ms cubic-bezier(0.32, 0.72, 0, 1); }
+
+/* pendant le glissé : transition: none, transform = translateY(dy px),
+   opacité du fond = 0.72 × (1 − dy / hauteur) */
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .open .sheet { transform: none; transition: opacity 120ms; }
+  .sheet { opacity: 0; } .open .sheet { opacity: 1; }
+}</div>
+      </section>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1400,"height":1600}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sheet: false };
+  }
+  renderVals() {
+    const open = this.state.sheet;
+    return {
+      sheetOpen: open ? 'true' : 'false',
+      dotsColor: open ? '#A6E3A1' : '#9091AB',
+      openSheet: () => this.setState({ sheet: !open }),
+      closeSheet: () => this.setState({ sheet: false }),
+      sheetY: open ? '0' : '100%',
+      backdropOp: open ? 0.72 : 0,
+      backdropEvents: open ? 'auto' : 'none',
+      sheetDur: open ? '320ms' : '220ms',
+      sheetEase: open ? 'cubic-bezier(0.32, 0.72, 0, 1)' : 'cubic-bezier(0.4, 0, 1, 1)'
+    };
+  }
+}
+</script>
+</body>
+</html>

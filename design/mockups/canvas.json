@@ -1,0 +1,342 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Bibliotheque.dc.html": {
+      "h": 1240,
+      "page": "mobile",
+      "title": "03 · bibliothèque",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "Desktop-Accueil.dc.html": {
+      "expand": "fill",
+      "h": 1400,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "D1 · accueil",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Desktop-Biblio.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "page": "desktop",
+      "title": "D3 · bibliothèque",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "Desktop-Bibliotheque.dc.html": {
+      "expand": "fill",
+      "h": 1100,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "D3b · playlist « titres likés »",
+      "w": 1440,
+      "x": 4560,
+      "y": 0
+    },
+    "Playlist.dc.html": {
+      "h": 1000,
+      "page": "mobile",
+      "title": "03b · playlist « titres likés »",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "Desktop-Lecteur.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "D2 · lecteur",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Desktop-Notifications.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "page": "desktop",
+      "title": "D7 · notifications",
+      "w": 1440,
+      "x": 12160,
+      "y": 0
+    },
+    "Desktop-Recherche.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "page": "desktop",
+      "title": "D4 · recherche",
+      "w": 1440,
+      "x": 6080,
+      "y": 0
+    },
+    "Desktop-Recherche-Resultats.dc.html": {
+      "expand": "fill",
+      "h": 1100,
+      "page": "desktop",
+      "title": "D4b · résultats de recherche",
+      "w": 1440,
+      "x": 7600,
+      "y": 0
+    },
+    "Recherche-Resultats.dc.html": {
+      "h": 1440,
+      "page": "mobile",
+      "title": "04b · résultats de recherche",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    },
+    "Desktop-Reglages.dc.html": {
+      "expand": "fill",
+      "h": 1300,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "D6 · réglages",
+      "w": 1440,
+      "x": 10640,
+      "y": 0
+    },
+    "Desktop-Stats.dc.html": {
+      "expand": "fill",
+      "h": 1100,
+      "page": "desktop",
+      "title": "D5 · stats",
+      "w": 1440,
+      "x": 9120,
+      "y": 0
+    },
+    "Animation-Defilement.dc.html": {
+      "h": 1100,
+      "page": "animations",
+      "title": "03 · défilement artiste + album",
+      "w": 1400,
+      "x": 1520,
+      "y": 0
+    },
+    "Animation-Paroles.dc.html": {
+      "h": 1500,
+      "is_interactive": true,
+      "page": "animations",
+      "title": "05 · défilement des paroles",
+      "w": 1400,
+      "x": 4560,
+      "y": 0
+    },
+    "Animation-Panneau.dc.html": {
+      "h": 1600,
+      "is_interactive": true,
+      "page": "animations",
+      "title": "04 · panneau du bas",
+      "w": 1400,
+      "x": 3040,
+      "y": 0
+    },
+    "Animations.dc.html": {
+      "h": 1400,
+      "is_interactive": true,
+      "page": "animations",
+      "title": "01 · 02 · menu de navigation",
+      "w": 1400,
+      "x": 0,
+      "y": 0
+    },
+    "Menus-Contextuels.dc.html": {
+      "h": 2320,
+      "page": "menus",
+      "title": "menus contextuels",
+      "w": 1400,
+      "x": 0,
+      "y": 0
+    },
+    "Mini-Graphes.dc.html": {
+      "h": 1720,
+      "page": "graphes",
+      "title": "mini-graphes",
+      "w": 1400,
+      "x": 0,
+      "y": 0
+    },
+    "Multi-Appareils.dc.html": {
+      "h": 1800,
+      "page": "appareils",
+      "title": "lecture multi-appareils",
+      "w": 1400,
+      "x": 0,
+      "y": 0
+    },
+    "Vignettes-Playlists.dc.html": {
+      "h": 1820,
+      "page": "vignettes",
+      "title": "vignettes de playlist",
+      "w": 1400,
+      "x": 0,
+      "y": 0
+    },
+    "Entete-Variantes.dc.html": {
+      "h": 1680,
+      "page": "entete",
+      "title": "en-tête accueil · variantes",
+      "w": 1400,
+      "x": 0,
+      "y": 0
+    },
+    "Lecteur.dc.html": {
+      "h": 1720,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "02 · lecteur",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "Lecteur-Menu.dc.html": {
+      "h": 844,
+      "page": "mobile",
+      "title": "02b · lecteur · menu [···]",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "h": 1400,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "01 · accueil",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "Notifications.dc.html": {
+      "h": 1000,
+      "page": "mobile",
+      "title": "07 · notifications",
+      "w": 390,
+      "x": 4230,
+      "y": 0
+    },
+    "Profil.dc.html": {
+      "h": 1720,
+      "page": "mobile",
+      "title": "05 · stats",
+      "w": 390,
+      "x": 3290,
+      "y": 0
+    },
+    "Recherche.dc.html": {
+      "h": 1000,
+      "page": "mobile",
+      "title": "04 · recherche",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "Reglages.dc.html": {
+      "h": 2120,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "06 · réglages",
+      "w": 390,
+      "x": 3760,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-01T10:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "titre": {
+      "kind": "title1",
+      "maxW": 4620,
+      "page": "mobile",
+      "text": "tty.fm — maquettes mobiles",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "titreDesktop": {
+      "kind": "title1",
+      "maxW": 13600,
+      "page": "desktop",
+      "text": "tty.fm — maquettes desktop",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Lecteur.dc.html",
+    "Lecteur-Menu.dc.html",
+    "Bibliotheque.dc.html",
+    "Playlist.dc.html",
+    "Recherche.dc.html",
+    "Recherche-Resultats.dc.html",
+    "Profil.dc.html",
+    "Reglages.dc.html",
+    "Notifications.dc.html",
+    "Desktop-Accueil.dc.html",
+    "Desktop-Lecteur.dc.html",
+    "Desktop-Biblio.dc.html",
+    "Desktop-Bibliotheque.dc.html",
+    "Desktop-Recherche.dc.html",
+    "Desktop-Recherche-Resultats.dc.html",
+    "Desktop-Stats.dc.html",
+    "Desktop-Reglages.dc.html",
+    "Desktop-Notifications.dc.html",
+    "Entete-Variantes.dc.html",
+    "Vignettes-Playlists.dc.html",
+    "Multi-Appareils.dc.html",
+    "Animations.dc.html",
+    "Animation-Defilement.dc.html",
+    "Animation-Panneau.dc.html",
+    "Animation-Paroles.dc.html",
+    "Mini-Graphes.dc.html",
+    "Menus-Contextuels.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "mobile",
+      "name": "mockup · mobile"
+    },
+    {
+      "id": "desktop",
+      "name": "mockup · desktop"
+    },
+    {
+      "id": "entete",
+      "name": "spec · en-tête accueil"
+    },
+    {
+      "id": "vignettes",
+      "name": "spec · vignettes playlists"
+    },
+    {
+      "id": "appareils",
+      "name": "spec · lecture multi-appareils"
+    },
+    {
+      "id": "animations",
+      "name": "spec · animations"
+    },
+    {
+      "id": "graphes",
+      "name": "spec · mini-graphes"
+    },
+    {
+      "id": "menus",
+      "name": "spec · menus contextuels"
+    }
+  ],
+  "title": "tty.fm — app de streaming musical"
+}
