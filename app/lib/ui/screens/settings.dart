@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -36,7 +37,7 @@ class SettingsScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('réglages')),
       body: ListView(
         children: [
-          const _Header('Serveur'),
+          _Header('Serveur', action: 'éditer', onAction: () => _editAddresses(context)),
           ListTile(
             leading: Icon(route.link == LinkType.local ? Icons.home_outlined : Icons.public),
             title: Text(route.baseUrl),
@@ -53,8 +54,16 @@ class SettingsScreen extends ConsumerWidget {
               onPressed: () => ref.read(routeProvider.notifier).refresh(),
             ),
           ),
-          if (s.lanUrl.isNotEmpty) ListTile(dense: true, title: const Text('Adresse locale'), subtitle: Text(s.lanUrl)),
-          ListTile(dense: true, title: const Text('Adresse distante'), subtitle: Text(s.remoteUrl)),
+          ListTile(
+            dense: true,
+            title: const Text('Adresse distante'),
+            subtitle: Text(s.remoteUrl),
+          ),
+          ListTile(
+            dense: true,
+            title: const Text('Adresse locale'),
+            subtitle: Text(s.lanUrl.isEmpty ? 'Aucune' : s.lanUrl),
+          ),
           ListTile(
             leading: const Icon(Icons.sync),
             title: const Text('Rescanner la bibliothèque'),
@@ -126,24 +135,179 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header(this.title);
-  final String title;
+Future<void> _editAddresses(BuildContext context) async {
+  final saved = await showDialog<bool>(context: context, builder: (_) => const _AddressDialog());
+  if (saved == true && context.mounted) toast(context, 'Adresses enregistrées');
+}
+
+/// Edits the remote and LAN addresses without logging out. Both are probed
+/// before saving; if neither answers, the user can still save (e.g. when
+/// fixing the remote address from home while Tailscale is off).
+class _AddressDialog extends ConsumerStatefulWidget {
+  const _AddressDialog();
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-    child: Text.rich(
-      TextSpan(
-        children: [
-          TextSpan(
-            text: '\$ ',
-            style: TextStyle(color: Theme.of(context).colorScheme.primary),
-          ),
-          TextSpan(text: title.toLowerCase()),
-        ],
+  ConsumerState<_AddressDialog> createState() => _AddressDialogState();
+}
+
+class _AddressDialogState extends ConsumerState<_AddressDialog> {
+  late final _remote = TextEditingController(text: ref.read(settingsProvider).remoteUrl);
+  late final _lan = TextEditingController(text: ref.read(settingsProvider).lanUrl);
+  final _probe = Dio(
+    BaseOptions(connectTimeout: const Duration(seconds: 5), receiveTimeout: const Duration(seconds: 5)),
+  );
+  bool _busy = false;
+  bool _force = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _remote.dispose();
+    _lan.dispose();
+    _probe.close();
+    super.dispose();
+  }
+
+  Future<bool> _answers(String base) async {
+    if (base.isEmpty) return false;
+    try {
+      final r = await _probe.get('$base$apiPrefix/health');
+      return r.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _save() async {
+    final remote = normalizeUrl(_remote.text);
+    final lan = normalizeUrl(_lan.text);
+    if (remote.isEmpty) {
+      setState(() => _error = 'Adresse distante requise');
+      return;
+    }
+    if (!_force) {
+      setState(() {
+        _busy = true;
+        _error = null;
+      });
+      final ok = await Future.wait([_answers(remote), _answers(lan)]);
+      if (!mounted) return;
+      if (!ok[0] && !ok[1]) {
+        setState(() {
+          _busy = false;
+          _force = true;
+          _error = 'Aucune adresse ne répond. Vérifie la saisie, ou enregistre quand même.';
+        });
+        return;
+      }
+    }
+    final s = ref.read(settingsProvider);
+    await ref.read(settingsProvider.notifier).update(s.copyWith(remoteUrl: remote, lanUrl: lan));
+    if (mounted) Navigator.pop(context, true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Editing an address again means it should be probed again.
+    void edited(String _) {
+      if (_force || _error != null) {
+        setState(() {
+          _force = false;
+          _error = null;
+        });
+      }
+    }
+
+    return AlertDialog(
+      title: const Text('Adresses du serveur'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _remote,
+              decoration: const InputDecoration(
+                labelText: 'Adresse distante',
+                hintText: 'nas.tailnet.ts.net:4533',
+                helperText: 'Adresse Tailscale, utilisée partout',
+              ),
+              keyboardType: TextInputType.url,
+              autocorrect: false,
+              onChanged: edited,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _lan,
+              decoration: const InputDecoration(
+                labelText: 'Adresse locale (optionnelle)',
+                hintText: '192.168.1.20:4533',
+                helperText: 'Préférée à la maison',
+              ),
+              keyboardType: TextInputType.url,
+              autocorrect: false,
+              onChanged: edited,
+              onSubmitted: (_) {
+                if (!_busy) _save();
+              },
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
+          ],
+        ),
       ),
-      style: const TextStyle(fontWeight: FontWeight.w700),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
+        FilledButton(
+          onPressed: _busy ? null : _save,
+          child: _busy
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              : Text(_force ? 'Enregistrer quand même' : 'Enregistrer'),
+        ),
+      ],
+    );
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header(this.title, {this.action, this.onAction});
+  final String title;
+
+  /// Optional action shown as `[action]` at the end of the line.
+  final String? action;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final header = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+      child: _title(context),
+    );
+    if (action == null) return header;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(child: header),
+        Padding(
+          padding: const EdgeInsets.only(right: 4),
+          child: TextButton(onPressed: onAction, child: Text('[$action]')),
+        ),
+      ],
+    );
+  }
+
+  Widget _title(BuildContext context) => Text.rich(
+    TextSpan(
+      children: [
+        TextSpan(
+          text: '\$ ',
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+        ),
+        TextSpan(text: title.toLowerCase()),
+      ],
     ),
+    style: const TextStyle(fontWeight: FontWeight.w700),
   );
 }
