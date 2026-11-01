@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app_info.dart';
 import '../../data/models.dart';
 import '../../state/library.dart';
 import '../../state/playback.dart';
@@ -32,6 +33,7 @@ class HomeScreen extends ConsumerWidget {
       builder: (h) {
         final header = TtyPrompt(
           'accueil',
+          brand: wide ? null : appDisplayName,
           comment: h.recentlyAdded.isEmpty
               ? '${greeting()}. bibliothèque vide : ajoute de la musique dans le dossier du NAS.'
               : '${greeting()}. ${_addedRecently(h.recentlyAdded)}',
@@ -46,10 +48,15 @@ class HomeScreen extends ConsumerWidget {
                     child: Text('> grep titre, artiste, album…', style: TextStyle(color: c.muted)),
                   ),
                 )
-              : IconButton(
-                  icon: Icon(Icons.settings_outlined, color: c.muted),
-                  tooltip: 'Réglages',
-                  onPressed: () => openSettings(context),
+              : Transform.translate(
+                  offset: const Offset(8, 0),
+                  child: SquareIconButton(
+                    icon: Icons.settings,
+                    size: 20,
+                    color: c.muted,
+                    tooltip: 'Réglages',
+                    onPressed: () => openSettings(context),
+                  ),
                 ),
         );
 

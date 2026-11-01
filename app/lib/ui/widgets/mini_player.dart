@@ -16,8 +16,9 @@ import 'tty.dart';
 /// Accent colour of a track (stable per album), used for its title.
 Color trackColor(BuildContext context, Track t) => Tty.of(context).accentFor(t.albumId);
 
-/// Mobile player card above the tab bar: cover, title, "// artist", like,
-/// play/pause and a thin progress line. Tap opens the full player.
+/// Mobile player card above the tab bar: play/pause on the left, cover and
+/// title (tap opens the full player), like, previous / next, and a thin
+/// progress line.
 class MiniPlayer extends ConsumerWidget {
   const MiniPlayer({super.key});
 
@@ -30,78 +31,84 @@ class MiniPlayer extends ConsumerWidget {
     }
     final playing = ref.watch(playbackStateProvider.select((s) => s.playing));
     final buffering = ref.watch(playbackStateProvider.select((s) => s.buffering));
+    final hasNext = ref.watch(playbackStateProvider.select((s) => s.hasNext));
     final fav = ref.watch(favoritesProvider.select((f) => f.value?['tracks']?.contains(track.id) ?? false));
     final c = Tty.of(context);
     final pc = ref.read(playbackControllerProvider);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-      child: Material(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(8),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: () => openNowPlaying(context),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Hero(
-                      tag: 'now-cover',
-                      child: CoverImage(track.coverId, size: 40, label: track.artist, seed: track.albumId),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            track.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: trackColor(context, track)),
-                          ),
-                          Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(text: '// ${track.artist}'),
-                                if (playing)
-                                  TextSpan(
-                                    text: ' · ▁▃▅▂',
-                                    style: TextStyle(color: c.green),
-                                  ),
-                              ],
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: c.muted, fontSize: 12),
-                          ),
-                        ],
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 12),
+      decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(8)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              buffering && playing
+                  ? const SizedBox.square(
+                      dimension: 40,
+                      child: Center(
+                        child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
                       ),
+                    )
+                  : SquareIconButton(
+                      icon: playing ? Icons.pause : Icons.play_arrow,
+                      tooltip: playing ? 'Pause' : 'Lecture',
+                      onPressed: pc.togglePlay,
                     ),
-                    if (fav) const HeartIcon(true, size: 14),
-                    SizedBox(
-                      width: 44,
-                      child: buffering && playing
-                          ? const Center(
-                              child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
-                            )
-                          : IconButton(
-                              icon: Icon(playing ? Icons.pause : Icons.play_arrow, size: 24),
-                              onPressed: pc.togglePlay,
-                              tooltip: playing ? 'Pause' : 'Lecture',
-                            ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Semantics(
+                  button: true,
+                  label: 'Ouvrir le lecteur',
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(4),
+                    onTap: () => openNowPlaying(context),
+                    child: Row(
+                      children: [
+                        Hero(
+                          tag: 'now-cover',
+                          child: CoverImage(track.coverId, size: 40, label: track.artist, seed: track.albumId),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                track.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: trackColor(context, track)),
+                              ),
+                              Text(
+                                '// ${track.artist}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: c.muted, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                const Padding(padding: EdgeInsets.only(right: 8), child: _ThinProgress()),
-              ],
-            ),
+              ),
+              const SizedBox(width: 4),
+              SquareIconButton(
+                icon: Icons.favorite,
+                color: fav ? c.red : c.muted,
+                tooltip: fav ? 'Retirer des titres likés' : 'Ajouter aux titres likés',
+                onPressed: () => ref.read(favoritesProvider.notifier).toggle('tracks', track.id),
+              ),
+              SquareIconButton(icon: Icons.skip_previous, tooltip: 'Titre précédent', onPressed: pc.previous),
+              SquareIconButton(icon: Icons.skip_next, tooltip: 'Titre suivant', onPressed: hasNext ? pc.next : null),
+            ],
           ),
-        ),
+          const SizedBox(height: 8),
+          const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: _ThinProgress()),
+        ],
       ),
     );
   }

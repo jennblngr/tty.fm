@@ -324,8 +324,13 @@ class _Browse extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(color: color, fontWeight: FontWeight.w700),
                           ),
-                          Text(
-                            '${sparkline(g.name.hashCode, length: 4)} · ${g.count} titres',
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                miniGraphSpan(sparkline(g.name.hashCode, length: 4), color: color),
+                                TextSpan(text: ' · ${g.count} titres'),
+                              ],
+                            ),
                             style: TextStyle(color: c.muted, fontSize: 12),
                           ),
                         ],

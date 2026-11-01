@@ -13,6 +13,7 @@ class Tty extends ThemeExtension<Tty> {
     required this.panel,
     required this.border,
     required this.track,
+    required this.empty,
     required this.text,
     required this.muted,
     required this.green,
@@ -33,6 +34,7 @@ class Tty extends ThemeExtension<Tty> {
   final Color panel; // stat cards
   final Color border;
   final Color track; // empty part of progress bars
+  final Color empty; // empty cells of meters and graphs
   final Color text;
   final Color muted; // secondary text, "// comments"
   final Color green; // prompt, active, play
@@ -53,6 +55,7 @@ class Tty extends ThemeExtension<Tty> {
     panel: Color(0xFF232334),
     border: Color(0xFF34344A),
     track: Color(0xFF3A3A50),
+    empty: Color(0xFF45475A),
     text: Color(0xFFE2E2EE),
     muted: Color(0xFF9091AB),
     green: Color(0xFFA6E3A1),
@@ -74,6 +77,7 @@ class Tty extends ThemeExtension<Tty> {
     panel: Color(0xFFE6E9EF),
     border: Color(0xFFCCD0DA),
     track: Color(0xFFBCC0CC),
+    empty: Color(0xFFACB0BE),
     text: Color(0xFF4C4F69),
     muted: Color(0xFF6C6F85),
     green: Color(0xFF40A02B),

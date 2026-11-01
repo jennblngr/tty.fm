@@ -251,8 +251,13 @@ class _TopGenres extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      '${s.topGenres[i].name.toLowerCase()} ${sparkline(s.topGenres[i].name.hashCode, length: 4)}',
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(text: '${s.topGenres[i].name.toLowerCase()} '),
+                          miniGraphSpan(sparkline(s.topGenres[i].name.hashCode, length: 4)),
+                        ],
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(color: c.accents[(i + 1) % c.accents.length]),

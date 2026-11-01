@@ -145,6 +145,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                       type: MaterialType.transparency,
                       child: TrackTile(
                         e.track,
+                        leadingNumber: i + 1,
                         onTap: () => c.playTracks(tracks, index: i, contextKind: 'playlist', contextId: id),
                         trailing: ReorderableDragStartListener(
                           index: i,

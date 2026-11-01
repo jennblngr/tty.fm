@@ -5,27 +5,33 @@ import '../theme.dart';
 // Small building blocks of the terminal look: "$ command" headers,
 // "// comments", "[bracket]" links and "[████░░]" meters.
 
-/// Page header: "$ command" and an optional "// comment" line.
+/// Page header: "[brand] $ command", trailing actions, and an optional
+/// "// comment" line under it across the full width.
 class TtyPrompt extends StatelessWidget {
-  const TtyPrompt(this.command, {super.key, this.comment, this.trailing});
+  const TtyPrompt(this.command, {super.key, this.comment, this.trailing, this.brand});
   final String command;
   final String? comment;
   final Widget? trailing;
+  final String? brand; // "tty.fm", in mauve before the prompt
 
   @override
   Widget build(BuildContext context) {
     final c = Tty.of(context);
     final style = Theme.of(context).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.w400);
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text.rich(
+        Row(
+          children: [
+            Expanded(
+              child: Text.rich(
                 TextSpan(
                   children: [
+                    if (brand != null)
+                      TextSpan(
+                        text: '$brand ',
+                        style: TextStyle(color: c.mauve),
+                      ),
                     TextSpan(
                       text: '\$ ',
                       style: TextStyle(color: c.green),
@@ -35,11 +41,11 @@ class TtyPrompt extends StatelessWidget {
                 ),
                 style: style,
               ),
-              if (comment != null) Comment(comment!),
-            ],
-          ),
+            ),
+            ?trailing,
+          ],
         ),
-        ?trailing,
+        if (comment != null) Comment(comment!),
       ],
     );
   }
@@ -153,7 +159,9 @@ class TtyLink extends StatelessWidget {
   }
 }
 
-/// Text meter: "[███████░░░]" (filled part coloured).
+/// Meter "[▮▮▮▮▮▮▮▯▯▯]": filled cells coloured, empty ones in [Tty.empty].
+/// Drawn rather than written with "█░", which JetBrains Mono lacks (the
+/// fallback font draws them lower). 10 cells for a %, 8 for the volume.
 class TtyMeter extends StatelessWidget {
   const TtyMeter(this.value, {super.key, this.cells = 10, this.color, this.suffix});
   final double value; // 0..1
@@ -170,17 +178,84 @@ class TtyMeter extends StatelessWidget {
         style: TextStyle(color: c.muted),
         children: [
           const TextSpan(text: '['),
-          TextSpan(
-            text: '█' * n,
-            style: TextStyle(color: color ?? c.green),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: MiniGraph(List.filled(n, 8) + List.filled(cells - n, 0), color: color ?? c.green, empty: c.empty),
           ),
-          TextSpan(text: '░' * (cells - n)),
           TextSpan(text: ']${suffix == null ? '' : ' $suffix'}'),
         ],
       ),
     );
   }
 }
+
+/// Mini bar graph sized like text: each bar is 0.6em wide (one character
+/// column, 7 units of bar + 1 of gap) and the graph 0.75em high, sitting on
+/// the baseline. [heights] go from 1 to 8 eighths; with [empty] set, a 0
+/// draws a full cell in that colour (meters).
+class MiniGraph extends StatelessWidget {
+  const MiniGraph(this.heights, {super.key, this.color, this.empty, this.fontSize});
+  final List<int> heights;
+  final Color? color;
+  final Color? empty;
+  final double? fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = DefaultTextStyle.of(context).style;
+    final em = fontSize ?? style.fontSize ?? 13;
+    return ExcludeSemantics(
+      child: CustomPaint(
+        size: Size(0.6 * em * heights.length, 0.75 * em),
+        painter: _MiniGraphPainter(heights, color ?? style.color ?? Tty.of(context).text, empty),
+      ),
+    );
+  }
+}
+
+class _MiniGraphPainter extends CustomPainter {
+  _MiniGraphPainter(this.heights, this.color, this.empty);
+  final List<int> heights;
+  final Color color;
+  final Color? empty;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (heights.isEmpty) return;
+    // viewBox 0 0 (8n − 1) 8, stretched to the size.
+    final sx = size.width / (8 * heights.length - 1);
+    final sy = size.height / 8;
+    final on = Paint()..color = color;
+    final off = empty == null ? null : (Paint()..color = empty!);
+    for (var i = 0; i < heights.length; i++) {
+      final h = heights[i].clamp(0, 8);
+      final paint = h == 0 ? off : on;
+      if (paint == null) continue;
+      final top = h == 0 ? 0 : 8 - h;
+      canvas.drawRect(Rect.fromLTRB(8 * i * sx, top * sy, (8 * i + 7) * sx, size.height), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_MiniGraphPainter old) =>
+      old.color != color || old.empty != empty || !_listEquals(old.heights, heights);
+
+  static bool _listEquals(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+}
+
+/// [MiniGraph] inside a [Text.rich], on the baseline.
+InlineSpan miniGraphSpan(List<int> heights, {Color? color}) => WidgetSpan(
+  alignment: PlaceholderAlignment.baseline,
+  baseline: TextBaseline.alphabetic,
+  child: MiniGraph(heights, color: color),
+);
 
 /// Initials of a name for coloured tiles: "nova kid" → "nk", "faune" → "fa".
 String initialsOf(String name) {
@@ -292,17 +367,11 @@ class TtyPanel extends StatelessWidget {
   );
 }
 
-/// Unicode mini bars ("▂▅▇▃▆") derived from a seed: a decorative signature
-/// for tiles, stable for a given item.
-String sparkline(int seed, {int length = 6}) {
-  const bars = '▁▂▃▄▅▆▇';
+/// Bar heights (1–7 eighths) derived from a seed, for a [MiniGraph]: a
+/// decorative signature for tiles, stable for a given item.
+List<int> sparkline(int seed, {int length = 6}) {
   var x = seed * 2654435761 & 0x7fffffff;
-  final out = StringBuffer();
-  for (var i = 0; i < length; i++) {
-    x = (x * 1103515245 + 12345) & 0x7fffffff;
-    out.write(bars[x % bars.length]);
-  }
-  return out.toString();
+  return [for (var i = 0; i < length; i++) (x = (x * 1103515245 + 12345) & 0x7fffffff) % 7 + 1];
 }
 
 /// Scrollable page body with the design's margins (wider on desktop).
@@ -360,6 +429,58 @@ String relativeDay(DateTime t) {
 
 /// "bonjour" / "bonsoir" depending on the hour.
 String greeting() => DateTime.now().hour >= 18 || DateTime.now().hour < 5 ? 'bonsoir' : 'bonjour';
+
+/// Icon button in a square box: 40×40 on mobile, 36×36 on desktop. Filled
+/// icons, muted when disabled.
+class SquareIconButton extends StatelessWidget {
+  const SquareIconButton({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.color,
+    this.size = 22,
+    this.badge,
+  });
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final Color? color;
+  final double size;
+  final Color? badge; // small dot in the top-right corner
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Tty.of(context);
+    final box = MediaQuery.sizeOf(context).width >= 900 ? 36.0 : 40.0;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(6),
+        child: SizedBox.square(
+          dimension: box,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(icon, size: size, color: onPressed == null ? c.empty : (color ?? c.text), semanticLabel: tooltip),
+              if (badge != null)
+                Positioned(
+                  top: box / 2 - size / 2 - 1,
+                  right: box / 2 - size / 2 - 1,
+                  child: Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(color: badge, shape: BoxShape.circle),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// Like marker. An icon rather than "♥": Android draws that character as a
 /// colour emoji whatever the font.
