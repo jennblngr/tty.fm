@@ -37,6 +37,7 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["appLabel"] = "tty.fm"
     }
 
     signingConfigs {
@@ -51,6 +52,11 @@ android {
     }
 
     buildTypes {
+        // Debug builds install alongside the release app.
+        debug {
+            applicationIdSuffix = ".dev"
+            manifestPlaceholders["appLabel"] = "tty.fm dev"
+        }
         release {
             signingConfig = signingConfigs.findByName("release")
                 ?: signingConfigs.getByName("debug")
