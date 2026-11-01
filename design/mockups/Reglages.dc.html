@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Réglages — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+html,body{overflow-x:hidden}
+body{margin:0;background:#1E1E2E}
+a{color:#A6E3A1;text-decoration:none}a:hover{color:#C8F0C4}
+button{font:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 2120px; box-sizing: border-box; overflow-x: clip; background: #1E1E2E; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; padding-top: 48px">
+
+  <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; padding: 8px 16px 12px">
+    <a href="Main.dc.html" style="justify-self: start; color: #9091AB; padding: 12px 0">[fermer]</a>
+    <span style="color: #CBA6F7; font-weight: 700">$ réglages</span>
+    <a href="Main.dc.html" style="justify-self: end; color: #A6E3A1; font-weight: 700; padding: 12px 0">[ok]</a>
+  </div>
+
+  <div style="padding: 24px 16px 32px; display: flex; flex-direction: column; gap: 32px">
+
+    <section style="display: flex; flex-direction: column; gap: 2px">
+      <h2 style="margin: 0 0 8px; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #A6E3A1" aria-hidden="true">▶</span>lecture</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px"><span>fondu enchaîné</span><span style="display: flex"><sc-for list="{{fade}}" as="o" hint-placeholder-count="3"><button onClick="{{o.pick}}" style="background: none; border: 0; padding: 8px 4px; cursor: pointer; color: {{o.color}}; font-weight: {{o.weight}}">[{{o.label}}]</button></sc-for></span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px"><span>lecture auto</span><span style="display: flex"><sc-for list="{{autoplay}}" as="o" hint-placeholder-count="2"><button onClick="{{o.pick}}" style="background: none; border: 0; padding: 8px 4px; cursor: pointer; color: {{o.color}}; font-weight: {{o.weight}}">[{{o.label}}]</button></sc-for></span></div>
+      <div style="color: #9091AB; padding-left: 24px; margin-top: -8px">// à la fin de la file, si la répétition est off : enchaîne des titres similaires. on par défaut.</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px"><span>volume égalisé</span><span style="display: flex"><sc-for list="{{normalize}}" as="o" hint-placeholder-count="2"><button onClick="{{o.pick}}" style="background: none; border: 0; padding: 8px 4px; cursor: pointer; color: {{o.color}}; font-weight: {{o.weight}}">[{{o.label}}]</button></sc-for></span></div>
+      <div style="color: #9091AB; padding-left: 24px; margin-top: -8px">// même niveau sonore d'un titre à l'autre</div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 2px">
+      <h2 style="margin: 0 0 8px; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #FAB387" aria-hidden="true">∿</span>son</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px"><span>qualité</span><span style="display: flex"><sc-for list="{{quality}}" as="o" hint-placeholder-count="3"><button onClick="{{o.pick}}" style="background: none; border: 0; padding: 8px 4px; cursor: pointer; color: {{o.color}}; font-weight: {{o.weight}}">[{{o.label}}]</button></sc-for></span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px">
+        <span>égaliseur</span>
+        <span style="display: flex; align-items: center; gap: 8px">
+          <button onClick="{{eqPrev}}" aria-label="Préréglage précédent" style="background: none; border: 0; color: #A6E3A1; padding: 8px 4px; cursor: pointer">[&lt;]</button>
+          <span style="min-width: 72px; text-align: center">{{eqName}}</span>
+          <button onClick="{{eqNext}}" aria-label="Préréglage suivant" style="background: none; border: 0; color: #A6E3A1; padding: 8px 4px; cursor: pointer">[&gt;]</button>
+        </span>
+      </div>
+      <div style="margin: 4px 0 0 24px; background: #2A2A3C; border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 4px">
+        <span aria-hidden="true" style="display: flex; align-items: flex-end; justify-content: space-between; height: 32px; color: #FAB387"><sc-for list="{{eqCols}}" as="b" hint-placeholder-count="7"><span style="width: 16px; height: {{b.h}}; background: currentColor"></span></sc-for></span>
+        <span style="color: #9091AB; font-size: 10px; display: flex; justify-content: space-between"><span>60</span><span>150</span><span>400</span><span>1k</span><span>2.4k</span><span>6k</span><span>15k</span></span>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 2px">
+      <h2 style="margin: 0 0 8px; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #89B4FA" aria-hidden="true">▦</span>bibliothèque</h2>
+      <div style="padding-left: 24px; color: #9091AB">dossiers de musique</div>
+      <div style="padding-left: 24px; display: flex; justify-content: space-between"><span>├─ ~/Musique</span><span style="color: #9091AB">3 920</span></div>
+      <div style="padding-left: 24px; display: flex; justify-content: space-between"><span>└─ ~/Téléchargements/flac</span><span style="color: #9091AB">892</span></div>
+      <div style="padding-left: 24px"><button style="background: none; border: 0; color: #A6E3A1; padding: 8px 0; cursor: pointer">[+ ajouter un dossier]</button></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px"><span>scan automatique</span><span style="display: flex"><sc-for list="{{scan}}" as="o" hint-placeholder-count="2"><button onClick="{{o.pick}}" style="background: none; border: 0; padding: 8px 4px; cursor: pointer; color: {{o.color}}; font-weight: {{o.weight}}">[{{o.label}}]</button></sc-for></span></div>
+      <div style="color: #9091AB; padding-left: 24px; margin-top: -8px">// détecte les fichiers ajoutés dans ces dossiers</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px"><span>analyse audio</span><span style="display: flex"><sc-for list="{{analysis}}" as="o" hint-placeholder-count="2"><button onClick="{{o.pick}}" style="background: none; border: 0; padding: 8px 4px; cursor: pointer; color: {{o.color}}; font-weight: {{o.weight}}">[{{o.label}}]</button></sc-for></span></div>
+      <div style="color: #9091AB; padding-left: 24px; margin-top: -8px">// calcule genre, bpm et tonalité à l'import</div>
+      <div style="padding-left: 24px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center"><span style="color: #9091AB; display: flex; flex-direction: column"><span>4 812 titres · 38 Go</span><span>// scan il y a 2 h</span></span><button style="background: none; border: 0; color: #A6E3A1; padding: 8px 0; cursor: pointer">[rescanner]</button></div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 2px">
+      <h2 style="margin: 0 0 8px; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #CBA6F7" aria-hidden="true">◐</span>apparence</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px"><span>suivre le système</span><span style="display: flex"><sc-for list="{{follow}}" as="o" hint-placeholder-count="2"><button onClick="{{o.pick}}" style="background: none; border: 0; padding: 8px 4px; cursor: pointer; color: {{o.color}}; font-weight: {{o.weight}}">[{{o.label}}]</button></sc-for></span></div>
+      <div style="color: #9091AB; padding-left: 24px; margin-top: -8px">{{followHint}}</div>
+      <div style="padding-left: 24px; margin-top: 8px; color: #9091AB">thèmes sombres</div>
+      <div role="radiogroup" aria-label="Thèmes sombres" style="padding-left: 24px; display: flex; flex-direction: column">
+        <sc-for list="{{darkThemes}}" as="t" hint-placeholder-count="7">
+          <button role="radio" aria-checked="{{t.checked}}" onClick="{{t.pick}}" style="display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 6px 0; cursor: pointer; text-align: left; color: {{t.color}}">
+            <span aria-hidden="true" style="width: 72px; height: 24px; flex: none; box-sizing: border-box; border-radius: 4px; border: 1px solid #34344A; background: {{t.bg}}; display: flex; align-items: center; justify-content: center; gap: 4px"><sc-for list="{{t.dots}}" as="d" hint-placeholder-count="5"><span style="width: 8px; height: 8px; border-radius: 4px; background: {{d.c}}"></span></sc-for></span>
+            <span style="flex: 1">{{t.name}}</span><span style="color: #A6E3A1">{{t.mark}}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="padding-left: 24px; margin-top: 8px; color: #9091AB">thèmes clairs</div>
+      <div role="radiogroup" aria-label="Thèmes clairs" style="padding-left: 24px; display: flex; flex-direction: column">
+        <sc-for list="{{lightThemes}}" as="t" hint-placeholder-count="5">
+          <button role="radio" aria-checked="{{t.checked}}" onClick="{{t.pick}}" style="display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 6px 0; cursor: pointer; text-align: left; color: {{t.color}}">
+            <span aria-hidden="true" style="width: 72px; height: 24px; flex: none; box-sizing: border-box; border-radius: 4px; border: 1px solid #34344A; background: {{t.bg}}; display: flex; align-items: center; justify-content: center; gap: 4px"><sc-for list="{{t.dots}}" as="d" hint-placeholder-count="5"><span style="width: 8px; height: 8px; border-radius: 4px; background: {{d.c}}"></span></sc-for></span>
+            <span style="flex: 1">{{t.name}}</span><span style="color: #A6E3A1">{{t.mark}}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="color: #9091AB; padding-left: 24px">// les couleurs d'accent viennent du thème</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px; margin-top: 8px"><span>taille du texte</span><span style="display: flex"><sc-for list="{{textSize}}" as="o" hint-placeholder-count="3"><button onClick="{{o.pick}}" style="background: none; border: 0; padding: 8px 4px; cursor: pointer; color: {{o.color}}; font-weight: {{o.weight}}">[{{o.label}}]</button></sc-for></span></div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 2px">
+      <h2 style="margin: 0 0 8px; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #F9E2AF" aria-hidden="true">◔</span>notifications</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px"><span>analyse terminée</span><span style="display: flex"><sc-for list="{{nAnalysis}}" as="o" hint-placeholder-count="2"><button onClick="{{o.pick}}" style="background: none; border: 0; padding: 8px 4px; cursor: pointer; color: {{o.color}}; font-weight: {{o.weight}}">[{{o.label}}]</button></sc-for></span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px"><span>mix prêts</span><span style="display: flex"><sc-for list="{{nMix}}" as="o" hint-placeholder-count="2"><button onClick="{{o.pick}}" style="background: none; border: 0; padding: 8px 4px; cursor: pointer; color: {{o.color}}; font-weight: {{o.weight}}">[{{o.label}}]</button></sc-for></span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px"><span>nouvelles sorties</span><span style="display: flex"><sc-for list="{{nReleases}}" as="o" hint-placeholder-count="2"><button onClick="{{o.pick}}" style="background: none; border: 0; padding: 8px 4px; cursor: pointer; color: {{o.color}}; font-weight: {{o.weight}}">[{{o.label}}]</button></sc-for></span></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 24px"><span>stats &amp; rétro</span><span style="display: flex"><sc-for list="{{nStats}}" as="o" hint-placeholder-count="2"><button onClick="{{o.pick}}" style="background: none; border: 0; padding: 8px 4px; cursor: pointer; color: {{o.color}}; font-weight: {{o.weight}}">[{{o.label}}]</button></sc-for></span></div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0 0 2px; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #94E2D5" aria-hidden="true">▤</span>données</h2>
+      <button style="margin-left: 24px; text-align: left; background: #2A2A3C; border: 0; border-radius: 6px; color: #E2E2EE; padding: 12px; cursor: pointer">$ exporter les stats <span style="color: #9091AB">(.csv)</span></button>
+      <button style="margin-left: 24px; text-align: left; background: #2A2A3C; border: 0; border-radius: 6px; color: #E2E2EE; padding: 12px; cursor: pointer">$ vider le cache <span style="color: #9091AB">(pochettes, 210 Mo)</span></button>
+      <button style="margin-left: 24px; text-align: left; background: #3D2633; border: 0; border-radius: 6px; color: #F38BA8; padding: 12px; cursor: pointer">$ réinitialiser l'analyse audio</button>
+    </section>
+
+    <div style="color: #9091AB; text-align: center">// tty.fm v0.1.0</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2120}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      fade: '6 s', autoplay: 'on', normalize: 'on', quality: 'lossless', eq: 1,
+      scan: 'on', analysis: 'on', follow: 'on', dark: 'catppuccin mocha', light: 'catppuccin latte', fixed: 'catppuccin mocha', textSize: 'normal',
+      nAnalysis: 'on', nMix: 'on', nReleases: 'off', nStats: 'on'
+    };
+  }
+  seg(key, labels) {
+    return labels.map((label) => ({
+      label: label,
+      color: this.state[key] === label ? '#A6E3A1' : '#9091AB',
+      weight: this.state[key] === label ? 700 : 400,
+      pick: () => this.setState({ [key]: label })
+    }));
+  }
+  renderVals() {
+    const s = this.state;
+    const presets = [
+      { name: 'plat', bars: '▄▄▄▄▄▄▄' },
+      { name: 'basses+', bars: '▇▆▅▄▄▄▄' },
+      { name: 'voix', bars: '▃▄▅▇▆▄▃' },
+      { name: 'soirée', bars: '▆▅▄▃▄▆▇' },
+      { name: 'perso', bars: '▅▆▄▃▅▆▄' }
+    ];
+    const p = presets[s.eq];
+    const darkList = [
+      ['catppuccin mocha', '#1E1E2E', '#CBA6F7 #A6E3A1 #FAB387 #89B4FA #F38BA8'],
+      ['dracula', '#282A36', '#BD93F9 #50FA7B #FFB86C #8BE9FD #FF79C6'],
+      ['nord', '#2E3440', '#88C0D0 #A3BE8C #EBCB8B #81A1C1 #BF616A'],
+      ['gruvbox dark', '#282828', '#D3869B #B8BB26 #FE8019 #83A598 #FB4934'],
+      ['tokyo night', '#1A1B26', '#BB9AF7 #9ECE6A #FF9E64 #7AA2F7 #F7768E'],
+      ['rosé pine', '#191724', '#C4A7E7 #9CCFD8 #F6C177 #31748F #EB6F92'],
+      ['one dark', '#282C34', '#C678DD #98C379 #D19A66 #61AFEF #E06C75']
+    ];
+    const lightList = [
+      ['catppuccin latte', '#EFF1F5', '#8839EF #40A02B #FE640B #1E66F5 #D20F39'],
+      ['solarized light', '#FDF6E3', '#6C71C4 #859900 #CB4B16 #268BD2 #DC322F'],
+      ['gruvbox light', '#FBF1C7', '#8F3F71 #79740E #AF3A03 #076678 #9D0006'],
+      ['rosé pine dawn', '#FAF4ED', '#907AA9 #56949F #EA9D34 #286983 #B4637A'],
+      ['one light', '#FAFAFA', '#A626A4 #50A14F #C18401 #4078F2 #E45649']
+    ];
+    const following = s.follow === 'on';
+    const themeRows = (list, slot) => list.map(([name, bg, dots]) => {
+      const on = following ? s[slot] === name : s.fixed === name;
+      return {
+        name: name, bg: bg,
+        dots: dots.split(' ').map((c) => ({ c: c })),
+        checked: on ? 'true' : 'false',
+        mark: on ? (following ? (slot === 'dark' ? '✓ nuit' : '✓ jour') : '✓') : '',
+        color: on ? '#E2E2EE' : '#9091AB',
+        pick: () => this.setState(following ? { [slot]: name } : { fixed: name })
+      };
+    });
+    const onOff = ['off', 'on'];
+    return {
+      fade: this.seg('fade', ['off', '6 s', '12 s']),
+      autoplay: this.seg('autoplay', onOff),
+      normalize: this.seg('normalize', onOff),
+      quality: this.seg('quality', ['normal', 'élevée', 'lossless']),
+      eqName: p.name,
+      eqCols: p.bars.split('').map((c) => ({ h: (('▁▂▃▄▅▆▇█'.indexOf(c) + 1) * 12.5) + '%' })),
+      eqPrev: () => this.setState({ eq: (s.eq + presets.length - 1) % presets.length }),
+      eqNext: () => this.setState({ eq: (s.eq + 1) % presets.length }),
+      scan: this.seg('scan', onOff),
+      analysis: this.seg('analysis', onOff),
+      follow: this.seg('follow', onOff),
+      followHint: following ? '// un thème sombre pour la nuit, un clair pour le jour, selon le système' : '// un seul thème, choisis-le dans une des deux listes',
+      darkThemes: themeRows(darkList, 'dark'),
+      lightThemes: themeRows(lightList, 'light'),
+      textSize: this.seg('textSize', ['petit', 'normal', 'grand']),
+      nAnalysis: this.seg('nAnalysis', onOff),
+      nMix: this.seg('nMix', onOff),
+      nReleases: this.seg('nReleases', onOff),
+      nStats: this.seg('nStats', onOff)
+    };
+  }
+}
+</script>
+</body>
+</html>

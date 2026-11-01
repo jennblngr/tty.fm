@@ -160,15 +160,20 @@ class _AppShellState extends State<AppShell> {
   }
 }
 
-/// Mobile tab bar: four words, the active one green with a top rule.
+/// Mobile tab bar: four words, the active one green, with a rule on top
+/// that slides to it (plain change with reduced motion).
 class _TabBar extends StatelessWidget {
   const _TabBar({required this.index, required this.onSelect});
   final int index;
   final ValueChanged<int> onSelect;
 
+  static const _curve = Cubic(0.65, 0, 0.35, 1);
+
   @override
   Widget build(BuildContext context) {
     final c = Tty.of(context);
+    final reduced = MediaQuery.of(context).disableAnimations;
+    final duration = reduced ? Duration.zero : const Duration(milliseconds: 360);
     return Container(
       decoration: BoxDecoration(
         color: c.base,
@@ -176,34 +181,49 @@ class _TabBar extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Row(
+        child: Stack(
           children: [
-            for (var i = 0; i < _tabs.length; i++)
-              Expanded(
-                child: Semantics(
-                  selected: i == index,
-                  button: true,
-                  child: InkWell(
-                    onTap: () => onSelect(i),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      decoration: BoxDecoration(
-                        border: Border(top: BorderSide(color: i == index ? c.green : Colors.transparent, width: 2)),
-                      ),
-                      child: Center(
-                        heightFactor: 1,
-                        child: Text(
-                          _tabs[i].label,
-                          style: TextStyle(
-                            color: i == index ? c.green : c.muted,
-                            fontWeight: i == index ? FontWeight.w600 : FontWeight.w400,
+            Row(
+              children: [
+                for (var i = 0; i < _tabs.length; i++)
+                  Expanded(
+                    child: Semantics(
+                      selected: i == index,
+                      button: true,
+                      child: InkWell(
+                        onTap: () => onSelect(i),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Center(
+                            heightFactor: 1,
+                            child: AnimatedDefaultTextStyle(
+                              duration: duration,
+                              curve: _curve,
+                              style: DefaultTextStyle.of(context).style.copyWith(
+                                color: i == index ? c.green : c.muted,
+                                fontWeight: i == index ? FontWeight.w500 : FontWeight.w400,
+                              ),
+                              child: Text(_tabs[i].label),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
+              ],
+            ),
+            Positioned.fill(
+              bottom: null,
+              child: AnimatedAlign(
+                duration: duration,
+                curve: _curve,
+                alignment: Alignment(_tabs.length == 1 ? 0 : -1 + 2 * index / (_tabs.length - 1), -1),
+                child: FractionallySizedBox(
+                  widthFactor: 1 / _tabs.length,
+                  child: Container(height: 2, color: c.green),
                 ),
               ),
+            ),
           ],
         ),
       ),
@@ -472,10 +492,7 @@ class TrackArt extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(color: fg, fontWeight: FontWeight.w700, fontSize: big ? 44 : 30, height: 1.1),
           ),
-          Text(
-            sparkline(track.id, length: 8),
-            style: TextStyle(color: fg, fontSize: big ? 28 : 22, letterSpacing: 2),
-          ),
+          MiniGraph(sparkline(track.id, length: 8), color: fg, fontSize: big ? 28 : 22),
         ],
       ),
     );

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Mini-graphes — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#181825}
+pre{margin:0;white-space:pre-wrap;word-break:break-word}
+</style>
+</helmet>
+<div style="width: 1400px; height: 1720px; box-sizing: border-box; padding: 64px; background: #181825; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; gap: 48px">
+
+  <header style="display: flex; flex-direction: column; gap: 8px; max-width: 920px">
+    <h1 style="margin: 0; font-size: 26px; font-weight: 700"><span style="color: #A6E3A1">$</span> mini-graphes <span style="color: #9091AB">--svg</span></h1>
+    <p style="margin: 0; color: #9091AB">// les petites barres (style musical, analyse, jauges, volume, eq) sont dessinées en SVG, jamais avec les caractères ▁▂▃▄▅▆▇█ ░.</p>
+  </header>
+
+  <section style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+    <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <span style="color: #A6E3A1; font-weight: 700">règle 1 · pas de glyphes</span>
+      <span>JetBrains Mono (Google Fonts) ne contient pas les blocs Unicode. La police de secours les dessine plus bas et décalés : on les remplace par des SVG.</span>
+    </div>
+    <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <span style="color: #A6E3A1; font-weight: 700">règle 2 · taille en em</span>
+      <span>0.6em de large par barre (une colonne de caractère), 0.75em de haut. Le graphe suit la taille du texte et reste sur la ligne de base.</span>
+    </div>
+    <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <span style="color: #A6E3A1; font-weight: 700">règle 3 · currentColor</span>
+      <span>Le SVG hérite de la couleur du texte (fill="currentColor"). Les cases vides des jauges sont en #45475A.</span>
+    </div>
+    <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <span style="color: #A6E3A1; font-weight: 700">règle 4 · décoratif</span>
+      <span>aria-hidden="true" sur chaque graphe. La valeur réelle (genre, %, bpm) est toujours écrite en texte à côté.</span>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700"><span style="color: #FAB387">▮</span> construction</h2>
+      <div style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; align-items: flex-end; gap: 24px">
+          <svg aria-hidden="true" viewBox="0 0 55 8" preserveAspectRatio="none" fill="#CBA6F7" style="width: 220px; height: 64px"><path d="M0 7h7v1h-7zM8 6h7v2h-7zM16 5h7v3h-7zM24 4h7v4h-7zM32 3h7v5h-7zM40 2h7v6h-7zM48 1h7v7h-7z"></path></svg>
+          <div style="display: flex; flex-direction: column; gap: 4px; color: #9091AB">
+            <span>// hauteur en huitièmes : 1 → 7 (8 = plein)</span>
+            <span>// barre = 7 unités, espace = 1 unité</span>
+            <span>// viewBox = 0 0 (8n − 1) 8</span>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 16px">
+          <span style="color: #9091AB">viewBox</span><span>0 0 {8n−1} 8 · n = nombre de barres</span>
+          <span style="color: #9091AB">barre i</span><span>M{8i} {8−h}h7v{h}h-7z</span>
+          <span style="color: #9091AB">width</span><span>{0.6 × n}em</span>
+          <span style="color: #9091AB">height</span><span>0.75em</span>
+          <span style="color: #9091AB">ratio</span><span>preserveAspectRatio="none"</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700"><span style="color: #89B4FA">▮</span> avant / après</h2>
+      <div style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; align-items: center">
+          <span style="color: #F38BA8">avant</span>
+          <span style="font-size: 15px">[électro <span style="color: #CBA6F7; position: relative; top: 3px; font-family: monospace">▅▅▅▅</span>] [synthwave <span style="color: #F5A3C7; position: relative; top: 3px; left: 2px; font-family: monospace">▂▅▃▆</span>]</span>
+          <span style="color: #A6E3A1">après</span>
+          <span style="font-size: 15px">[électro <span style="color: #CBA6F7"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em"><path d="M0 3h7v5h-7zM8 3h7v5h-7zM16 3h7v5h-7zM24 3h7v5h-7z"></path></svg></span>] [synthwave <span style="color: #F5A3C7"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em"><path d="M0 6h7v2h-7zM8 3h7v5h-7zM16 5h7v3h-7zM24 2h7v6h-7z"></path></svg></span>]</span>
+        </div>
+        <span style="color: #9091AB">// la ligne "avant" simule le rendu de la police de secours : barres plus basses et décalées.</span>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-size: 15px; font-weight: 700"><span style="color: #94E2D5">▮</span> trois variantes</h2>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+      <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+        <span style="color: #A6E3A1; font-weight: 700">a · graphe statique</span>
+        <span style="font-size: 15px">[indie <span style="color: #94E2D5"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em"><path d="M0 5h7v3h-7zM8 3h7v5h-7zM16 6h7v2h-7zM24 2h7v6h-7z"></path></svg></span>] <span style="color: #9091AB">120 bpm</span></span>
+        <span style="color: #9091AB">// SVG écrit en dur : tags de genre, tuiles de genre, mix, histogramme tempo, top genres.</span>
+      </div>
+      <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+        <span style="color: #A6E3A1; font-weight: 700">b · jauge</span>
+        <span style="font-size: 15px">énergie [<span style="color: #FAB387"><svg aria-hidden="true" viewBox="0 0 79 8" preserveAspectRatio="none" style="width: 6em; height: 0.75em"><path fill="currentColor" d="M0 0h7v8h-7zM8 0h7v8h-7zM16 0h7v8h-7zM24 0h7v8h-7zM32 0h7v8h-7zM40 0h7v8h-7zM48 0h7v8h-7z"></path><path fill="#45475A" d="M56 0h7v8h-7zM64 0h7v8h-7zM72 0h7v8h-7z"></path></svg></span>] 72%</span>
+        <span style="color: #9091AB">// cases pleines : 2 chemins, un plein (currentColor) et un vide (#45475A). 10 cases pour un %, 8 pour le volume.</span>
+      </div>
+      <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+        <span style="color: #A6E3A1; font-weight: 700">c · graphe dynamique</span>
+        <span style="display: flex; align-items: flex-end; gap: 2px; width: 132px; height: 16px; color: #F5A3C7"><span style="flex: 1; height: 25%; background: currentColor"></span><span style="flex: 1; height: 62.5%; background: currentColor"></span><span style="flex: 1; height: 87.5%; background: currentColor"></span><span style="flex: 1; height: 37.5%; background: currentColor"></span><span style="flex: 1; height: 75%; background: currentColor"></span><span style="flex: 1; height: 25%; background: currentColor"></span><span style="flex: 1; height: 50%; background: currentColor"></span><span style="flex: 1; height: 87.5%; background: currentColor"></span><span style="flex: 1; height: 62.5%; background: currentColor"></span><span style="flex: 1; height: 12.5%; background: currentColor"></span></span>
+        <span style="color: #9091AB">// barres flex calculées depuis les données : eq animé du lecteur, égaliseur des réglages, colonne genre de la bibliothèque.</span>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700"><span style="color: #F9E2AF">▮</span> où c'est utilisé</h2>
+      <div style="background: #232334; border-radius: 8px; padding: 16px; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 8px 16px">
+        <span style="color: #9091AB">tags de genre</span><span>02 · D2 lecteur, D1 accueil, 04 · D4 meilleur résultat</span>
+        <span style="color: #9091AB">analyse</span><span>02 · D2 répartition des genres</span>
+        <span style="color: #9091AB">jauges</span><span>énergie, dansant, acoustique, top artistes</span>
+        <span style="color: #9091AB">volume</span><span>pied de page desktop (8 cases)</span>
+        <span style="color: #9091AB">tuiles</span><span>genres (04 · D4), mix du jour (01 · D1)</span>
+        <span style="color: #9091AB">stats</span><span>histogramme tempo, top genres, rétro (05 · D5)</span>
+        <span style="color: #9091AB">dynamique</span><span>eq pochette (02 · D2), égaliseur (06 · D6), table D3</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700"><span style="color: #CBA6F7">▮</span> pour claude code</h2>
+      <pre style="background: #11111B; border-radius: 8px; padding: 16px; color: #C9CBE0; font-size: 12px">// heights : tableau d'entiers 1 → 8
+export function MiniGraph({ heights, className }) {
+  const n = heights.length;
+  const d = heights
+    .map((h, i) =&gt; `M${8 * i} ${8 - h}h7v${h}h-7z`)
+    .join('');
+  return (
+    &lt;svg aria-hidden="true" viewBox={`0 0 ${8 * n - 1} 8`}
+      preserveAspectRatio="none" fill="currentColor"
+      className={className}
+      style={ { width: `${0.6 * n}em`, height: '0.75em' } }&gt;
+      &lt;path d={d} /&gt;
+    &lt;/svg&gt;
+  );
+}
+
+// jauge : value 0 → 1, cells = 10 (ou 8 pour le volume)
+export function Meter({ value, cells = 10 }) {
+  const on = Math.round(value * cells);
+  const cell = (i) =&gt; `M${8 * i} 0h7v8h-7z`;
+  const range = (a, b) =&gt;
+    Array.from({ length: b - a }, (_, k) =&gt; cell(a + k)).join('');
+  return (
+    &lt;svg aria-hidden="true" viewBox={`0 0 ${8 * cells - 1} 8`}
+      preserveAspectRatio="none"
+      style={ { width: `${0.6 * cells}em`, height: '0.75em' } }&gt;
+      &lt;path fill="currentColor" d={range(0, on)} /&gt;
+      &lt;path fill="#45475A" d={range(on, cells)} /&gt;
+    &lt;/svg&gt;
+  );
+}</pre>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1400,"height":1720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

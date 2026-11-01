@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Bibliothèque — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+html,body{overflow-x:hidden}
+body{margin:0;background:#1E1E2E}
+a{color:#A6E3A1;text-decoration:none}a:hover{color:#C8F0C4}
+button{font:inherit}
+.swipe{scrollbar-width:none}.swipe::-webkit-scrollbar{display:none}
+</style>
+</helmet>
+<div style="width: 390px; height: 1240px; box-sizing: border-box; overflow-x: clip; background: #1E1E2E; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; padding-top: 48px">
+
+  <div style="padding: 16px 16px 0; display: flex; flex-direction: column; gap: 24px">
+    <div>
+      <div><span style="color: #CBA6F7">tty.fm</span> <span style="color: #A6E3A1">$</span> ls ~/biblio</div>
+      <div style="color: #9091AB; margin-top: 12px">// 8 playlists. 23 artistes. 140 titres hors-ligne.</div>
+    </div>
+
+    <div role="group" aria-label="Filtres" style="display: flex; flex-direction: column; margin: -4px 0">
+      <div style="display: flex; align-items: center; gap: 12px; margin-right: -16px">
+        <span style="color: #9091AB; width: 5ch; flex: none">type:</span>
+        <div class="swipe" style="flex: 1; min-width: 0; display: flex; gap: 12px; overflow-x: auto; white-space: nowrap; padding-right: 16px">
+          <button style="flex: none; background: none; border: 0; padding: 4px 0; color: #A6E3A1; font-weight: 700; cursor: pointer">[tout]</button>
+          <button style="flex: none; background: none; border: 0; padding: 4px 0; color: #9091AB; cursor: pointer">[playlists]</button>
+          <button style="flex: none; background: none; border: 0; padding: 4px 0; color: #9091AB; cursor: pointer">[albums]</button>
+          <button style="flex: none; background: none; border: 0; padding: 4px 0; color: #9091AB; cursor: pointer">[artistes]</button>
+          <button style="flex: none; background: none; border: 0; padding: 4px 0; color: #9091AB; cursor: pointer">[titres]</button>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; margin-right: -16px">
+        <span style="color: #9091AB; width: 5ch; flex: none">bpm:</span>
+        <div class="swipe" style="flex: 1; min-width: 0; display: flex; gap: 12px; overflow-x: auto; white-space: nowrap; padding-right: 16px">
+          <button style="flex: none; background: none; border: 0; padding: 4px 0; color: #FAB387; font-weight: 700; cursor: pointer">[tout]</button>
+          <button style="flex: none; background: none; border: 0; padding: 4px 0; color: #9091AB; cursor: pointer">[&lt;90]</button>
+          <button style="flex: none; background: none; border: 0; padding: 4px 0; color: #9091AB; cursor: pointer">[90–120]</button>
+          <button style="flex: none; background: none; border: 0; padding: 4px 0; color: #9091AB; cursor: pointer">[120–140]</button>
+          <button style="flex: none; background: none; border: 0; padding: 4px 0; color: #9091AB; cursor: pointer">[&gt;140]</button>
+        </div>
+      </div>
+      <div style="color: #9091AB; padding-top: 4px">// les deux filtres se combinent</div>
+    </div>
+
+    <section style="display: flex; flex-direction: column">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid #34344A">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 700; color: #F38BA8; display: flex; gap: 8px; align-items: center"><span aria-hidden="true">♥</span>épinglés</h2>
+        <span style="color: #9091AB">[2] ▾</span>
+      </div>
+      <a href="Playlist.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 12px 0; color: #E2E2EE">
+        <span style="width: 44px; height: 44px; border-radius: 6px; background: #3D2633; color: #F38BA8; display: flex; align-items: center; justify-content: center; font-size: 18px">♥</span>
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #F38BA8">titres likés</span><span style="color: #9091AB">// 612 titres · +3 aujourd'hui</span></span>
+      </a>
+      <a href="Lecteur.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 12px 0; color: #E2E2EE">
+        <span style="width: 44px; height: 44px; border-radius: 6px; background: #263A34; color: #94E2D5; display: flex; align-items: center; justify-content: center; font-size: 18px">↓</span>
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #94E2D5">hors-ligne</span><span style="color: #9091AB">// 140 titres · 1.1 Go</span></span>
+      </a>
+    </section>
+
+    <section style="display: flex; flex-direction: column">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid #34344A">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 700; color: #CBA6F7; display: flex; gap: 8px; align-items: center"><span aria-hidden="true">≡</span>playlists</h2>
+        <button aria-label="Trier les playlists, tri actuel : écoutées récemment" style="background: none; border: 0; padding: 8px 0; margin: -8px 0; cursor: pointer; color: #9091AB">tri : <span style="color: #E2E2EE">[récent ▾]</span></button>
+      </div>
+      <a href="Lecteur.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 8px 0; color: #E2E2EE">
+        <span style="width: 44px; height: 44px; flex: none; border-radius: 4px; overflow: hidden; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr))"><img src="../covers/basse-ville.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/maree-basse.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/halo.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/cassette-92.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"></span>
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #89B4FA">nuits blanches</span><span style="color: #9091AB">// 48 titres · 2h51</span></span>
+        <span style="color: #A6E3A1" aria-label="téléchargée">↓</span>
+      </a>
+      <a href="Lecteur.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 8px 0; color: #E2E2EE">
+        <span style="width: 44px; height: 44px; flex: none; border-radius: 4px; overflow: hidden; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr))"><img src="../covers/halo.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/racines.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/maree-basse.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/basse-ville.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"></span>
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #FAB387">road trip 2026</span><span style="color: #9091AB">// 73 titres · 4h38</span></span>
+      </a>
+      <a href="Lecteur.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 8px 0; color: #E2E2EE">
+        <span style="width: 44px; height: 44px; flex: none; border-radius: 4px; overflow: hidden; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr))"><img src="../covers/cassette-92.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/basse-ville.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/maree-basse.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/halo.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"></span>
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #A6E3A1">salle de sport</span><span style="color: #9091AB">// 31 titres · 140+ bpm</span></span>
+      </a>
+      <a href="Lecteur.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 8px 0; color: #E2E2EE">
+        <span style="width: 44px; height: 44px; flex: none; border-radius: 4px; overflow: hidden; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr))"><img src="../covers/racines.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/maree-basse.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/cassette-92.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/halo.svg" alt="" width="22" height="22" style="width: 100%; height: 100%; object-fit: cover; display: block"></span>
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #94E2D5">lo-fi pour coder</span><span style="color: #9091AB">// 120 titres · 6h04</span></span>
+      </a>
+      <a href="Lecteur.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 8px 0; color: #E2E2EE">
+        <img src="../covers/racines.svg" alt="" width="44" height="44" style="width: 44px; height: 44px; flex: none; border-radius: 4px; object-fit: cover">
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #F9E2AF">à découvrir</span><span style="color: #9091AB">// 3 titres · 11 min</span></span>
+      </a>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid #34344A">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 700; color: #94E2D5; display: flex; gap: 8px; align-items: center"><span aria-hidden="true">●</span>artistes suivis</h2>
+        <span style="color: #9091AB">[23] ▾</span>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <a href="Main.dc.html" style="background: #2A2A3C; border-radius: 6px; padding: 8px 12px; color: #89B4FA">nova kid <span style="color: #F38BA8">•</span></a>
+        <a href="Main.dc.html" style="background: #2A2A3C; border-radius: 6px; padding: 8px 12px; color: #94E2D5">les échos <span style="color: #F38BA8">•</span></a>
+        <a href="Main.dc.html" style="background: #2A2A3C; border-radius: 6px; padding: 8px 12px; color: #FAB387">mira sol</a>
+        <a href="Main.dc.html" style="background: #2A2A3C; border-radius: 6px; padding: 8px 12px; color: #F9E2AF">faune</a>
+        <a href="Main.dc.html" style="background: #2A2A3C; border-radius: 6px; padding: 8px 12px; color: #9091AB">+19</a>
+      </div>
+      <div style="color: #9091AB">// • = nouvelle sortie</div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 4px">
+      <div style="display: flex; justify-content: space-between"><span>stockage hors-ligne</span><span style="color: #9091AB">1.1 / 4 Go</span></div>
+      <div style="height: 14px; display: flex; gap: 2px">
+        <span style="width: 28%; background: #94E2D5"></span>
+        <span style="flex: 1; background: repeating-linear-gradient(90deg, #34344A 0 2px, transparent 2px 4px)"></span>
+      </div>
+    </section>
+  </div>
+
+  <div style="margin: auto 16px 12px; display: flex; gap: 12px; align-items: center">
+    <button style="background: #26332B; color: #A6E3A1; border: 0; border-radius: 6px; padding: 12px 16px; cursor: pointer">+ playlist</button>
+    <button style="background: #2E2840; color: #CBA6F7; border: 0; border-radius: 6px; padding: 12px 16px; cursor: pointer">+ dossier</button>
+    <button style="margin-left: auto; background: none; border: 0; color: #9091AB; padding: 12px 0; cursor: pointer">[réorganiser]</button>
+  </div>
+
+  <nav aria-label="Navigation principale" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid #34344A; padding-bottom: 24px">
+    <a href="Main.dc.html" style="text-align: center; padding: 12px 0; color: #9091AB">accueil</a>
+    <a href="Recherche.dc.html" style="text-align: center; padding: 12px 0; color: #9091AB">recherche</a>
+    <a href="Bibliotheque.dc.html" style="text-align: center; padding: 12px 0; color: #A6E3A1; font-weight: 500; border-top: 2px solid #A6E3A1; margin-top: -1px">biblio</a>
+    <a href="Profil.dc.html" style="text-align: center; padding: 12px 0; color: #9091AB">stats</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

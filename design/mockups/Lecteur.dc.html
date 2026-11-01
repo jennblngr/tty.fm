@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Lecteur — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+html,body{overflow-x:hidden}
+body{margin:0;background:#1E1E2E}
+a{color:#A6E3A1;text-decoration:none}a:hover{color:#C8F0C4}
+button{font:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 1720px; box-sizing: border-box; overflow-x: clip; background: #1E1E2E; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; padding-top: 48px">
+
+  <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; padding: 8px 16px">
+    <a href="Main.dc.html" style="justify-self: start; color: #9091AB; padding: 12px 0">[fermer]</a>
+    <span style="color: #CBA6F7; font-weight: 700">$ play --now</span>
+    <a href="Lecteur-Menu.dc.html" aria-label="Plus d'options" style="justify-self: end; color: #9091AB; padding: 12px 0">[···]</a>
+  </div>
+  <div style="text-align: center; color: #9091AB; font-size: 12px">// depuis la playlist « nuits blanches »</div>
+
+  <div style="padding: 16px 16px 0; display: flex; flex-direction: column; gap: 24px">
+
+    <div style="height: 358px; border-radius: 8px; overflow: hidden; position: relative; background: #140F3D">
+      <img src="../covers/basse-ville.svg" alt="Pochette de « basse ville », nova kid" width="358" height="358" style="width: 100%; height: 100%; object-fit: cover; display: block">
+      <span aria-hidden="true" style="position: absolute; right: 16px; bottom: 12px; display: flex; align-items: flex-end; gap: 2px; width: 132px; height: 16px; color: #FF8FC4"><sc-for list="{{eqBars}}" as="b" hint-placeholder-count="10"><span style="flex: 1; height: {{b.h}}; background: currentColor"></span></sc-for></span>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <h1 style="margin: 0; font-size: 18px; font-weight: 700; color: #89B4FA">néons</h1>
+        <a href="Recherche.dc.html" style="color: #9091AB">// nova kid · album « basse ville »</a>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px 8px; margin-top: 4px; font-size: 12px">
+          <span style="color: #CBA6F7">[électro<svg aria-hidden="true" viewBox="0 0 32 8" preserveAspectRatio="none" width="31" height="10" fill="currentColor" style="vertical-align: baseline; margin-left: 8px"><rect x="0" y="3" width="7" height="5"></rect><rect x="8" y="3" width="7" height="5"></rect><rect x="16" y="3" width="7" height="5"></rect><rect x="24" y="3" width="7" height="5"></rect></svg>]</span>
+          <span style="color: #F5A3C7">[synthwave<svg aria-hidden="true" viewBox="0 0 32 8" preserveAspectRatio="none" width="31" height="10" fill="currentColor" style="vertical-align: baseline; margin-left: 8px"><rect x="0" y="6" width="7" height="2"></rect><rect x="8" y="3" width="7" height="5"></rect><rect x="16" y="5" width="7" height="3"></rect><rect x="24" y="2" width="7" height="6"></rect></svg>]</span>
+          <span style="color: #FAB387">118 bpm</span>
+        </div>
+      </div>
+      <button onClick="{{toggleLike}}" aria-label="{{likeAria}}" style="background: none; border: 0; color: {{likeColor}}; font-size: 22px; width: 44px; height: 44px; cursor: pointer">{{likeIcon}}</button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; gap: 8px; align-items: center; white-space: nowrap">
+        <span>1:46</span>
+        <span style="flex: 1; height: 6px; background: #3A3A50; border-radius: 3px; position: relative"><span style="position: absolute; left: 0; top: 0; bottom: 0; width: 48%; background: #A6E3A1; border-radius: 3px"></span></span>
+        <span style="color: #9091AB">3:41</span>
+      </div>
+      <div style="color: #9091AB; font-size: 12px">// {{qualityLabel}}</div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <button aria-label="Lecture aléatoire" onClick="{{toggleShuffle}}" style="background: none; border: 0; color: {{shuffleColor}}; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path></svg>
+      </button>
+      <button aria-label="Précédent" style="background: none; border: 0; color: #E2E2EE; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.5 5.2v13.6a.8.8 0 0 1-1.25.66L9 13a1.2 1.2 0 0 1 0-2l9.25-6.46a.8.8 0 0 1 1.25.66z"></path><rect x="4.5" y="5" width="3" height="14" rx="1"></rect></svg>
+      </button>
+      <button aria-label="{{playLabel}}" onClick="{{togglePlay}}" style="background: #A6E3A1; border: 0; color: #1E1E2E; width: 64px; height: 64px; border-radius: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <sc-if value="{{playing}}" hint-placeholder-val="{{ true }}">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"></rect><rect x="14" y="4.5" width="4" height="15" rx="1"></rect></svg>
+        </sc-if>
+        <sc-if value="{{paused}}" hint-placeholder-val="{{ false }}">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"></path></svg>
+        </sc-if>
+      </button>
+      <button aria-label="Suivant" style="background: none; border: 0; color: #E2E2EE; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.5 5.2v13.6a.8.8 0 0 0 1.25.66L15 13a1.2 1.2 0 0 0 0-2L5.75 4.54a.8.8 0 0 0-1.25.66z"></path><rect x="16.5" y="5" width="3" height="14" rx="1"></rect></svg>
+      </button>
+      <button aria-label="Répéter" onClick="{{cycleRepeat}}" style="background: none; border: 0; color: {{repeatColor}}; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; gap: 2px; cursor: pointer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"></path><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"></path><path d="M21 13v2a3 3 0 0 1-3 3H3"></path></svg><span style="font-size: 10px">{{repeatMark}}</span>
+      </button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <button style="background: #2A2A3C; border: 0; border-radius: 6px; color: #A6E3A1; padding: 12px 0; min-height: 44px; cursor: pointer">⌁ ce tél.</button>
+      <button style="background: #2A2A3C; border: 0; border-radius: 6px; color: #E2E2EE; padding: 12px 0; min-height: 44px; cursor: pointer">+ playlist</button>
+    </div>
+
+    <section style="background: #2E2840; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 4px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 700; color: #CBA6F7">$ paroles</h2>
+        <span style="color: #9091AB">[synchro]</span>
+      </div>
+      <span style="color: #9091AB">les rues s'allument une à une</span>
+      <span style="color: #9091AB">je compte les fenêtres encore</span>
+      <span style="color: #E2E2EE; font-weight: 700; font-size: 15px">&gt; sous les néons on se ressemble</span>
+      <span style="color: #9091AB">on oublie l'heure et le décor</span>
+      <span style="color: #9091AB">…</span>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 4px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #FAB387" aria-hidden="true">∿</span>$ analyse --piste</h2>
+        <span style="color: #9091AB">[détails]</span>
+      </div>
+      <div style="color: #9091AB; margin-bottom: 4px">// calculé à partir du fichier audio</div>
+      <div style="display: grid; grid-template-columns: 110px 1fr; gap: 4px 8px">
+        <span style="color: #9091AB">genre</span><span><span style="color: #CBA6F7">électro<svg aria-hidden="true" viewBox="0 0 32 8" preserveAspectRatio="none" width="31" height="10" fill="currentColor" style="vertical-align: baseline; margin-left: 8px"><rect x="0" y="3" width="7" height="5"></rect><rect x="8" y="3" width="7" height="5"></rect><rect x="16" y="3" width="7" height="5"></rect><rect x="24" y="3" width="7" height="5"></rect></svg></span> <span style="color: #9091AB">68%</span></span>
+        <span style="color: #9091AB">sous-genre</span><span><span style="color: #F5A3C7">synthwave<svg aria-hidden="true" viewBox="0 0 32 8" preserveAspectRatio="none" width="31" height="10" fill="currentColor" style="vertical-align: baseline; margin-left: 8px"><rect x="0" y="6" width="7" height="2"></rect><rect x="8" y="3" width="7" height="5"></rect><rect x="16" y="5" width="7" height="3"></rect><rect x="24" y="2" width="7" height="6"></rect></svg></span> <span style="color: #9091AB">24%</span></span>
+        <span style="color: #9091AB">tempo</span><span><span style="color: #FAB387">118 bpm</span> <span style="color: #9091AB">♩ = 0.51 s</span></span>
+        <span style="color: #9091AB">tonalité</span><span>la mineur <span style="color: #9091AB">(8A)</span></span>
+        <span style="color: #9091AB">énergie</span><span style="color: #9091AB">[<span style="color: #A6E3A1"><svg aria-hidden="true" viewBox="0 0 79 8" preserveAspectRatio="none" style="width: 6em; height: 0.75em"><path fill="currentColor" d="M0 0h7v8h-7zM8 0h7v8h-7zM16 0h7v8h-7zM24 0h7v8h-7zM32 0h7v8h-7zM40 0h7v8h-7zM48 0h7v8h-7z"></path><path fill="#45475A" d="M56 0h7v8h-7zM64 0h7v8h-7zM72 0h7v8h-7z"></path></svg></span>] 72%</span>
+        <span style="color: #9091AB">dansant</span><span style="color: #9091AB">[<span style="color: #A6E3A1"><svg aria-hidden="true" viewBox="0 0 79 8" preserveAspectRatio="none" style="width: 6em; height: 0.75em"><path fill="currentColor" d="M0 0h7v8h-7zM8 0h7v8h-7zM16 0h7v8h-7zM24 0h7v8h-7zM32 0h7v8h-7zM40 0h7v8h-7z"></path><path fill="#45475A" d="M48 0h7v8h-7zM56 0h7v8h-7zM64 0h7v8h-7zM72 0h7v8h-7z"></path></svg></span>] 61%</span>
+        <span style="color: #9091AB">ambiance</span><span style="color: #89B4FA">nocturne · mélancolique</span>
+        <span style="color: #9091AB">volume</span><span>-8.2 LUFS</span>
+        <span style="color: #9091AB">fichier</span><span>flac · 24 bits / 48 kHz</span>
+      </div>
+      <div style="color: #9091AB; margin-top: 4px">// enchaînement compatible : marée basse (120 bpm, 8A)</div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 2px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #CBA6F7" aria-hidden="true">≡</span>file d'attente</h2>
+        <span style="color: #9091AB">[4] · 14:52</span>
+      </div>
+      <div style="display: flex; gap: 12px; padding: 8px 0; border-top: 1px solid #34344A">
+        <span aria-label="en cours" style="width: 24px; height: 24px; flex: none; align-self: center; display: flex; align-items: center; justify-content: center; color: #A6E3A1"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.6-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"></path></svg></span>
+        <img src="../covers/basse-ville.svg" alt="" width="40" height="40" style="width: 40px; height: 40px; flex: none; border-radius: 4px; object-fit: cover">
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #A6E3A1">néons</span><span style="color: #9091AB">// nova kid · en cours</span></span>
+      </div>
+      <div style="display: flex; gap: 12px; padding: 8px 0">
+        <span style="width: 24px; height: 24px; flex: none; align-self: center; display: flex; align-items: center; justify-content: center; color: #9091AB">02</span>
+        <img src="../covers/maree-basse.svg" alt="" width="40" height="40" style="width: 40px; height: 40px; flex: none; border-radius: 4px; object-fit: cover">
+        <span style="flex: 1; display: flex; flex-direction: column"><span>marée basse</span><span style="color: #9091AB">// les échos · 4:12</span></span>
+        <span style="color: #9091AB" aria-hidden="true">⠿</span>
+      </div>
+      <div style="display: flex; gap: 12px; padding: 8px 0">
+        <span style="width: 24px; height: 24px; flex: none; align-self: center; display: flex; align-items: center; justify-content: center; color: #9091AB">03</span>
+        <img src="../covers/halo.svg" alt="" width="40" height="40" style="width: 40px; height: 40px; flex: none; border-radius: 4px; object-fit: cover">
+        <span style="flex: 1; display: flex; flex-direction: column"><span>halo</span><span style="color: #9091AB">// mira sol · 3:05</span></span>
+        <span style="color: #9091AB" aria-hidden="true">⠿</span>
+      </div>
+      <div style="display: flex; gap: 12px; padding: 8px 0">
+        <span style="width: 24px; height: 24px; flex: none; align-self: center; display: flex; align-items: center; justify-content: center; color: #9091AB">04</span>
+        <img src="../covers/cassette-92.svg" alt="" width="40" height="40" style="width: 40px; height: 40px; flex: none; border-radius: 4px; object-fit: cover">
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #FAB387">cassette 92</span><span style="color: #9091AB">// kassette · 3:54 · ajouté par toi</span></span>
+        <span style="color: #9091AB" aria-hidden="true">⠿</span>
+      </div>
+      <div style="padding-top: 8px; border-top: 1px dashed #34344A; color: #9091AB">// ensuite : radio « nova kid »</div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1720}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { playing: true, liked: true, shuffle: false, repeat: 0, quality: 'élevée' };
+  }
+  opts(list, key) {
+    return list.map((label) => ({
+      label: label,
+      color: this.state[key] === label ? '#A6E3A1' : '#9091AB',
+      weight: this.state[key] === label ? 700 : 400,
+      pick: () => this.setState({ [key]: label })
+    }));
+  }
+  renderVals() {
+    const s = this.state;
+    const qLabels = { 'normal': 'ogg 160 kbps', 'élevée': 'ogg 320 kbps', 'lossless': 'flac 24 bits' };
+    return {
+      playing: s.playing,
+      paused: !s.playing,
+      eqBars: (s.playing ? '▂▅▇▃▆▂▄▇▅▁' : '▁▁▁▁▁▁▁▁▁▁').split('').map((c) => ({ h: (('▁▂▃▄▅▆▇█'.indexOf(c) + 1) * 12.5) + '%' })),
+      playLabel: s.playing ? 'Pause' : 'Lecture',
+      togglePlay: () => this.setState({ playing: !s.playing }),
+      likeIcon: s.liked ? '♥' : '♡',
+      likeAria: s.liked ? 'Retirer des titres likés' : 'Ajouter aux titres likés',
+      likeColor: s.liked ? '#F38BA8' : '#9091AB',
+      toggleLike: () => this.setState({ liked: !s.liked }),
+      shuffleColor: s.shuffle ? '#A6E3A1' : '#9091AB',
+      toggleShuffle: () => this.setState({ shuffle: !s.shuffle }),
+      repeatColor: s.repeat ? '#A6E3A1' : '#9091AB',
+      repeatMark: s.repeat === 2 ? '1' : '',
+      cycleRepeat: () => this.setState({ repeat: (s.repeat + 1) % 3 }),
+      qualityLabel: qLabels[s.quality]    };
+  }
+}
+</script>
+</body>
+</html>

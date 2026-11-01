@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Animation paroles — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#181825}
+button{font:inherit}
+</style>
+</helmet>
+<div style="width: 1400px; min-height: 100vh; box-sizing: border-box; padding: 64px; background: #181825; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; gap: 48px">
+
+  <header style="display: flex; flex-direction: column; gap: 8px; max-width: 920px">
+    <h1 style="margin: 0; font-size: 26px; font-weight: 700"><span style="color: #A6E3A1">$</span> animations <span style="color: #9091AB">› 05</span></h1>
+    <p style="margin: 0; color: #9091AB">// paroles synchronisées : la ligne chantée reste au centre, le texte défile en dessous.</p>
+  </header>
+
+  <section style="display: grid; grid-template-columns: 440px minmax(0, 1fr); gap: 48px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700"><span style="color: #A6E3A1">05</span> lecteur · défilement des paroles</h2>
+
+      <div style="background: #2E2840; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span style="font-weight: 700; color: #CBA6F7">$ paroles</span>
+          <span style="color: #A6E3A1">[synchro]</span>
+        </div>
+        <div style="position: relative; height: 224px; overflow: hidden; -webkit-mask-image: linear-gradient(180deg, transparent, #000 48px, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(180deg, transparent, #000 48px, #000 calc(100% - 48px), transparent)">
+          <div style="display: flex; flex-direction: column; transform: translateY({{trackY}}); transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1)">
+            <sc-for list="{{lines}}" as="l" hint-placeholder-count="12">
+              <button onClick="{{l.seek}}" style="height: 32px; flex: none; display: flex; align-items: center; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; white-space: nowrap; color: {{l.color}}; font-size: 15px; font-weight: {{l.weight}}; transform: scale({{l.scale}}); transform-origin: left center; transition: color 480ms cubic-bezier(0.22, 1, 0.36, 1), transform 480ms cubic-bezier(0.22, 1, 0.36, 1)"><span style="display: inline-block; width: 2ch; color: #A6E3A1; opacity: {{l.caret}}; transition: opacity 240ms">&gt;</span>{{l.text}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span style="color: #9091AB">{{time}}</span>
+          <span style="flex: 1; height: 4px; background: #3A3A50; border-radius: 2px; position: relative"><span style="position: absolute; left: 0; top: 0; bottom: 0; width: {{progress}}; background: #CBA6F7; border-radius: 2px; transition: width 480ms cubic-bezier(0.22, 1, 0.36, 1)"></span></span>
+          <span style="color: #9091AB">3:41</span>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between">
+        <button onClick="{{prev}}" style="background: #2A2A3C; border: 0; border-radius: 6px; color: #E2E2EE; padding: 8px 16px; cursor: pointer">[‹ ligne préc.]</button>
+        <button onClick="{{next}}" style="background: #2A2A3C; border: 0; border-radius: 6px; color: #A6E3A1; padding: 8px 16px; cursor: pointer">[ligne suiv. ›]</button>
+      </div>
+      <span style="color: #9091AB">// avance ligne par ligne, ou clique une ligne pour y sauter.</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <section style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #CBA6F7">≡ comportement</h3>
+        <div><span style="color: #9091AB">position</span> &nbsp;la ligne chantée se place sur la 3ᵉ ligne visible (sur 7) : on voit 2 lignes passées et 4 à venir.</div>
+        <div><span style="color: #9091AB">changement</span> la liste glisse vers le haut d'une ligne. en même temps, la nouvelle ligne grossit et s'éclaire, l'ancienne rétrécit et s'éteint, et le curseur &gt; passe de l'une à l'autre.</div>
+        <div><span style="color: #9091AB">états</span> &nbsp;&nbsp;&nbsp;&nbsp;en cours : #E2E2EE, gras, taille 100 %. à venir : #9091AB, 87 %. passées : #6C6C8A, 87 %.</div>
+        <div><span style="color: #9091AB">instrumental</span> pause de plus de 6 s : une ligne « ♪ ♪ ♪ » prend la place de la ligne en cours.</div>
+        <div><span style="color: #9091AB">bords</span> &nbsp;&nbsp;&nbsp;&nbsp;fondu sur 48 px en haut et en bas.</div>
+        <div><span style="color: #9091AB">sauter</span> &nbsp;&nbsp;&nbsp;tap sur une ligne : la lecture va à cet instant, avec la même animation.</div>
+        <div><span style="color: #9091AB">défiler</span> &nbsp;&nbsp;si on fait défiler à la main, le suivi automatique s'arrête. un bouton [↓ revenir à la ligne] apparaît, et le suivi reprend tout seul après 4 s sans geste.</div>
+        <div><span style="color: #9091AB">sans synchro</span> paroles sans minutage : texte fixe, tout en #9091AB, défilement manuel, et le libellé passe à [texte].</div>
+      </section>
+
+      <section style="background: #232334; border-radius: 8px; padding: 24px; display: grid; grid-template-columns: 120px 1fr; gap: 8px 16px">
+        <h3 style="grid-column: 1 / -1; margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #FAB387">∿ paramètres</h3>
+        <span style="color: #9091AB">durée</span><span><span style="color: #A6E3A1">480ms</span>, déclenchée 120 ms avant le début de la ligne pour être prête au premier mot</span>
+        <span style="color: #9091AB">courbe</span><span style="color: #F9E2AF">cubic-bezier(0.22, 1, 0.36, 1)</span>
+        <span style="color: #9091AB">propriétés</span><span>transform: translateY (liste) · transform: scale + color (lignes)</span>
+        <span style="color: #9091AB">hauteur ligne</span><span>32 px fixes sur mobile, 40 px sur desktop : la taille change avec scale, donc rien ne se décale.</span>
+        <span style="color: #9091AB">mouvement réduit</span><span>pas de glissement : la liste saute directement, seule la couleur change (120 ms).</span>
+        <span style="color: #9091AB">accessibilité</span><span>conteneur aria-live="off" (pas d'annonce à chaque ligne). la ligne en cours porte aria-current="true".</span>
+      </section>
+
+      <section style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #94E2D5">▤ implémentation</h3>
+        <div style="background: #1E1E2E; border-radius: 6px; padding: 16px; color: #F9E2AF; white-space: pre-line">.lyrics { height: calc(var(--line) * 7); overflow: hidden;
+  mask-image: linear-gradient(180deg, transparent, #000 48px, #000 calc(100% - 48px), transparent); }
+.lyrics-track { transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(calc(var(--line) * (2 - var(--current)))); }
+.lyric { height: var(--line); display: flex; align-items: center;
+  transform-origin: left center; transform: scale(0.87); color: var(--muted);
+  transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1), color 480ms; }
+.lyric.past    { color: #6C6C8A; }
+.lyric.current { transform: scale(1); color: var(--text); font-weight: 700; }
+.lyric::before { content: "&gt;"; width: 2ch; color: var(--accent); opacity: 0; transition: opacity 240ms; }
+.lyric.current::before { opacity: 1; }
+/* --line : 32px mobile, 40px desktop. --current : index de la ligne, mis à jour
+   depuis les minutages LRC (déclenché 120 ms en avance) */</div>
+      </section>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1400,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { cur: 3 };
+  }
+  renderVals() {
+    const text = [
+      'les rues s\'allument une à une',
+      'je compte les fenêtres encore',
+      'le métro tremble sous mes pieds',
+      'sous les néons on se ressemble',
+      'on oublie l\'heure et le décor',
+      'et la ville tourne sans nous',
+      '♪ ♪ ♪',
+      'tes mots s\'effacent dans le bruit',
+      'je garde la lumière en moi',
+      'sous les néons on se ressemble',
+      'jusqu\'au matin, jusqu\'au matin',
+      ''
+    ];
+    const times = ['0:32', '0:36', '0:41', '0:45', '0:50', '0:54', '0:59', '1:12', '1:17', '1:21', '1:26', '1:31'];
+    const n = text.length - 1;
+    const c = this.state.cur;
+    return {
+      trackY: ((2 - c) * 32) + 'px',
+      time: times[c],
+      progress: Math.round((32 + c * 5) / 221 * 100) + '%',
+      prev: () => this.setState({ cur: Math.max(0, c - 1) }),
+      next: () => this.setState({ cur: c >= n - 1 ? 0 : c + 1 }),
+      lines: text.map((t, i) => ({
+        text: t,
+        color: i === c ? '#E2E2EE' : (i < c ? '#6C6C8A' : '#9091AB'),
+        weight: i === c ? 700 : 400,
+        scale: i === c ? 1 : 0.87,
+        caret: i === c ? 1 : 0,
+        seek: () => this.setState({ cur: Math.min(i, n - 1) })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

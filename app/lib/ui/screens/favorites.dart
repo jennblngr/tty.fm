@@ -79,6 +79,7 @@ class FavoritesScreen extends ConsumerWidget {
                     for (var i = 0; i < tracks.length; i++)
                       TrackTile(
                         tracks[i],
+                        leadingNumber: i + 1,
                         onTap: () => pc.playTracks(tracks, index: i, contextKind: 'favorites'),
                       ),
                   ],

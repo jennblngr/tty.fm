@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Accueil — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+html,body{overflow-x:hidden}
+body{margin:0;background:#1E1E2E}
+a{color:#A6E3A1;text-decoration:none}a:hover{color:#C8F0C4}
+button{font:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 1400px; box-sizing: border-box; overflow-x: clip; background: #1E1E2E; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; padding-top: 48px">
+
+  <div style="padding: 16px 16px 0; display: flex; flex-direction: column; gap: 24px">
+
+    <div style="display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+      <div><span style="color: #CBA6F7">tty.fm</span> <span style="color: #A6E3A1">$</span> accueil</div>
+      <div style="display: flex; margin: -12px -12px -12px 0">
+        <a href="Notifications.dc.html" aria-label="Notifications, 3 non lues" style="position: relative; color: #9091AB; padding: 12px; display: flex">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5a6 6 0 0 0-6 6c0 4.2-1.2 6.4-2.2 7.6-.5.6-.1 1.4.7 1.4h15c.8 0 1.2-.8.7-1.4-1-1.2-2.2-3.4-2.2-7.6a6 6 0 0 0-6-6z"></path><path d="M9.5 19.5h5a2.5 2.5 0 0 1-5 0z"></path></svg>
+          <span style="position: absolute; top: 10px; right: 10px; width: 7px; height: 7px; border-radius: 4px; background: #FAB387"></span>
+        </a>
+        <a href="Reglages.dc.html" aria-label="Réglages" style="color: #9091AB; padding: 12px; display: flex">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2zM12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"></path></svg>
+        </a>
+      </div>
+    </div>
+    <div style="color: #9091AB">// bonsoir. 2 sorties de tes artistes.</div>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #A6E3A1" aria-hidden="true">↺</span>écouté récemment</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <a href="Lecteur.dc.html" style="display: flex; align-items: center; gap: 12px; background: #2A2A3C; border-radius: 6px; overflow: hidden; color: #E2E2EE; min-height: 48px"><span style="width: 48px; height: 48px; flex: none; background: #3D2633; color: #F38BA8; display: flex; align-items: center; justify-content: center">♥</span><span style="font-size: 12px">titres likés</span></a>
+        <a href="Lecteur.dc.html" style="display: flex; align-items: center; gap: 12px; background: #2A2A3C; border-radius: 6px; overflow: hidden; color: #E2E2EE; min-height: 48px"><img src="../covers/basse-ville.svg" alt="" width="48" height="48" style="width: 48px; height: 48px; flex: none; object-fit: cover"><span style="font-size: 12px">nova kid</span></a>
+        <a href="Lecteur.dc.html" style="display: flex; align-items: center; gap: 12px; background: #2A2A3C; border-radius: 6px; overflow: hidden; color: #E2E2EE; min-height: 48px"><span style="width: 48px; height: 48px; flex: none; overflow: hidden; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr))"><img src="../covers/racines.svg" alt="" width="24" height="24" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/maree-basse.svg" alt="" width="24" height="24" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/cassette-92.svg" alt="" width="24" height="24" style="width: 100%; height: 100%; object-fit: cover; display: block"><img src="../covers/halo.svg" alt="" width="24" height="24" style="width: 100%; height: 100%; object-fit: cover; display: block"></span><span style="font-size: 12px">lo-fi pour coder</span></a>
+        <a href="Lecteur.dc.html" style="display: flex; align-items: center; gap: 12px; background: #2A2A3C; border-radius: 6px; overflow: hidden; color: #E2E2EE; min-height: 48px"><img src="../covers/halo.svg" alt="" width="48" height="48" style="width: 48px; height: 48px; flex: none; object-fit: cover"><span style="font-size: 12px">mira sol — halo</span></a>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 2px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #FAB387" aria-hidden="true">+</span>ajouts récents</h2>
+        <a href="Bibliotheque.dc.html" style="color: #9091AB">[biblio]</a>
+      </div>
+      <a href="Lecteur.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 8px 0; color: #E2E2EE">
+        <img src="../covers/cassette-92.svg" alt="" width="44" height="44" style="width: 44px; height: 44px; flex: none; border-radius: 4px; object-fit: cover">
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #F5A3C7">cassette 92</span><span style="color: #9091AB">// kassette · album · ajouté hier</span></span>
+      </a>
+      <a href="Lecteur.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 8px 0; color: #E2E2EE">
+        <img src="../covers/racines.svg" alt="" width="44" height="44" style="width: 44px; height: 44px; flex: none; border-radius: 4px; object-fit: cover">
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #F9E2AF">racines</span><span style="color: #9091AB">// faune · 3 titres · ajoutés il y a 2 j</span></span>
+      </a>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #CBA6F7" aria-hidden="true">✦</span>tes mix du jour</h2>
+      <div style="color: #9091AB; margin-top: -8px">// générés selon tes écoutes</div>
+      <div style="display: flex; gap: 12px; overflow: hidden; margin-right: -16px">
+        <a href="Lecteur.dc.html" style="flex: 0 0 140px; display: flex; flex-direction: column; gap: 8px; color: #E2E2EE">
+          <span style="height: 140px; background: #23324A; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; padding: 12px; box-sizing: border-box; color: #89B4FA; font-weight: 700"><span>mix_01</span><span style="font-size: 18px"><svg aria-hidden="true" viewBox="0 0 47 8" preserveAspectRatio="none" fill="currentColor" style="width: 3.6em; height: 0.75em"><path d="M0 7h7v1h-7zM8 5h7v3h-7zM16 2h7v6h-7zM24 5h7v3h-7zM32 3h7v5h-7zM40 6h7v2h-7z"></path></svg></span></span>
+          <span style="color: #9091AB; font-size: 12px">// nova kid, faune, les échos…</span>
+        </a>
+        <a href="Lecteur.dc.html" style="flex: 0 0 140px; display: flex; flex-direction: column; gap: 8px; color: #E2E2EE">
+          <span style="height: 140px; background: #2E2840; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; padding: 12px; box-sizing: border-box; color: #CBA6F7; font-weight: 700"><span>mix_02</span><span style="font-size: 18px"><svg aria-hidden="true" viewBox="0 0 47 8" preserveAspectRatio="none" fill="currentColor" style="width: 3.6em; height: 0.75em"><path d="M0 6h7v2h-7zM8 3h7v5h-7zM16 1h7v7h-7zM24 3h7v5h-7zM32 5h7v3h-7zM40 7h7v1h-7z"></path></svg></span></span>
+          <span style="color: #9091AB; font-size: 12px">// électro, synthwave, kassette…</span>
+        </a>
+        <a href="Lecteur.dc.html" style="flex: 0 0 140px; display: flex; flex-direction: column; gap: 8px; color: #E2E2EE">
+          <span style="height: 140px; background: #3D2E26; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; padding: 12px; box-sizing: border-box; color: #FAB387; font-weight: 700"><span>radar</span><span style="font-size: 18px"><svg aria-hidden="true" viewBox="0 0 47 8" preserveAspectRatio="none" fill="currentColor" style="width: 3.6em; height: 0.75em"><path d="M0 5h7v3h-7zM8 7h7v1h-7zM16 4h7v4h-7zM24 2h7v6h-7zM32 6h7v2h-7zM40 3h7v5h-7z"></path></svg></span></span>
+          <span style="color: #9091AB; font-size: 12px">// 30 découvertes, chaque lundi</span>
+        </a>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 2px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #94E2D5" aria-hidden="true">●</span>nouvelles sorties</h2>
+        <a href="Bibliotheque.dc.html" style="color: #9091AB">[tout]</a>
+      </div>
+      <a href="Lecteur.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 8px 0; color: #E2E2EE">
+        <img src="../covers/maree-basse.svg" alt="" width="44" height="44" style="width: 44px; height: 44px; flex: none; border-radius: 4px; object-fit: cover">
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #94E2D5">marée basse</span><span style="color: #9091AB">// les échos · album · 11 titres</span></span>
+        <span style="color: #9091AB">[+]</span>
+      </a>
+      <a href="Lecteur.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 8px 0; color: #E2E2EE">
+        <img src="../covers/basse-ville.svg" alt="" width="44" height="44" style="width: 44px; height: 44px; flex: none; border-radius: 4px; object-fit: cover">
+        <span style="flex: 1; display: flex; flex-direction: column"><span style="color: #89B4FA">néons (remix)</span><span style="color: #9091AB">// nova kid · single · 3:41</span></span>
+        <span style="color: #A6E3A1">[✓]</span>
+      </a>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #F9E2AF" aria-hidden="true">◉</span>radios d'artistes</h2>
+      <div style="display: flex; gap: 12px; overflow: hidden; margin-right: -16px">
+        <a href="Lecteur.dc.html" style="flex: 0 0 104px; display: flex; flex-direction: column; align-items: center; gap: 8px; color: #F9E2AF; font-weight: 500"><img src="../covers/racines.svg" alt="" width="104" height="104" style="width: 104px; height: 104px; border-radius: 52px; object-fit: cover"><span>faune</span></a>
+        <a href="Lecteur.dc.html" style="flex: 0 0 104px; display: flex; flex-direction: column; align-items: center; gap: 8px; color: #F5A3C7; font-weight: 500"><img src="../covers/cassette-92.svg" alt="" width="104" height="104" style="width: 104px; height: 104px; border-radius: 52px; object-fit: cover"><span>kassette</span></a>
+        <a href="Lecteur.dc.html" style="flex: 0 0 104px; display: flex; flex-direction: column; align-items: center; gap: 8px; color: #FAB387; font-weight: 500"><img src="../covers/halo.svg" alt="" width="104" height="104" style="width: 104px; height: 104px; border-radius: 52px; object-fit: cover"><span>mira sol</span></a>
+        <a href="Lecteur.dc.html" style="flex: 0 0 104px; display: flex; flex-direction: column; align-items: center; gap: 8px; color: #94E2D5; font-weight: 500"><img src="../covers/maree-basse.svg" alt="" width="104" height="104" style="width: 104px; height: 104px; border-radius: 52px; object-fit: cover"><span>les échos</span></a>
+      </div>
+    </section>
+  </div>
+
+  <div aria-label="Mini-lecteur" style="margin: auto 12px 12px; background: #2A2A3C; border-radius: 8px; padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 8px; color: #E2E2EE">
+    <sc-if value="{{remote}}" hint-placeholder-val="{{ true }}">
+      <div style="margin: -8px -12px 0 -12px; padding: 2px 12px; background: #26332B; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; color: #A6E3A1; font-size: 12px">
+        <span style="display: flex; align-items: center; gap: 8px; min-width: 0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="4.5" width="16" height="11.5" rx="1.5"></rect><rect x="2" y="18" width="20" height="2" rx="1"></rect></svg>
+          <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">lecture sur {{device}}</span>
+        </span>
+        <button onClick="{{playHere}}" style="background: none; border: 0; color: #A6E3A1; font-weight: 700; padding: 12px 0; cursor: pointer; white-space: nowrap">[écouter ici]</button>
+      </div>
+    </sc-if>
+    <div style="display: flex; align-items: center; gap: 4px">
+      <button aria-label="Pause" style="background: none; border: 0; color: #E2E2EE; width: 40px; height: 40px; flex: none; margin-left: -8px; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1"></rect><rect x="14" y="4.5" width="4" height="15" rx="1"></rect></svg>
+      </button>
+      <a href="Lecteur.dc.html" aria-label="Ouvrir le lecteur : néons, nova kid" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; color: #E2E2EE">
+        <img src="../covers/basse-ville.svg" alt="" width="40" height="40" style="width: 40px; height: 40px; flex: none; border-radius: 4px; object-fit: cover">
+        <span style="min-width: 0; display: flex; flex-direction: column"><span style="color: #89B4FA; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">néons</span><span style="color: #9091AB; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">// nova kid</span></span>
+      </a>
+      <button aria-label="Retirer des titres likés" style="background: none; border: 0; color: #F38BA8; width: 40px; height: 40px; flex: none; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.3 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.6.1.2.4.2.5 0 .8-1.4 2.3-2.6 4.4-2.6 3.7 0 5.8 3.8 4.3 7.3C18.5 16.4 12 21 12 21z"></path></svg>
+      </button>
+      <button aria-label="Titre précédent" style="background: none; border: 0; color: #E2E2EE; width: 40px; height: 40px; flex: none; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.5 5.2v13.6a.8.8 0 0 1-1.25.66L9 13a1.2 1.2 0 0 1 0-2l9.25-6.46a.8.8 0 0 1 1.25.66z"></path><rect x="4.5" y="5" width="3" height="14" rx="1"></rect></svg>
+      </button>
+      <button aria-label="Titre suivant" style="background: none; border: 0; color: #E2E2EE; width: 40px; height: 40px; flex: none; margin-right: -8px; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.5 5.2v13.6a.8.8 0 0 0 1.25.66L15 13a1.2 1.2 0 0 0 0-2L5.75 4.54a.8.8 0 0 0-1.25.66z"></path><rect x="16.5" y="5" width="3" height="14" rx="1"></rect></svg>
+      </button>
+    </div>
+    <span style="height: 2px; background: #3A3A50; display: block"><span style="display: block; height: 2px; width: 48%; background: #A6E3A1"></span></span>
+  </div>
+
+  <nav aria-label="Navigation principale" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid #34344A; padding-bottom: 24px">
+    <a href="Main.dc.html" style="text-align: center; padding: 12px 0; color: #A6E3A1; font-weight: 500; border-top: 2px solid #A6E3A1; margin-top: -1px">accueil</a>
+    <a href="Recherche.dc.html" style="text-align: center; padding: 12px 0; color: #9091AB">recherche</a>
+    <a href="Bibliotheque.dc.html" style="text-align: center; padding: 12px 0; color: #9091AB">biblio</a>
+    <a href="Profil.dc.html" style="text-align: center; padding: 12px 0; color: #9091AB">stats</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"lectureSur":{"editor":"enum","options":["ce téléphone","macbook de jenny"],"default":"macbook de jenny"},"$preview":{"width":390,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { here: false };
+  }
+  renderVals() {
+    const device = this.props.lectureSur ?? 'macbook de jenny';
+    return {
+      remote: device !== 'ce téléphone' && !this.state.here,
+      device: device,
+      playHere: () => this.setState({ here: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

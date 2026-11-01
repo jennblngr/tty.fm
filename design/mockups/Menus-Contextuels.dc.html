@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Menus contextuels — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#181825}
+button{font:inherit}
+</style>
+</helmet>
+<div style="width: 1400px; height: 2320px; box-sizing: border-box; padding: 64px; background: #181825; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; gap: 48px">
+
+  <header style="display: flex; flex-direction: column; gap: 8px; max-width: 920px">
+    <h1 style="margin: 0; font-size: 26px; font-weight: 700"><span style="color: #A6E3A1">$</span> menus <span style="color: #9091AB">--contextuels</span></h1>
+    <p style="margin: 0; color: #9091AB">// les menus ouverts par [···]. chaque menu ne contient que les actions qu'on ne trouve pas déjà sur l'écran.</p>
+  </header>
+
+  <section style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+    <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <span style="color: #A6E3A1; font-weight: 700">règle 1 · pas de doublon</span>
+      <span>Si une action a déjà sa place sur l'écran (file d'attente, ♥, ajout en playlist), elle n'apparaît pas dans le menu.</span>
+    </div>
+    <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <span style="color: #A6E3A1; font-weight: 700">règle 2 · groupes</span>
+      <span>Actions groupées par intention et séparées par un trait. Ordre : naviguer › régler › fichier › bibliothèque.</span>
+    </div>
+    <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <span style="color: #A6E3A1; font-weight: 700">règle 3 · destructif en bas</span>
+      <span>Les actions qui retirent quelque chose sont en dernier, en rouge #F38BA8, et demandent une confirmation.</span>
+    </div>
+    <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+      <span style="color: #A6E3A1; font-weight: 700">règle 4 · format</span>
+      <span>Mobile : panneau depuis le bas. Desktop : menu sous [···], aligné à droite. Fermeture au clic dehors ou avec Échap.</span>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; align-items: baseline; gap: 16px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 700"><span style="color: #CBA6F7">01</span> · lecteur <span style="color: #9091AB">[···]</span></h2>
+      <span style="color: #9091AB">// 02 lecteur mobile, D2 lecteur desktop · actions sur le titre en cours</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 390px 320px minmax(0, 1fr); gap: 32px; align-items: start">
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <span style="font-weight: 700"><span style="color: #FAB387">▮</span> mobile · panneau</span>
+        <div style="position: relative; width: 390px; height: 720px; border-radius: 16px; overflow: hidden; background: #1E1E2E">
+          <div style="position: absolute; inset: 0; background: rgba(17, 17, 27, 0.72)"></div>
+          <div style="position: absolute; left: 0; right: 0; bottom: 0; background: #2A2A3C; border-radius: 16px 16px 0 0; padding: 8px 16px 24px; display: flex; flex-direction: column">
+            <span style="align-self: center; width: 32px; height: 4px; border-radius: 2px; background: #45475A; margin-bottom: 12px"></span>
+            <div style="display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #34344A">
+              <img src="../covers/basse-ville.svg" alt="" width="40" height="40" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover">
+              <span style="display: flex; flex-direction: column"><span style="color: #A6E3A1">néons</span><span style="color: #9091AB">// nova kid · basse ville</span></span>
+            </div>
+            <div style="display: flex; flex-direction: column; padding: 4px 0; border-bottom: 1px solid #34344A">
+              <span style="display: flex; justify-content: space-between; padding: 12px 0"><span>aller à l'album</span><span style="color: #9091AB">›</span></span>
+              <span style="display: flex; justify-content: space-between; padding: 12px 0"><span>aller à l'artiste</span><span style="color: #9091AB">›</span></span>
+              <span style="display: flex; justify-content: space-between; padding: 12px 0"><span>lancer la radio</span><span style="color: #9091AB">// genre + bpm</span></span>
+            </div>
+            <div style="display: flex; flex-direction: column; padding: 4px 0; border-bottom: 1px solid #34344A">
+              <span style="display: flex; justify-content: space-between; padding: 12px 0"><span>égaliseur</span><span style="color: #9091AB">soirée ›</span></span>
+              <span style="display: flex; justify-content: space-between; padding: 12px 0"><span>lire sur…</span><span style="color: #9091AB">ce tel. ›</span></span>
+            </div>
+            <div style="display: flex; flex-direction: column; padding: 4px 0; border-bottom: 1px solid #34344A">
+              <span style="padding: 12px 0">infos du fichier</span>
+              <span style="padding: 12px 0">modifier les tags</span>
+              <span style="padding: 12px 0">relancer l'analyse</span>
+            </div>
+            <div style="display: flex; flex-direction: column; padding: 4px 0 0">
+              <span style="padding: 12px 0">archiver</span>
+              <span style="padding: 12px 0; color: #F38BA8">retirer de la bibliothèque</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <span style="font-weight: 700"><span style="color: #89B4FA">▮</span> desktop · menu déroulant</span>
+        <div style="display: flex; justify-content: flex-end; color: #9091AB; padding: 0 8px">[···]</div>
+        <div style="background: #2A2A3C; border: 1px solid #34344A; border-radius: 8px; padding: 4px 0; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4); display: flex; flex-direction: column">
+          <span style="display: flex; justify-content: space-between; padding: 8px 16px; background: #34344A"><span>aller à l'album</span><span style="color: #9091AB">⌥A</span></span>
+          <span style="display: flex; justify-content: space-between; padding: 8px 16px"><span>aller à l'artiste</span><span style="color: #9091AB">⌥R</span></span>
+          <span style="display: flex; justify-content: space-between; padding: 8px 16px"><span>lancer la radio</span><span style="color: #9091AB"></span></span>
+          <span style="height: 1px; background: #34344A; margin: 4px 0"></span>
+          <span style="display: flex; justify-content: space-between; padding: 8px 16px"><span>égaliseur</span><span style="color: #9091AB">›</span></span>
+          <span style="display: flex; justify-content: space-between; padding: 8px 16px"><span>lire sur…</span><span style="color: #9091AB">›</span></span>
+          <span style="height: 1px; background: #34344A; margin: 4px 0"></span>
+          <span style="display: flex; justify-content: space-between; padding: 8px 16px"><span>infos du fichier</span><span style="color: #9091AB">⌘I</span></span>
+          <span style="padding: 8px 16px">modifier les tags</span>
+          <span style="padding: 8px 16px">relancer l'analyse</span>
+          <span style="height: 1px; background: #34344A; margin: 4px 0"></span>
+          <span style="padding: 8px 16px">archiver</span>
+          <span style="padding: 8px 16px; color: #F38BA8">retirer de la bibliothèque</span>
+        </div>
+        <span style="color: #9091AB">// survol : fond #34344A. raccourcis clavier en gris à droite.</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <span style="font-weight: 700"><span style="color: #F9E2AF">▮</span> actions</span>
+        <div style="background: #232334; border-radius: 8px; padding: 16px; display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 12px 16px">
+          <span style="color: #CBA6F7; grid-column: 1 / -1; font-weight: 700">naviguer</span>
+          <span>aller à l'album</span><span style="color: #9091AB">ouvre la page album, titre en cours surligné.</span>
+          <span>aller à l'artiste</span><span style="color: #9091AB">ouvre la page artiste.</span>
+          <span>lancer la radio</span><span style="color: #9091AB">remplace la suite de la file par des titres proches (genre, bpm, tonalité). demande confirmation si la file contient des ajouts manuels.</span>
+
+          <span style="color: #CBA6F7; grid-column: 1 / -1; font-weight: 700; padding-top: 8px">régler</span>
+          <span>égaliseur</span><span style="color: #9091AB">lien vers 06/D6 réglages › égaliseur. affiche le préréglage actif.</span>
+          <span>lire sur…</span><span style="color: #9091AB">liste des appareils (voir spec multi-appareils). affiche l'appareil actif.</span>
+
+          <span style="color: #CBA6F7; grid-column: 1 / -1; font-weight: 700; padding-top: 8px">fichier</span>
+          <span>infos du fichier</span><span style="color: #9091AB">format, débit, fréquence, taille, chemin sur le disque, date d'ajout.</span>
+          <span>modifier les tags</span><span style="color: #9091AB">titre, artiste, album, n°, année, pochette. écrit dans le fichier.</span>
+          <span>relancer l'analyse</span><span style="color: #9091AB">recalcule genre, bpm, tonalité, énergie. progression dans les notifications.</span>
+
+          <span style="color: #CBA6F7; grid-column: 1 / -1; font-weight: 700; padding-top: 8px">bibliothèque</span>
+          <span>archiver</span><span style="color: #9091AB">masque sans supprimer : retiré de la biblio, des recos, des mix et de la recherche. fichier et stats conservés. réversible depuis bibliothèque › [archivés].</span>
+          <span style="color: #F38BA8">retirer de la bibliothèque</span><span style="color: #9091AB">retire de l'index et des playlists. le fichier reste sur le disque, sauf si la case est cochée.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <span style="font-weight: 700"><span style="color: #F38BA8">!</span> confirmation · retirer</span>
+      <div style="background: #2A2A3C; border: 1px solid #34344A; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 16px; max-width: 420px">
+        <span style="font-weight: 700"><span style="color: #F38BA8">$</span> retirer « néons » ?</span>
+        <span style="color: #9091AB">// le titre quitte la bibliothèque et 3 playlists. pour juste le masquer, utilise [archiver].</span>
+        <span><span style="color: #9091AB">[ ]</span> supprimer aussi le fichier du disque</span>
+        <div style="display: flex; justify-content: flex-end; gap: 16px">
+          <span style="color: #9091AB">[annuler]</span>
+          <span style="color: #F38BA8; font-weight: 700">[retirer]</span>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <span style="font-weight: 700"><span style="color: #A6E3A1">✓</span> retour · archiver</span>
+      <div style="background: #2A2A3C; border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; max-width: 420px">
+        <span>« néons » archivé.</span>
+        <span style="color: #A6E3A1; font-weight: 700">[annuler]</span>
+      </div>
+      <span style="color: #9091AB">// pas de confirmation pour archiver : un toast de 5 s avec [annuler] suffit, l'action est réversible.</span>
+      <span style="color: #9091AB">// exclus volontairement : file d'attente (déjà sur l'écran), ajout en playlist (déjà dans l'interface), minuterie, vitesse, masquer des recos.</span>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 24px; border-top: 1px solid #34344A; padding-top: 48px">
+    <div style="display: flex; align-items: baseline; gap: 16px">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 700"><span style="color: #CBA6F7">02</span> · tri <span style="color: #9091AB">[récent ▾]</span></h2>
+      <span style="color: #9091AB">// 03 biblio (playlists), D3 biblio (titres) · choisir l'ordre d'une liste</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 390px 320px minmax(0, 1fr); gap: 32px; align-items: start">
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <span style="font-weight: 700"><span style="color: #FAB387">▮</span> mobile · panneau</span>
+        <div style="position: relative; width: 390px; height: 460px; border-radius: 16px; overflow: hidden; background: #1E1E2E">
+          <div style="position: absolute; inset: 0; background: rgba(17, 17, 27, 0.72)"></div>
+          <div role="menu" aria-label="Trier les playlists" style="position: absolute; left: 0; right: 0; bottom: 0; background: #2A2A3C; border-radius: 16px 16px 0 0; padding: 8px 16px 24px; display: flex; flex-direction: column">
+            <span style="align-self: center; width: 32px; height: 4px; border-radius: 2px; background: #45475A; margin-bottom: 12px"></span>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 12px; border-bottom: 1px solid #34344A">
+              <span style="font-weight: 700"><span style="color: #A6E3A1">$</span> sort playlists</span>
+              <span><span style="color: #A6E3A1; font-weight: 700">[↓ desc]</span> <span style="color: #9091AB">[↑ asc]</span></span>
+            </div>
+            <span role="menuitemradio" aria-checked="true" style="display: flex; justify-content: space-between; padding: 12px 0; color: #A6E3A1"><span>● récent</span><span style="color: #9091AB">dernière écoute</span></span>
+            <span role="menuitemradio" style="display: flex; justify-content: space-between; padding: 12px 0"><span><span style="color: #45475A">○</span> ajout</span><span style="color: #9091AB">date de création</span></span>
+            <span role="menuitemradio" style="display: flex; justify-content: space-between; padding: 12px 0"><span><span style="color: #45475A">○</span> a → z</span><span style="color: #9091AB">nom</span></span>
+            <span role="menuitemradio" style="display: flex; justify-content: space-between; padding: 12px 0"><span><span style="color: #45475A">○</span> nombre de titres</span><span style="color: #9091AB"></span></span>
+            <span role="menuitemradio" style="display: flex; justify-content: space-between; padding: 12px 0"><span><span style="color: #45475A">○</span> bpm moyen</span><span style="color: #FAB387">∿</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <span style="font-weight: 700"><span style="color: #89B4FA">▮</span> desktop · menu déroulant</span>
+        <div style="display: flex; justify-content: flex-end; color: #9091AB; padding: 0 8px">tri : <span style="color: #E2E2EE">&nbsp;[récent ▾]</span></div>
+        <div style="background: #2A2A3C; border: 1px solid #34344A; border-radius: 8px; padding: 4px 0; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4); display: flex; flex-direction: column">
+          <span style="display: flex; justify-content: space-between; padding: 8px 16px; color: #A6E3A1; background: #34344A"><span>● récent</span><span style="color: #9091AB">↓</span></span>
+          <span style="padding: 8px 16px"><span style="color: #45475A">○</span> ajout</span>
+          <span style="padding: 8px 16px"><span style="color: #45475A">○</span> a → z</span>
+          <span style="padding: 8px 16px"><span style="color: #45475A">○</span> nombre de titres</span>
+          <span style="padding: 8px 16px"><span style="color: #45475A">○</span> bpm moyen</span>
+          <span style="height: 1px; background: #34344A; margin: 4px 0"></span>
+          <span style="display: flex; justify-content: space-between; padding: 8px 16px"><span>ordre</span><span><span style="color: #A6E3A1; font-weight: 700">[↓]</span> <span style="color: #9091AB">[↑]</span></span></span>
+        </div>
+        <span style="color: #9091AB">// dans le tableau D3, un clic sur l'en-tête d'une colonne trie aussi (bpm ▾).</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <span style="font-weight: 700"><span style="color: #F9E2AF">▮</span> règles</span>
+        <div style="background: #232334; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+          <div><span style="color: #9091AB">choix</span> &nbsp;&nbsp;un seul tri actif, marqué ● et en vert. ○ pour les autres.</div>
+          <div><span style="color: #9091AB">sens</span> &nbsp;&nbsp;&nbsp;↓/↑ à part, pour ne pas doubler chaque option. par défaut : ↓ pour récent, ajout, nombre, bpm ; ↑ pour a → z.</div>
+          <div><span style="color: #9091AB">fermeture</span> un tap sur une option applique le tri et ferme le menu. le sens s'applique sans fermer.</div>
+          <div><span style="color: #9091AB">libellé</span> &nbsp;le bouton affiche le tri actif : tri : [a → z ▾].</div>
+          <div><span style="color: #9091AB">mémoire</span> &nbsp;le choix est gardé par liste (playlists, titres, albums).</div>
+          <div><span style="color: #9091AB">épinglés</span> toujours en haut, quel que soit le tri.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1400,"height":2320}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

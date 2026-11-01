@@ -12,8 +12,10 @@ import 'cover.dart';
 import 'tty.dart';
 import '../theme.dart';
 
-/// A track row: number or cover, coloured title, "// artist · album",
-/// duration and the "···" menu. [onTap] usually plays the list it belongs
+/// A track row: a 24 px square with the number (or the green play icon for
+/// the current track, so nothing shifts), the cover, the title, "// artist ·
+/// album", duration and the "···" menu. Without a number and with a cover,
+/// the square is left out and the current track shows in green. [onTap] usually plays the list it belongs
 /// to from here.
 class TrackTile extends ConsumerWidget {
   const TrackTile(
@@ -37,23 +39,25 @@ class TrackTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isCurrent = ref.watch(currentTrackProvider.select((t) => t?.id == track.id));
     final c = Tty.of(context);
+    final number = leadingNumber ?? (showCover ? null : track.trackNo ?? 0);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(4),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            if (showCover)
-              CoverImage(track.coverId, size: 40, label: track.artist, seed: track.albumId)
-            else
-              SizedBox(
-                width: 28,
-                child: Text(
-                  isCurrent ? '▶' : (leadingNumber ?? track.trackNo ?? '').toString().padLeft(2, '0'),
-                  style: TextStyle(color: isCurrent ? c.green : c.muted),
+            if (number != null)
+              SizedBox.square(
+                dimension: 24,
+                child: Center(
+                  child: isCurrent
+                      ? Icon(Icons.play_arrow, size: 18, color: c.green, semanticLabel: 'en cours')
+                      : Text(number.toString().padLeft(2, '0'), style: TextStyle(color: c.muted)),
                 ),
               ),
+            if (number != null && showCover) const SizedBox(width: 12),
+            if (showCover) CoverImage(track.coverId, size: 40, label: track.artist, seed: track.albumId),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -63,10 +67,7 @@ class TrackTile extends ConsumerWidget {
                     track.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: isCurrent ? c.green : c.text,
-                      fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w400,
-                    ),
+                    style: TextStyle(color: isCurrent ? c.green : c.text),
                   ),
                   Comment(showCover ? '${track.artist} · ${track.album}' : track.artist, maxLines: 1),
                 ],

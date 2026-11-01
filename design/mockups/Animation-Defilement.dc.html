@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Animation défilement — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#181825}
+@keyframes ttyMarquee{0%,15%{transform:translateX(0)}100%{transform:translateX(calc(-50% - 24px))}}
+@media (prefers-reduced-motion: reduce){.tty-marquee-track{animation:none !important}}
+</style>
+</helmet>
+<div style="width: 1400px; min-height: 100vh; box-sizing: border-box; padding: 64px; background: #181825; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; gap: 48px">
+
+  <header style="display: flex; flex-direction: column; gap: 8px; max-width: 920px">
+    <h1 style="margin: 0; font-size: 26px; font-weight: 700"><span style="color: #A6E3A1">$</span> animations <span style="color: #9091AB">› 03</span></h1>
+    <p style="margin: 0; color: #9091AB">// lecteur · artiste + album trop longs : défilement infini.</p>
+  </header>
+
+  <section style="display: grid; grid-template-columns: 440px minmax(0, 1fr); gap: 48px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700"><span style="color: #A6E3A1">03</span> lecteur · artiste + album trop longs</h2>
+      <div style="background: #1E1E2E; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 32px">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span style="color: #45475A">// tient dans la largeur : texte fixe</span>
+          <span style="font-size: 18px; font-weight: 700; color: #89B4FA">néons</span>
+          <span style="color: #9091AB">// nova kid · album « basse ville »</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span style="color: #45475A">// trop long : défilement infini</span>
+          <span style="font-size: 18px; font-weight: 700; color: #FAB387">tard le soir</span>
+          <div aria-label="mira sol et les échos, album les nuits où l'on ne dort pas, édition deluxe" style="overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent); mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent)">
+            <div class="tty-marquee-track" style="display: inline-flex; gap: 48px; white-space: nowrap; animation: ttyMarquee 18s linear infinite">
+              <span style="color: #9091AB">// mira sol &amp; les échos · album « les nuits où l'on ne dort pas (édition deluxe) »</span>
+              <span aria-hidden="true" style="color: #9091AB">// mira sol &amp; les échos · album « les nuits où l'on ne dort pas (édition deluxe) »</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <section style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #CBA6F7">≡ comportement</h3>
+        <div><span style="color: #9091AB">déclencheur</span> seulement si « artiste · album » dépasse la largeur disponible ; sinon le texte reste fixe.</div>
+        <div><span style="color: #9091AB">boucle</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;le texte est répété avec 48 px d'écart : quand la copie arrive au début, la boucle repart sans saut visible.</div>
+        <div><span style="color: #9091AB">pause</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;le texte reste immobile au début de chaque boucle (15 % de la durée), pour pouvoir le lire.</div>
+        <div><span style="color: #9091AB">bords</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fondu sur 16 px à gauche et à droite, pour que le texte n'apparaisse pas coupé net.</div>
+        <div><span style="color: #9091AB">où</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lecteur mobile et desktop. le titre du morceau suit la même règle s'il dépasse aussi.</div>
+      </section>
+
+      <section style="background: #232334; border-radius: 8px; padding: 24px; display: grid; grid-template-columns: 120px 1fr; gap: 8px 16px">
+        <h3 style="grid-column: 1 / -1; margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #FAB387">∿ paramètres</h3>
+        <span style="color: #9091AB">vitesse</span><span>constante, ≈ 40 px/s : la durée dépend de la longueur du texte.</span>
+        <span style="color: #9091AB">courbe</span><span style="color: #F9E2AF">linear</span>
+        <span style="color: #9091AB">répétition</span><span>infinie, tant que l'écran est visible</span>
+        <span style="color: #9091AB">mouvement réduit</span><span>pas de défilement : texte tronqué avec …</span>
+        <span style="color: #9091AB">accessibilité</span><span>la copie est masquée aux lecteurs d'écran (aria-hidden).</span>
+      </section>
+
+      <section style="background: #232334; border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #94E2D5">▤ implémentation</h3>
+        <div style="background: #1E1E2E; border-radius: 6px; padding: 16px; color: #F9E2AF; white-space: pre-line">.marquee { overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent); }
+.marquee-track { display: inline-flex; gap: 48px; white-space: nowrap;
+  animation: marquee var(--duree) linear infinite; }  /* --duree = (largeur texte + 48) / 40 px/s, + 15 % de pause */
+@keyframes marquee {
+  0%, 15% { transform: translateX(0); }
+  100%    { transform: translateX(calc(-50% - 24px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+  .marquee-track > :last-child { display: none; }
+  .marquee-track > :first-child { overflow: hidden; text-overflow: ellipsis; }
+}
+/* activer seulement si scrollWidth &gt; clientWidth (recalculé au redimensionnement) */</div>
+      </section>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1400,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

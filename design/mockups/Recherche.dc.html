@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Recherche — tty.fm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+html,body{overflow-x:hidden}
+body{margin:0;background:#1E1E2E}
+a{color:#A6E3A1;text-decoration:none}a:hover{color:#C8F0C4}
+button,input{font:inherit}
+input::placeholder{color:#9091AB}
+.swipe{scrollbar-width:none}.swipe::-webkit-scrollbar{display:none}
+</style>
+</helmet>
+<div style="width: 390px; height: 1000px; box-sizing: border-box; overflow-x: clip; background: #1E1E2E; color: #E2E2EE; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; display: flex; flex-direction: column; padding-top: 48px">
+
+  <div style="padding: 16px; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <label for="q"><span style="color: #CBA6F7">tty.fm</span> <span style="color: #A6E3A1">$</span> grep</label>
+      <div style="display: flex; align-items: center; gap: 8px; background: #2A2A3C; border-radius: 6px; padding: 0 12px">
+        <span style="color: #A6E3A1" aria-hidden="true">&gt;</span>
+        <input id="q" type="search" placeholder="titre, artiste, album, paroles…" style="flex: 1; min-width: 0; background: none; border: 0; outline: none; color: #E2E2EE; padding: 12px 0">
+      </div>
+      <div role="group" aria-label="Ajouter un filtre" class="swipe" style="display: flex; gap: 8px; overflow-x: auto; white-space: nowrap; margin-right: -16px; padding-right: 16px">
+        <button style="flex: none; background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #E2E2EE; cursor: pointer">paroles<span style="color: #9091AB">:</span></button>
+        <button style="flex: none; background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #E2E2EE; cursor: pointer">artiste<span style="color: #9091AB">:</span></button>
+        <button style="flex: none; background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #E2E2EE; cursor: pointer">album<span style="color: #9091AB">:</span></button>
+        <button style="flex: none; background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #E2E2EE; cursor: pointer">genre<span style="color: #9091AB">:</span></button>
+        <button style="flex: none; background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #FAB387; cursor: pointer">bpm ▾</button>
+        <button style="flex: none; background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #E2E2EE; cursor: pointer">ton<span style="color: #9091AB">:</span></button>
+        <button style="flex: none; background: #2A2A3C; border: 0; border-radius: 6px; padding: 4px 8px; color: #E2E2EE; cursor: pointer">ajouté ▾</button>
+      </div>
+      <div style="color: #9091AB">// tap = ajoute le filtre au champ. se combinent : genre:électro bpm:&gt;120</div>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 2px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #9091AB" aria-hidden="true">↺</span>historique</h2>
+        <button style="background: none; border: 0; color: #9091AB; padding: 8px 0; cursor: pointer">[effacer]</button>
+      </div>
+      <a href="Recherche-Resultats.dc.html" style="display: flex; justify-content: space-between; padding: 8px 0; color: #E2E2EE"><span><span style="color: #9091AB">$ </span>nova</span><span style="color: #9091AB">13 résultats ×</span></a>
+      <div style="display: flex; justify-content: space-between; padding: 8px 0"><span><span style="color: #9091AB">$ </span>« sous les néons »</span><span style="color: #9091AB">paroles ×</span></div>
+      <div style="display: flex; justify-content: space-between; padding: 8px 0"><span><span style="color: #9091AB">$ </span>bpm:&gt;140 électro</span><span style="color: #9091AB">filtre ×</span></div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 700; display: flex; gap: 8px; align-items: center"><span style="color: #CBA6F7" aria-hidden="true">▦</span>parcourir</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <a href="Main.dc.html" style="height: 84px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #3D2633; color: #F5A3C7; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">pop<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #F5A3C7"><path d="M0 6h7v2h-7zM8 3h7v5h-7zM16 5h7v3h-7zM24 2h7v6h-7z"></path></svg></span></a>
+        <a href="Main.dc.html" style="height: 84px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #3D2E26; color: #FAB387; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">rap fr<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #FAB387"><path d="M0 1h7v7h-7zM8 5h7v3h-7zM16 1h7v7h-7zM24 5h7v3h-7z"></path></svg></span></a>
+        <a href="Main.dc.html" style="height: 84px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #2E2840; color: #CBA6F7; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">électro<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #CBA6F7"><path d="M0 3h7v5h-7zM8 3h7v5h-7zM16 3h7v5h-7zM24 3h7v5h-7z"></path></svg></span></a>
+        <a href="Main.dc.html" style="height: 84px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #263A34; color: #94E2D5; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">lo-fi / chill<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #94E2D5"><path d="M0 6h7v2h-7zM8 5h7v3h-7zM16 6h7v2h-7zM24 5h7v3h-7z"></path></svg></span></a>
+        <a href="Main.dc.html" style="height: 84px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #3A3526; color: #F9E2AF; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">jazz<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #F9E2AF"><path d="M0 5h7v3h-7zM8 2h7v6h-7zM16 6h7v2h-7zM24 3h7v5h-7z"></path></svg></span></a>
+        <a href="Main.dc.html" style="height: 84px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #23324A; color: #89B4FA; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">rock<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #89B4FA"><path d="M0 1h7v7h-7zM8 2h7v6h-7zM16 1h7v7h-7zM24 3h7v5h-7z"></path></svg></span></a>
+        <a href="Main.dc.html" style="height: 84px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #26332B; color: #A6E3A1; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">classique<span style="font-weight: 400; color: #9091AB"><svg aria-hidden="true" viewBox="0 0 31 8" preserveAspectRatio="none" fill="currentColor" style="width: 2.4em; height: 0.75em; color: #A6E3A1"><path d="M0 7h7v1h-7zM8 5h7v3h-7zM16 3h7v5h-7zM24 1h7v7h-7z"></path></svg></span></a>
+        <a href="Main.dc.html" style="height: 84px; box-sizing: border-box; border-radius: 6px; padding: 12px; background: #2A2A3C; color: #E2E2EE; font-weight: 700; display: flex; flex-direction: column; justify-content: space-between">[plus]<span style="font-weight: 400; color: #9091AB">// humeurs, décennies</span></a>
+      </div>
+    </section>
+  </div>
+
+  <nav aria-label="Navigation principale" style="margin-top: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid #34344A; padding-bottom: 24px">
+    <a href="Main.dc.html" style="text-align: center; padding: 12px 0; color: #9091AB">accueil</a>
+    <a href="Recherche.dc.html" style="text-align: center; padding: 12px 0; color: #A6E3A1; font-weight: 500; border-top: 2px solid #A6E3A1; margin-top: -1px">recherche</a>
+    <a href="Bibliotheque.dc.html" style="text-align: center; padding: 12px 0; color: #9091AB">biblio</a>
+    <a href="Profil.dc.html" style="text-align: center; padding: 12px 0; color: #9091AB">stats</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
