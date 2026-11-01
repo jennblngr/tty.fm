@@ -8,7 +8,7 @@ import (
 
 	"go.senan.xyz/taglib"
 
-	"selfstream/internal/store"
+	"ttyfm/internal/store"
 )
 
 func readFile(abs string, f walkedFile) (*store.TrackFile, error) {

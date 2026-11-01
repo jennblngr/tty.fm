@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"selfstream/internal/auth"
-	"selfstream/internal/store"
+	"ttyfm/internal/auth"
+	"ttyfm/internal/store"
 )
 
 func (s *Server) playlistTree(w http.ResponseWriter, r *http.Request) {

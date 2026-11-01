@@ -19,7 +19,7 @@ import (
 
 	"golang.org/x/crypto/argon2"
 
-	"selfstream/internal/store"
+	"ttyfm/internal/store"
 )
 
 // argon2id parameters (OWASP baseline). ~50 ms on an N100.

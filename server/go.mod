@@ -1,4 +1,4 @@
-module selfstream
+module ttyfm
 
 go 1.27.1
 

@@ -9,14 +9,14 @@ import (
 	"strconv"
 	"time"
 
-	"selfstream/internal/app"
-	"selfstream/internal/auth"
-	"selfstream/internal/covers"
-	"selfstream/internal/hub"
-	"selfstream/internal/lyrics"
-	"selfstream/internal/scanner"
-	"selfstream/internal/store"
-	"selfstream/internal/stream"
+	"ttyfm/internal/app"
+	"ttyfm/internal/auth"
+	"ttyfm/internal/covers"
+	"ttyfm/internal/hub"
+	"ttyfm/internal/lyrics"
+	"ttyfm/internal/scanner"
+	"ttyfm/internal/store"
+	"ttyfm/internal/stream"
 )
 
 type Server struct {
@@ -186,7 +186,7 @@ func (s *Server) logRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		sw := &statusWriter{ResponseWriter: w, status: http.StatusOK}
-		w.Header().Set("X-App", app.Name+"/"+app.Version)
+		w.Header().Set("X-App", app.Title+"/"+app.Version)
 		next.ServeHTTP(sw, r)
 		s.Log.Debug("http", "method", r.Method, "path", r.URL.Path, "status", sw.status,
 			"duration", time.Since(start).Round(time.Microsecond))
@@ -194,5 +194,5 @@ func (s *Server) logRequests(next http.Handler) http.Handler {
 }
 
 func (s *Server) health(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "app": app.Name, "version": app.Version})
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "app": app.Title, "version": app.Version})
 }

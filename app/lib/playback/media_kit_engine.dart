@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:media_kit/media_kit.dart';
 
+import '../app_info.dart';
 import 'audio_engine.dart';
 
 /// [AudioEngine] backed by media_kit (libmpv) on every platform.
@@ -27,7 +28,7 @@ class MediaKitEngine implements AudioEngine {
   }
 
   final _player = Player(
-    configuration: const PlayerConfiguration(title: 'selfstream', bufferSize: 64 << 20),
+    configuration: const PlayerConfiguration(title: appDisplayName, bufferSize: 64 << 20),
   );
   final _index = StreamController<int>.broadcast();
   final _subs = <StreamSubscription<dynamic>>[];

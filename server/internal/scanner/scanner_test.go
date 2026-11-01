@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"selfstream/internal/covers"
-	"selfstream/internal/store"
+	"ttyfm/internal/covers"
+	"ttyfm/internal/store"
 )
 
 func needFFmpeg(t *testing.T) {

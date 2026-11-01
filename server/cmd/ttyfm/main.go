@@ -7,22 +7,23 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
 	_ "time/tzdata" // local time for stats even in a minimal image (TZ env)
 
-	"selfstream/internal/api"
-	"selfstream/internal/app"
-	"selfstream/internal/auth"
-	"selfstream/internal/config"
-	"selfstream/internal/covers"
-	"selfstream/internal/hub"
-	"selfstream/internal/lyrics"
-	"selfstream/internal/scanner"
-	"selfstream/internal/store"
-	"selfstream/internal/stream"
+	"ttyfm/internal/api"
+	"ttyfm/internal/app"
+	"ttyfm/internal/auth"
+	"ttyfm/internal/config"
+	"ttyfm/internal/covers"
+	"ttyfm/internal/hub"
+	"ttyfm/internal/lyrics"
+	"ttyfm/internal/scanner"
+	"ttyfm/internal/store"
+	"ttyfm/internal/stream"
 )
 
 // Tracks missing for longer than this are deleted for good.
@@ -45,13 +46,18 @@ func run() error {
 	}
 	log := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: cfg.LogLevel}))
 	slog.SetDefault(log)
-	log.Info("starting", "app", app.Name, "version", app.Version, "music", cfg.MusicDir, "data", cfg.DataDir)
+	log.Info("starting", "app", app.Title, "version", app.Version, "music", cfg.MusicDir, "data", cfg.DataDir)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	if err := os.MkdirAll(cfg.DataDir, 0o755); err != nil {
 		return err
+	}
+	if moved, err := cfg.MigrateLegacyDB(); err != nil {
+		return err
+	} else if moved {
+		log.Info("renamed legacy database", "from", app.LegacyName+".db", "to", filepath.Base(cfg.DBPath()))
 	}
 	db, err := store.Open(cfg.DBPath())
 	if err != nil {

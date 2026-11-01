@@ -39,7 +39,7 @@ Future<void> main() async {
           return Uri.parse(api.url('/covers/${t.coverId}?size=800&token=${container.read(tokenProvider)}'));
         }),
         config: const AudioServiceConfig(
-          androidNotificationChannelId: 'dev.selfstream.playback',
+          androidNotificationChannelId: 'fm.tty.playback',
           androidNotificationChannelName: '$appDisplayName playback',
           androidNotificationOngoing: true,
           androidStopForegroundOnPause: true,
@@ -59,5 +59,5 @@ Future<void> main() async {
   // rebuilt when the server address or the token changes.
   container.listen(liveSyncProvider, (_, _) {});
 
-  runApp(UncontrolledProviderScope(container: container, child: const SelfstreamApp()));
+  runApp(UncontrolledProviderScope(container: container, child: const TtyFmApp()));
 }

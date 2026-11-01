@@ -13,8 +13,8 @@ import 'theme.dart';
 final _dark = ttyTheme(Tty.mocha);
 final _light = ttyTheme(Tty.latte);
 
-class SelfstreamApp extends ConsumerWidget {
-  const SelfstreamApp({super.key});
+class TtyFmApp extends ConsumerWidget {
+  const TtyFmApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -7,7 +7,7 @@
 
 # Go
 /server/bin/
-/server/selfstream
+/server/ttyfm
 *.test
 *.out
 

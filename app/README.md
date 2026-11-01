@@ -1,4 +1,4 @@
-# Client selfstream (Flutter)
+# Client tty.fm (Flutter)
 
 Application native pour **macOS** et **Android**. Windows et iOS sont prévus pour plus tard : le code est commun, seules les intégrations système restent à brancher.
 
@@ -34,7 +34,7 @@ Depuis un émulateur Android, le Mac s'appelle `10.0.2.2`.
 
 ```bash
 flutter build macos --release
-cp -R build/macos/Build/Products/Release/selfstream.app /Applications/
+cp -R build/macos/Build/Products/Release/tty.fm.app /Applications/
 ```
 
 L'app est signée « ad hoc » : elle tourne sur le Mac qui l'a construite. Pour un autre Mac : clic droit → Ouvrir la première fois, ou signature avec un compte développeur Apple.
@@ -61,8 +61,8 @@ flutter analyze
 ```bash
 # terminal 1 : serveur de développement avec une petite bibliothèque
 tools/demo-library.sh            # génère data/dev-music
-cd server && make build && SELFSTREAM_MUSIC_DIR=../data/dev-music SELFSTREAM_DATA_DIR=../data/dev-data \
-  SELFSTREAM_ADMIN_PASSWORD=devpass SELFSTREAM_LISTEN=127.0.0.1:4533 ./bin/selfstream
+cd server && make build && TTYFM_MUSIC_DIR=../data/dev-music TTYFM_DATA_DIR=../data/dev-data \
+  TTYFM_ADMIN_PASSWORD=devpass TTYFM_LISTEN=127.0.0.1:4533 ./bin/ttyfm
 # terminal 2
 cd app && flutter test integration_test -d macos
 cd app && flutter test integration_test -d emulator-5554 --dart-define=SERVER=10.0.2.2:4533

@@ -1,4 +1,4 @@
-package dev.selfstream.selfstream
+package fm.tty.app
 
 import com.ryanheise.audioservice.AudioServiceActivity
 

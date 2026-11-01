@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"selfstream/internal/app"
+	"ttyfm/internal/app"
 )
 
 type Config struct {
@@ -81,3 +81,27 @@ func Load() (*Config, error) {
 func (c *Config) DBPath() string       { return filepath.Join(c.DataDir, app.Name+".db") }
 func (c *Config) CoverDir() string     { return filepath.Join(c.DataDir, "covers") }
 func (c *Config) TranscodeDir() string { return filepath.Join(c.DataDir, "transcode") }
+
+// MigrateLegacyDB renames the database left by the former app name
+// (with its WAL and shared-memory files) to DBPath. It does nothing when the
+// new database already exists or there is no legacy one, and reports whether
+// it renamed anything.
+func (c *Config) MigrateLegacyDB() (bool, error) {
+	newPath := c.DBPath()
+	oldPath := filepath.Join(c.DataDir, app.LegacyName+".db")
+	if _, err := os.Stat(newPath); err == nil {
+		return false, nil
+	}
+	if _, err := os.Stat(oldPath); err != nil {
+		return false, nil
+	}
+	// The WAL and shm files go first so the main file is never visible
+	// under the new name without them.
+	for _, suffix := range []string{"-wal", "-shm", ""} {
+		err := os.Rename(oldPath+suffix, newPath+suffix)
+		if err != nil && !(suffix != "" && os.IsNotExist(err)) {
+			return false, fmt.Errorf("rename %s: %w", filepath.Base(oldPath+suffix), err)
+		}
+	}
+	return true, nil
+}

@@ -20,8 +20,8 @@ import (
 
 	"go.senan.xyz/taglib"
 
-	"selfstream/internal/covers"
-	"selfstream/internal/store"
+	"ttyfm/internal/covers"
+	"ttyfm/internal/store"
 )
 
 var audioExt = map[string]bool{

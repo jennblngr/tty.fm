@@ -1,7 +1,7 @@
 // End-to-end test of the real app against a running server.
 //
-//   cd server && SELFSTREAM_MUSIC_DIR=../data/dev-music SELFSTREAM_DATA_DIR=../data/dev-data \
-//     SELFSTREAM_ADMIN_PASSWORD=devpass SELFSTREAM_LISTEN=127.0.0.1:4533 ./bin/selfstream
+//   cd server && TTYFM_MUSIC_DIR=../data/dev-music TTYFM_DATA_DIR=../data/dev-data \
+//     TTYFM_ADMIN_PASSWORD=devpass TTYFM_LISTEN=127.0.0.1:4533 ./bin/ttyfm
 //   cd app && flutter test integration_test -d macos \
 //     --dart-define=SERVER=127.0.0.1:4533 --dart-define=PASSWORD=devpass
 //
@@ -18,15 +18,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:selfstream/core/session.dart';
-import 'package:selfstream/data/library_repository.dart';
-import 'package:selfstream/main.dart' as app;
-import 'package:selfstream/offline/downloads.dart';
-import 'package:selfstream/state/library.dart';
-import 'package:selfstream/state/playback.dart';
-import 'package:selfstream/state/remote.dart';
-import 'package:selfstream/state/search.dart';
-import 'package:selfstream/ui/widgets/mini_player.dart';
+import 'package:ttyfm/core/session.dart';
+import 'package:ttyfm/data/library_repository.dart';
+import 'package:ttyfm/main.dart' as app;
+import 'package:ttyfm/offline/downloads.dart';
+import 'package:ttyfm/state/library.dart';
+import 'package:ttyfm/state/playback.dart';
+import 'package:ttyfm/state/remote.dart';
+import 'package:ttyfm/state/search.dart';
+import 'package:ttyfm/ui/widgets/mini_player.dart';
 
 const server = String.fromEnvironment('SERVER', defaultValue: '127.0.0.1:4533');
 const password = String.fromEnvironment('PASSWORD', defaultValue: 'devpass');

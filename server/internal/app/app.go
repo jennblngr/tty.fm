@@ -1,12 +1,16 @@
-// Package app holds the application identity. The product name is a working
-// title: change it here (and in .env / app/lib/app_info.dart) to rename.
+// Package app holds the application identity: Title is the product name,
+// Name the technical identifier (binary, database file, env prefix).
 package app
 
 const (
-	// Name is the application name, used in logs, headers and defaults.
-	Name = "selfstream"
+	// Title is the product name, used in logs and headers.
+	Title = "tty.fm"
+	// Name is the technical identifier, used for defaults such as the database file.
+	Name = "ttyfm"
+	// LegacyName is the former technical identifier; its database is renamed on start.
+	LegacyName = "selfstream"
 	// EnvPrefix is prepended to every configuration environment variable.
-	EnvPrefix = "SELFSTREAM_"
+	EnvPrefix = "TTYFM_"
 	// APIVersion is the current REST API version segment.
 	APIVersion = "v1"
 )

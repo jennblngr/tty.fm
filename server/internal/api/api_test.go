@@ -19,13 +19,13 @@ import (
 
 	"github.com/coder/websocket"
 
-	"selfstream/internal/auth"
-	"selfstream/internal/covers"
-	"selfstream/internal/hub"
-	"selfstream/internal/lyrics"
-	"selfstream/internal/scanner"
-	"selfstream/internal/store"
-	"selfstream/internal/stream"
+	"ttyfm/internal/auth"
+	"ttyfm/internal/covers"
+	"ttyfm/internal/hub"
+	"ttyfm/internal/lyrics"
+	"ttyfm/internal/scanner"
+	"ttyfm/internal/store"
+	"ttyfm/internal/stream"
 )
 
 type client struct {

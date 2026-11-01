@@ -30,7 +30,7 @@ import (
 
 	"github.com/coder/websocket"
 
-	"selfstream/internal/store"
+	"ttyfm/internal/store"
 )
 
 const (

@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:selfstream/data/models.dart';
-import 'package:selfstream/playback/audio_engine.dart';
-import 'package:selfstream/playback/playback_controller.dart';
+import 'package:ttyfm/data/models.dart';
+import 'package:ttyfm/playback/audio_engine.dart';
+import 'package:ttyfm/playback/playback_controller.dart';
 
 /// In-memory engine that mimics mpv's playlist behaviour closely enough to
 /// test the controller.

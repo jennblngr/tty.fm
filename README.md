@@ -1,8 +1,8 @@
-# selfstream
+# tty.fm
 
 Lecteur de musique auto-hébergé : un serveur Go + SQLite tourne sur le NAS, le client Flutter natif tourne sur macOS et Android (Windows et iOS plus tard).
 
-> *selfstream* est un nom de travail. Il est centralisé dans `server/internal/app/app.go` (nom, préfixe des variables d'environnement), `.env` (`APP_NAME`) et `app/lib/app_info.dart`.
+> Le nom affiché est *tty.fm* (`app.Title` dans `server/internal/app/app.go`, `appDisplayName` dans `app/lib/app_info.dart`). L’identifiant technique est `ttyfm` : module Go, binaire, image Docker, préfixe `TTYFM_` des variables, base `ttyfm.db`. Les identifiants de bundle sont `fm.tty.app`. Au démarrage, le serveur renomme une ancienne base `selfstream.db` en `ttyfm.db`.
 
 ```
 server/       API REST + streaming (Go, SQLite WAL + FTS5, ffmpeg)
@@ -24,24 +24,24 @@ Prérequis : Docker activé dans UGOS Pro, SSH activé (Panneau de configuration
 2. **Construire l'image sur le Mac** (Apple Silicon, émulation x86_64 via Colima + Rosetta, environ 3 min) et l'envoyer :
    ```bash
    colima start --vm-type vz --vz-rosetta --cpu 4 --memory 4   # une fois par session
-   docker build --platform linux/amd64 --build-arg VERSION=$(git describe --always) -t selfstream:latest server/
-   docker save selfstream:latest | gzip | ssh user@nas 'gunzip | docker load'
+   docker build --platform linux/amd64 --build-arg VERSION=$(git describe --always) -t ttyfm:latest server/
+   docker save ttyfm:latest | gzip | ssh user@nas 'gunzip | docker load'
    ```
    (`scp` vers `/volume1` échoue sur UGOS : le SFTP ne voit pas les volumes, d'où le passage par `ssh`.)
 
-3. **Configurer** dans `/volume1/docker/selfstream` :
+3. **Configurer** dans `/volume1/docker/ttyfm` :
    ```bash
-   ssh user@nas 'mkdir -p /volume1/docker/selfstream/data'
-   sed '/^    build:/,/^        VERSION/d' docker-compose.yml | ssh user@nas 'cat > /volume1/docker/selfstream/docker-compose.yml'
-   ssh user@nas 'cat > /volume1/docker/selfstream/.env' < .env   # préparé à partir de .env.example
+   ssh user@nas 'mkdir -p /volume1/docker/ttyfm/data'
+   sed '/^    build:/,/^        VERSION/d' docker-compose.yml | ssh user@nas 'cat > /volume1/docker/ttyfm/docker-compose.yml'
+   ssh user@nas 'cat > /volume1/docker/ttyfm/.env' < .env   # préparé à partir de .env.example
    ```
-   Dans `.env` : `MUSIC_DIR` (ex. `/volume1/music`), `DATA_DIR` (ex. `/volume1/docker/selfstream/data`), `ADMIN_PASSWORD`.
+   Dans `.env` : `MUSIC_DIR` (ex. `/volume1/music`), `DATA_DIR` (ex. `/volume1/docker/ttyfm/data`), `ADMIN_PASSWORD`.
 
    **Utilisateur du conteneur** : UGOS Pro refuse la surveillance inotify des dossiers partagés aux utilisateurs autres que root (`watch: cannot add … permission denied`). Le conteneur tourne donc en uid 0, mais **sans aucune capability** (`cap_drop: ALL`, `no-new-privileges`) : il ne peut pas contourner les permissions des fichiers, et la musique est montée en lecture seule.
 
 4. **Lancer** :
    ```bash
-   ssh user@nas 'cd /volume1/docker/selfstream && docker compose up -d && docker compose logs --tail 20'
+   ssh user@nas 'cd /volume1/docker/ttyfm && docker compose up -d && docker compose logs --tail 20'
    ```
    Le projet apparaît aussi dans l'application Docker de UGOS Pro. Le premier scan démarre automatiquement ; le log affiche `scan done … seen=… added=…`. Les fichiers copiés ensuite dans le dossier musique (par SMB depuis le Mac, par exemple) sont détectés une dizaine de secondes après la fin de la copie.
 
@@ -49,31 +49,31 @@ Prérequis : Docker activé dans UGOS Pro, SSH activé (Panneau de configuration
 
 **Accès distant** : Tailscale sur le NAS (paquet UGOS ou conteneur `tailscale/tailscale` en `network_mode: host`) et sur les clients. Dans l'application, utiliser l'adresse Tailscale du NAS (`100.x.y.z:4533` ou `nas.<tailnet>.ts.net:4533`) comme adresse du serveur, et l'adresse locale comme adresse locale. Ne pas ouvrir le port 4533 sur Internet.
 
-**Mise à jour** : refaire l'étape 2, puis `ssh user@nas 'cd /volume1/docker/selfstream && docker compose up -d'`.
+**Mise à jour** : refaire l'étape 2, puis `ssh user@nas 'cd /volume1/docker/ttyfm && docker compose up -d'`.
 
 **Tester localement avec Docker** : créer un `.env` de test (chemins sous `$HOME`, que Colima partage avec la VM), puis lancer `docker compose --env-file <fichier> up -d`. Sur Mac, fsnotify ne voit pas les fichiers ajoutés depuis macOS (limite du partage virtiofs) : le scan périodique ou `POST /api/v1/admin/scan` prend le relais. Sur le NAS, la surveillance fonctionne normalement.
 
-**Sauvegarde** : le dossier `DATA_DIR` suffit (la base `selfstream.db`, plus les caches, qui sont régénérables).
+**Sauvegarde** : le dossier `DATA_DIR` suffit (la base `ttyfm.db`, plus les caches, qui sont régénérables).
 
 ### Configuration (variables d'environnement)
 
-Dans `docker-compose.yml`, les variables `SELFSTREAM_*` sont alimentées par `.env`.
+Dans `docker-compose.yml`, les variables `TTYFM_*` sont alimentées par `.env`.
 
 | Variable | Défaut | Rôle |
 |---|---|---|
-| `SELFSTREAM_MUSIC_DIR` | `/music` | racine de la bibliothèque |
-| `SELFSTREAM_DATA_DIR` | `/data` | base, pochettes, cache de transcodage |
-| `SELFSTREAM_LISTEN` | `:4533` | adresse d'écoute |
-| `SELFSTREAM_ADMIN_USER` | `admin` | utilisateur unique |
-| `SELFSTREAM_ADMIN_PASSWORD` | *(généré et affiché dans le log si vide)* | mot de passe ; s'il change dans `.env`, il est mis à jour au démarrage |
-| `SELFSTREAM_SCAN_ON_START` | `true` | scan incrémental au démarrage |
-| `SELFSTREAM_WATCH` | `true` | surveillance fsnotify du dossier musique |
-| `SELFSTREAM_WATCH_DEBOUNCE` | `10s` | délai avant rescan après des modifications |
-| `SELFSTREAM_SCAN_INTERVAL` | `1h` | scan incrémental périodique (filet de sécurité) |
-| `SELFSTREAM_SCAN_WORKERS` | nb de CPU | lectures de tags en parallèle |
-| `SELFSTREAM_TRANSCODE_CACHE_MB` | `2048` | taille max du cache de transcodage |
-| `SELFSTREAM_FFMPEG` | `ffmpeg` | binaire ffmpeg |
-| `SELFSTREAM_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
+| `TTYFM_MUSIC_DIR` | `/music` | racine de la bibliothèque |
+| `TTYFM_DATA_DIR` | `/data` | base, pochettes, cache de transcodage |
+| `TTYFM_LISTEN` | `:4533` | adresse d'écoute |
+| `TTYFM_ADMIN_USER` | `admin` | utilisateur unique |
+| `TTYFM_ADMIN_PASSWORD` | *(généré et affiché dans le log si vide)* | mot de passe ; s'il change dans `.env`, il est mis à jour au démarrage |
+| `TTYFM_SCAN_ON_START` | `true` | scan incrémental au démarrage |
+| `TTYFM_WATCH` | `true` | surveillance fsnotify du dossier musique |
+| `TTYFM_WATCH_DEBOUNCE` | `10s` | délai avant rescan après des modifications |
+| `TTYFM_SCAN_INTERVAL` | `1h` | scan incrémental périodique (filet de sécurité) |
+| `TTYFM_SCAN_WORKERS` | nb de CPU | lectures de tags en parallèle |
+| `TTYFM_TRANSCODE_CACHE_MB` | `2048` | taille max du cache de transcodage |
+| `TTYFM_FFMPEG` | `ffmpeg` | binaire ffmpeg |
+| `TTYFM_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 
 ### Comportement du scan
 
@@ -142,7 +142,7 @@ Prérequis : Go ≥ 1.27, un compilateur C (Xcode CLT sur macOS), ffmpeg (`brew 
 ```bash
 cd server
 make test                                   # tests (ffmpeg requis pour scanner et API)
-SELFSTREAM_MUSIC_DIR=~/Music make run       # serveur local sur :4533, données dans ../data
+TTYFM_MUSIC_DIR=~/Music make run       # serveur local sur :4533, données dans ../data
 ```
 
 Le build tag `sqlite_fts5` est obligatoire : passer par le `Makefile`, ou ajouter `-tags sqlite_fts5` à la main.

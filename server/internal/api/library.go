@@ -6,11 +6,11 @@ import (
 	"os"
 	"strconv"
 
-	"selfstream/internal/auth"
-	"selfstream/internal/covers"
-	"selfstream/internal/lyrics"
-	"selfstream/internal/store"
-	"selfstream/internal/stream"
+	"ttyfm/internal/auth"
+	"ttyfm/internal/covers"
+	"ttyfm/internal/lyrics"
+	"ttyfm/internal/store"
+	"ttyfm/internal/stream"
 )
 
 // --- auth & devices --------------------------------------------------------

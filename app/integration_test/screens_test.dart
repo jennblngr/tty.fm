@@ -12,8 +12,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:selfstream/main.dart' as app;
-import 'package:selfstream/ui/widgets/mini_player.dart';
+import 'package:ttyfm/main.dart' as app;
+import 'package:ttyfm/ui/widgets/mini_player.dart';
 
 Future<void> settle(WidgetTester tester, [Duration d = const Duration(milliseconds: 1500)]) async {
   final end = DateTime.now().add(d);
