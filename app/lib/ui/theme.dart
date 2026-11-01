@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Design tokens of the "tty" look: a terminal palette (Catppuccin Mocha in
 /// dark, Latte in light) and JetBrains Mono everywhere. Widgets read them
@@ -106,10 +105,13 @@ class Tty extends ThemeExtension<Tty> {
 }
 
 ThemeData ttyTheme(Tty c) {
-  // JetBrains Mono, fetched once by google_fonts and cached (system
-  // monospace until then).
-  final family = GoogleFonts.jetBrainsMono().fontFamily;
-  final base = ThemeData(brightness: c.dark ? Brightness.dark : Brightness.light, useMaterial3: true);
+  // JetBrains Mono, bundled with the app (see pubspec.yaml).
+  const family = 'JetBrains Mono';
+  final base = ThemeData(
+    brightness: c.dark ? Brightness.dark : Brightness.light,
+    useMaterial3: true,
+    fontFamily: family,
+  );
   final text = base.textTheme
       .copyWith(
         bodyLarge: TextStyle(fontSize: 14, height: 1.5, color: c.text),
