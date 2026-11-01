@@ -76,6 +76,13 @@ class LibraryRepository {
     await _api.get('/search', query: {'q': q, 'limit': limit, ...filter.toQuery()}, cancel: cancel),
   );
 
+  /// Listening stats over the last [days] days (0: all time).
+  Stream<ListeningStats> stats(int days) => _cached(
+    'stats:$days',
+    () => _api.get('/stats', query: {'days': days}),
+    (j) => ListeningStats.fromJson(j as Map<String, dynamic>),
+  );
+
   Stream<SearchFacets> searchFacets() => _cached(
     'search:facets',
     () => _api.get('/search/facets'),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../data/models.dart';
 import '../nav.dart';
+import '../theme.dart';
 import 'cover.dart';
+import 'tty.dart';
 
 /// Square cover with title and artist, for grids and carousels.
 class AlbumCard extends StatelessWidget {
@@ -13,9 +15,9 @@ class AlbumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
+    final c = Tty.of(context);
     return InkWell(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(6),
       onTap: () => openAlbum(context, album.id),
       child: SizedBox(
         width: size,
@@ -24,15 +26,15 @@ class AlbumCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CoverImage(album.coverId, size: size - 8, radius: 8),
-              const SizedBox(height: 6),
-              Text(album.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: text.bodyMedium),
+              CoverImage(album.coverId, size: size - 8, radius: 6, label: album.artist, seed: album.id),
+              const SizedBox(height: 8),
               Text(
-                album.artist,
+                album.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: text.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                style: TextStyle(color: c.accentFor(album.id)),
               ),
+              Comment(album.artist, maxLines: 1),
             ],
           ),
         ),
@@ -54,7 +56,7 @@ class AlbumGrid extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       shrinkWrap: shrinkWrap,
       physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 190, childAspectRatio: 0.74),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 190, childAspectRatio: 0.72),
       itemCount: albums.length,
       itemBuilder: (_, i) => LayoutBuilder(builder: (_, c) => AlbumCard(albums[i], size: c.maxWidth)),
     );

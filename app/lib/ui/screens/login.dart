@@ -5,6 +5,7 @@ import '../../app_info.dart';
 import '../../core/api_client.dart';
 import '../../core/session.dart';
 import '../../core/settings.dart';
+import '../theme.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -55,7 +56,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 children: [
                   Icon(Icons.graphic_eq, size: 56, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(height: 8),
-                  Text(appDisplayName, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineMedium),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: appDisplayName,
+                          style: TextStyle(color: Tty.of(context).mauve),
+                        ),
+                        TextSpan(
+                          text: ' \$ ',
+                          style: TextStyle(color: Tty.of(context).green),
+                        ),
+                        const TextSpan(text: 'login'),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 32),
                   TextField(
                     controller: _remote,

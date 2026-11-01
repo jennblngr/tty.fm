@@ -1,41 +1,253 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../offline/downloads.dart';
 import '../../state/library.dart';
 import '../../state/playback.dart';
+import '../dialogs.dart';
+import '../format.dart';
 import '../nav.dart';
+import '../shell.dart';
+import '../theme.dart';
 import '../widgets/album_card.dart';
 import '../widgets/async_view.dart';
 import '../widgets/cover.dart';
-import '../widgets/download_button.dart';
-import 'offline.dart';
 import '../widgets/track_tile.dart';
+import '../widgets/tty.dart';
+import 'favorites.dart';
+import 'offline.dart';
 
-/// Artists / Albums / Tracks / Favourites. Whole lists are loaded once and cached, so
-/// scrolling and the local filter are instant.
-class LibraryScreen extends StatelessWidget {
+enum _View { playlists, albums, artistes, titres }
+
+/// "$ biblio": playlists (with the pinned likes and offline items), albums,
+/// artists and tracks, switched with "[bracket]" links. Whole lists are
+/// loaded once and cached, so scrolling is instant.
+class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
 
   @override
+  State<LibraryScreen> createState() => _LibraryScreenState();
+}
+
+class _LibraryScreenState extends State<LibraryScreen> {
+  var _view = _View.playlists;
+  var _albumSort = 'added';
+
+  @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 5,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Bibliothèque'),
-          bottom: const TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            tabs: [
-              Tab(text: 'Artistes'),
-              Tab(text: 'Albums'),
-              Tab(text: 'Titres'),
-              Tab(text: 'Favoris'),
-              Tab(text: 'Hors ligne'),
-            ],
-          ),
+    final wide = MediaQuery.sizeOf(context).width >= desktopWidth;
+    final pad = wide ? const EdgeInsets.fromLTRB(32, 24, 32, 0) : const EdgeInsets.fromLTRB(16, 16, 16, 0);
+    final c = Tty.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: pad,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _Header(),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      for (final v in _View.values)
+                        TtyLink(v.name, active: v == _view, onTap: () => setState(() => _view = v)),
+                      if (_view == _View.albums) ...[
+                        Text('|', style: TextStyle(color: c.border)),
+                        for (final (k, l) in const [('added', 'récents'), ('name', 'a-z'), ('year', 'année')])
+                          TtyLink(l, active: _albumSort == k, onTap: () => setState(() => _albumSort = k)),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: switch (_view) {
+                _View.playlists => const _Playlists(),
+                _View.albums => _Albums(_albumSort),
+                _View.artistes => const _Artists(),
+                _View.titres => const _Tracks(),
+              },
+            ),
+          ],
         ),
-        body: const TabBarView(children: [_Artists(), _Albums(), _Tracks(), _Favorites(), OfflineList()]),
+      ),
+    );
+  }
+}
+
+class _Header extends ConsumerWidget {
+  const _Header();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stats = ref.watch(libraryStatsProvider).value;
+    final playlists = ref.watch(playlistTreeProvider).value?.allPlaylists.length;
+    final offline = ref.watch(downloadsProvider.select((s) => s.tracks.length));
+    return TtyPrompt(
+      'ls ~/biblio',
+      comment: [
+        if (playlists != null) '$playlists playlists',
+        if (stats != null) '${stats.artists} artistes',
+        if (stats != null) '${stats.tracks} titres',
+        '$offline hors-ligne',
+      ].join('. '),
+    );
+  }
+}
+
+EdgeInsets _listPadding(BuildContext context) => MediaQuery.sizeOf(context).width >= desktopWidth
+    ? const EdgeInsets.fromLTRB(24, 8, 24, 24)
+    : const EdgeInsets.fromLTRB(8, 8, 8, 24);
+
+/// Pinned items (likes, offline) then the root of the playlist tree.
+class _Playlists extends ConsumerWidget {
+  const _Playlists();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = Tty.of(context);
+    final tree = ref.watch(playlistTreeProvider);
+    final favCount = ref.watch(favoritesProvider.select((f) => f.value?['tracks']?.length ?? 0));
+    final offline = ref.watch(downloadsProvider);
+    final actions = ref.read(playlistActionsProvider);
+    final pad = _listPadding(context);
+    return AsyncView(
+      tree,
+      onRetry: () => ref.invalidate(playlistTreeProvider),
+      builder: (t) => RefreshIndicator(
+        onRefresh: () => ref.refresh(playlistTreeProvider.future),
+        child: ListView(
+          padding: pad,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: TtySection('épinglés', glyph: '♥', color: c.red, ruled: true),
+            ),
+            _Item(
+              tile: InitialsTile('', size: 44, color: c.red, glyph: '♥'),
+              title: 'titres likés',
+              titleColor: c.red,
+              subtitle: '$favCount titres',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FavoritesScreen())),
+            ),
+            _Item(
+              tile: InitialsTile('', size: 44, color: c.green, glyph: '↓'),
+              title: 'hors-ligne',
+              titleColor: c.green,
+              subtitle: '${offline.tracks.length} titres · ${formatBytes(offline.totalBytes)}',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => Scaffold(appBar: AppBar(), body: const OfflineList()),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: TtySection(
+                'playlists',
+                glyph: '≡',
+                color: c.mauve,
+                ruled: true,
+                trailing: Wrap(
+                  spacing: 8,
+                  children: [
+                    TtyLink(
+                      '+ playlist',
+                      onTap: () async {
+                        final name = await promptText(context, title: 'Nouvelle playlist', action: 'Créer');
+                        if (name != null && context.mounted) {
+                          await guard(context, () => actions.createPlaylist(name, null));
+                        }
+                      },
+                    ),
+                    TtyLink(
+                      '+ dossier',
+                      onTap: () async {
+                        final name = await promptText(context, title: 'Nouveau dossier', action: 'Créer');
+                        if (name != null && context.mounted) {
+                          await guard(context, () => actions.createFolder(name, null));
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (t.folders.isEmpty && t.playlists.isEmpty)
+              const Padding(padding: EdgeInsets.all(8), child: Comment('aucune playlist pour l\'instant')),
+            for (final f in t.folders)
+              _Item(
+                tile: InitialsTile('', size: 44, color: c.muted, glyph: '▸'),
+                title: '${f.name}/',
+                subtitle: '${f.folders.length} dossiers · ${f.playlists.length} playlists',
+                onTap: () => openFolder(context, f.id),
+              ),
+            for (final p in t.playlists)
+              _Item(
+                tile: PlaylistCover(p.coverIds, size: 44, label: p.name, seed: p.id),
+                title: p.name,
+                titleColor: c.accentFor(p.id),
+                subtitle: formatCountDuration(p.trackCount, p.durationMs).toLowerCase(),
+                trailing: offline.status('playlist', p.id) == CollectionStatus.done
+                    ? Text('↓', style: TextStyle(color: c.green))
+                    : null,
+                onTap: () => openPlaylist(context, p.id),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: TtyLink('réorganiser', onTap: () => openFolderRoot(context)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Item extends StatelessWidget {
+  const _Item({required this.tile, required this.title, this.subtitle, this.titleColor, this.trailing, this.onTap});
+  final Widget tile;
+  final String title;
+  final String? subtitle;
+  final Color? titleColor;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 8),
+    child: TtyRow(
+      leading: tile,
+      title: title,
+      titleColor: titleColor,
+      subtitle: subtitle,
+      trailing: trailing,
+      onTap: onTap,
+    ),
+  );
+}
+
+class _Albums extends ConsumerWidget {
+  const _Albums(this.sort);
+  final String sort;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final albums = ref.watch(albumsProvider(sort));
+    return AsyncView(
+      albums,
+      onRetry: () => ref.invalidate(albumsProvider(sort)),
+      builder: (list) => RefreshIndicator(
+        onRefresh: () => ref.refresh(albumsProvider(sort).future),
+        child: Padding(padding: _listPadding(context).copyWith(top: 0, bottom: 0), child: AlbumGrid(list)),
       ),
     );
   }
@@ -47,71 +259,27 @@ class _Artists extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final artists = ref.watch(artistsProvider);
+    final c = Tty.of(context);
     return AsyncView(
       artists,
       onRetry: () => ref.invalidate(artistsProvider),
-      builder: (list) {
-        return RefreshIndicator(
-          onRefresh: () => ref.refresh(artistsProvider.future),
-          child: ListView.builder(
-            itemExtent: 64,
-            itemCount: list.length,
-            itemBuilder: (_, i) {
-              final a = list[i];
-              return ListTile(
-                leading: CoverImage(a.coverId, size: 44, radius: 22, icon: Icons.person),
-                title: Text(a.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: Text('${a.albumCount} album${a.albumCount > 1 ? 's' : ''}'),
-                onTap: () => openArtist(context, a.id),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _Albums extends ConsumerStatefulWidget {
-  const _Albums();
-
-  @override
-  ConsumerState<_Albums> createState() => _AlbumsState();
-}
-
-class _AlbumsState extends ConsumerState<_Albums> {
-  String _sort = 'added';
-
-  @override
-  Widget build(BuildContext context) {
-    final albums = ref.watch(albumsProvider(_sort));
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-          child: SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'added', label: Text('Récents')),
-              ButtonSegment(value: 'name', label: Text('A-Z')),
-              ButtonSegment(value: 'year', label: Text('Année')),
-            ],
-            selected: {_sort},
-            onSelectionChanged: (s) => setState(() => _sort = s.first),
-          ),
+      builder: (list) => RefreshIndicator(
+        onRefresh: () => ref.refresh(artistsProvider.future),
+        child: ListView.builder(
+          padding: _listPadding(context),
+          itemCount: list.length,
+          itemBuilder: (_, i) {
+            final a = list[i];
+            return _Item(
+              tile: CoverImage(a.coverId, size: 44, radius: 22, label: a.name, seed: a.id),
+              title: a.name.toLowerCase(),
+              titleColor: c.accentFor(a.id),
+              subtitle: '${a.albumCount} album${a.albumCount > 1 ? 's' : ''}',
+              onTap: () => openArtist(context, a.id),
+            );
+          },
         ),
-        Expanded(
-          child: AsyncView(
-            albums,
-            onRetry: () => ref.invalidate(albumsProvider(_sort)),
-            builder: (list) {
-              return RefreshIndicator(
-                onRefresh: () => ref.refresh(albumsProvider(_sort).future),
-                child: AlbumGrid(list),
-              );
-            },
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -122,108 +290,38 @@ class _Tracks extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tracks = ref.watch(tracksProvider);
+    final c = Tty.of(context);
     return AsyncView(
       tracks,
       onRetry: () => ref.invalidate(tracksProvider),
       builder: (list) {
-        return Column(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.shuffle),
-              title: Text('Tout en aléatoire (${list.length})'),
-              onTap: () => ref.read(playbackControllerProvider).playTracks(list, shuffle: true, contextKind: 'library'),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () => ref.refresh(tracksProvider.future),
-                child: ListView.builder(
-                  itemExtent: 60,
-                  itemCount: list.length,
-                  itemBuilder: (_, i) => TrackTile(
-                    list[i],
-                    onTap: () =>
-                        ref.read(playbackControllerProvider).playTracks(list, index: i, contextKind: 'library'),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _Favorites extends ConsumerWidget {
-  const _Favorites();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final favs = ref.watch(favoriteListsProvider);
-    return AsyncView(
-      favs,
-      onRetry: () => ref.invalidate(favoriteListsProvider),
-      builder: (data) {
-        final (tracks, albums) = data;
-        if (tracks.isEmpty && albums.isEmpty) {
-          return const Center(
-            child: Text('Aucun favori.\nUtilisez ♡ sur un titre ou un album.', textAlign: TextAlign.center),
-          );
-        }
-        final c = ref.read(playbackControllerProvider);
+        final pc = ref.read(playbackControllerProvider);
         return RefreshIndicator(
-          onRefresh: () => ref.refresh(favoriteListsProvider.future),
-          child: CustomScrollView(
-            slivers: [
-              if (albums.isNotEmpty) ...[
-                const SliverToBoxAdapter(child: _Section('Albums')),
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 210,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      itemCount: albums.length,
-                      itemBuilder: (_, i) => AlbumCard(albums[i], size: 160),
+          onRefresh: () => ref.refresh(tracksProvider.future),
+          child: ListView.builder(
+            padding: _listPadding(context),
+            itemCount: list.length + 1,
+            itemBuilder: (_, i) => i == 0
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                    child: Row(
+                      children: [
+                        Expanded(child: Comment('${list.length} titres')),
+                        TtyLink(
+                          'tout en aléatoire',
+                          color: c.green,
+                          onTap: () => pc.playTracks(list, shuffle: true, contextKind: 'library'),
+                        ),
+                      ],
                     ),
+                  )
+                : TrackTile(
+                    list[i - 1],
+                    onTap: () => pc.playTracks(list, index: i - 1, contextKind: 'library'),
                   ),
-                ),
-              ],
-              if (tracks.isNotEmpty) ...[
-                SliverToBoxAdapter(child: _Section('Titres (${tracks.length})')),
-                SliverToBoxAdapter(
-                  child: ListTile(
-                    trailing: DownloadButton(kind: 'favorites', id: 0, title: 'Titres favoris', tracks: tracks),
-                    leading: const Icon(Icons.shuffle),
-                    title: const Text('Lire en aléatoire'),
-                    onTap: () => c.playTracks(tracks, shuffle: true, contextKind: 'favorites'),
-                  ),
-                ),
-                SliverList.builder(
-                  itemCount: tracks.length,
-                  itemBuilder: (_, i) => TrackTile(
-                    tracks[i],
-                    onTap: () => c.playTracks(tracks, index: i, contextKind: 'favorites'),
-                  ),
-                ),
-              ],
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-            ],
           ),
         );
       },
     );
   }
-}
-
-class _Section extends StatelessWidget {
-  const _Section(this.title);
-  final String title;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-    child: Text(title, style: Theme.of(context).textTheme.titleMedium),
-  );
 }

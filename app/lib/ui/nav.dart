@@ -22,10 +22,14 @@ void openPlaylist(BuildContext context, int id) =>
 void openFolder(BuildContext context, int id) =>
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlaylistsScreen(folderId: id)));
 
-void openNowPlaying(BuildContext context) => Navigator.of(
+void openNowPlaying(BuildContext context, {bool lyrics = false}) => Navigator.of(
   context,
   rootNavigator: true,
-).push(MaterialPageRoute(fullscreenDialog: true, builder: (_) => const NowPlayingScreen()));
+).push(MaterialPageRoute(fullscreenDialog: true, builder: (_) => NowPlayingScreen(showLyrics: lyrics)));
 
 void openSettings(BuildContext context) =>
     Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+
+/// The playlist tree from its root, with the create/rename/move/reorder tools.
+void openFolderRoot(BuildContext context) =>
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PlaylistsScreen()));

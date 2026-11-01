@@ -6,7 +6,9 @@ import '../../state/library.dart';
 import '../../state/playback.dart';
 import '../format.dart';
 import '../widgets/async_view.dart';
+import '../theme.dart';
 import '../widgets/cover.dart';
+import '../widgets/tty.dart';
 import '../widgets/download_button.dart';
 import '../widgets/track_tile.dart';
 
@@ -41,11 +43,10 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     final playlist = tree.value?.allPlaylists.where((p) => p.id == id).firstOrNull;
     final entries = ref.watch(playlistTracksProvider(id));
     final c = ref.read(playbackControllerProvider);
-    final text = Theme.of(context).textTheme;
+    final tty = Tty.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(playlist?.name ?? ''),
         actions: [
           DownloadButton(
             kind: 'playlist',
@@ -70,14 +71,28 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      PlaylistCover(playlist?.coverIds ?? const [], size: 96),
+                      PlaylistCover(playlist?.coverIds ?? const [], size: 96, label: playlist?.name ?? '', seed: id),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(playlist?.name ?? '', style: text.titleLarge),
-                            Text(formatCountDuration(tracks.length, totalMs), style: text.bodySmall),
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '\$ ',
+                                    style: TextStyle(color: tty.green),
+                                  ),
+                                  const TextSpan(text: 'playlist'),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              playlist?.name ?? '',
+                              style: TextStyle(color: tty.accentFor(id), fontSize: 20, fontWeight: FontWeight.w700),
+                            ),
+                            Comment(formatCountDuration(tracks.length, totalMs).toLowerCase()),
                             const SizedBox(height: 8),
                             Wrap(
                               spacing: 8,

@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"selfstream/internal/auth"
 	"selfstream/internal/store"
@@ -300,4 +301,14 @@ func (s *Server) startScan(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) scanStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, s.Scanner.Status())
+}
+
+// stats: ?days=7|30|90 (0 or absent: all time).
+func (s *Server) stats(w http.ResponseWriter, r *http.Request) {
+	st, err := s.DB.ListeningStats(r.Context(), max(0, queryInt(r, "days", 30)), time.Now())
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, st)
 }

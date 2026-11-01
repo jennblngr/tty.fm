@@ -9,8 +9,12 @@ import '../format.dart';
 import '../nav.dart';
 import 'async_view.dart';
 import 'cover.dart';
+import 'tty.dart';
+import '../theme.dart';
 
-/// A track row. [onTap] usually plays the list it belongs to from here.
+/// A track row: number or cover, coloured title, "// artist · album",
+/// duration and the "···" menu. [onTap] usually plays the list it belongs
+/// to from here.
 class TrackTile extends ConsumerWidget {
   const TrackTile(
     this.track, {
@@ -32,34 +36,48 @@ class TrackTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isCurrent = ref.watch(currentTrackProvider.select((t) => t?.id == track.id));
-    final scheme = Theme.of(context).colorScheme;
-    final style = isCurrent ? TextStyle(color: scheme.primary, fontWeight: FontWeight.w600) : null;
-    return ListTile(
-      dense: true,
+    final c = Tty.of(context);
+    return InkWell(
       onTap: onTap,
-      leading: showCover
-          ? CoverImage(track.coverId, size: 40)
-          : SizedBox(
-              width: 28,
-              child: Center(
-                child: isCurrent
-                    ? Icon(Icons.graphic_eq, color: scheme.primary, size: 18)
-                    : Text('${leadingNumber ?? track.trackNo ?? ''}', style: TextStyle(color: scheme.onSurfaceVariant)),
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          children: [
+            if (showCover)
+              CoverImage(track.coverId, size: 40, label: track.artist, seed: track.albumId)
+            else
+              SizedBox(
+                width: 28,
+                child: Text(
+                  isCurrent ? '▶' : (leadingNumber ?? track.trackNo ?? '').toString().padLeft(2, '0'),
+                  style: TextStyle(color: isCurrent ? c.green : c.muted),
+                ),
+              ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    track.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isCurrent ? c.green : c.text,
+                      fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w400,
+                    ),
+                  ),
+                  Comment(showCover ? '${track.artist} · ${track.album}' : track.artist, maxLines: 1),
+                ],
               ),
             ),
-      title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: style),
-      subtitle: Text(
-        showCover ? '${track.artist} · ${track.album}' : track.artist,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ?trailing,
-          Text(formatDuration(track.duration), style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
-          TrackMenuButton(track, extra: extraMenu),
-        ],
+            ?trailing,
+            const SizedBox(width: 8),
+            Text(formatDuration(track.duration), style: TextStyle(color: c.muted, fontSize: 12)),
+            TrackMenuButton(track, extra: extraMenu),
+          ],
+        ),
       ),
     );
   }
@@ -81,7 +99,7 @@ class TrackMenuButton extends ConsumerWidget {
       child: ListTile(leading: Icon(icon), title: Text(label), dense: true),
     );
     return PopupMenuButton<VoidCallback>(
-      icon: const Icon(Icons.more_vert, size: 20),
+      icon: Text('···', style: TextStyle(color: Tty.of(context).muted)),
       tooltip: 'Plus',
       onSelected: (action) => action(),
       itemBuilder: (_) => [

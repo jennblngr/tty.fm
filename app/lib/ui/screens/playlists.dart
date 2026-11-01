@@ -7,7 +7,9 @@ import '../dialogs.dart';
 import '../format.dart';
 import '../nav.dart';
 import '../widgets/async_view.dart';
+import '../theme.dart';
 import '../widgets/cover.dart';
+import '../widgets/tty.dart';
 
 /// One level of the playlist tree: sub-folders first, then playlists.
 /// [folderId] null is the root.
@@ -23,7 +25,7 @@ class PlaylistsScreen extends ConsumerWidget {
     final missing = folderId != null && tree.hasValue && folder == null; // deleted meanwhile
 
     return Scaffold(
-      appBar: AppBar(title: Text(folderId == null ? 'Playlists' : folder?.name ?? '')),
+      appBar: AppBar(title: Text(folderId == null ? '~/playlists' : '${folder?.name ?? ''}/')),
       floatingActionButton: missing
           ? null
           : FloatingActionButton(
@@ -67,11 +69,11 @@ class PlaylistsScreen extends ConsumerWidget {
         tree,
         onRetry: () => ref.invalidate(playlistTreeProvider),
         builder: (tree) {
-          if (missing) return const Center(child: Text('Ce dossier n\'existe plus'));
+          if (missing) return const Center(child: Comment("ce dossier n'existe plus"));
           final folders = folder?.folders ?? tree.folders;
           final playlists = folder?.playlists ?? tree.playlists;
           if (folders.isEmpty && playlists.isEmpty) {
-            return const Center(child: Text('Vide. Créez une playlist ou un dossier avec +'));
+            return const Center(child: Comment('vide : crée une playlist ou un dossier avec +'));
           }
           return RefreshIndicator(
             onRefresh: () => ref.refresh(playlistTreeProvider.future),
@@ -99,9 +101,9 @@ class _FolderTile extends ConsumerWidget {
     final actions = ref.read(playlistActionsProvider);
     final count = folder.folders.length + folder.playlists.length;
     return ListTile(
-      leading: const SizedBox(width: 48, height: 48, child: Icon(Icons.folder, size: 36)),
-      title: Text(folder.name),
-      subtitle: Text('$count élément${count > 1 ? 's' : ''}'),
+      leading: InitialsTile('', size: 44, color: Tty.of(context).muted, glyph: '▸'),
+      title: Text('${folder.name}/'),
+      subtitle: Comment('$count élément${count > 1 ? 's' : ''}'),
       onTap: () => openFolder(context, folder.id),
       trailing: PopupMenuButton<VoidCallback>(
         onSelected: (a) => a(),
@@ -150,9 +152,9 @@ class _PlaylistTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final actions = ref.read(playlistActionsProvider);
     return ListTile(
-      leading: PlaylistCover(playlist.coverIds, size: 48),
-      title: Text(playlist.name),
-      subtitle: Text(formatCountDuration(playlist.trackCount, playlist.durationMs)),
+      leading: PlaylistCover(playlist.coverIds, size: 44, label: playlist.name, seed: playlist.id),
+      title: Text(playlist.name, style: TextStyle(color: Tty.of(context).accentFor(playlist.id))),
+      subtitle: Comment(formatCountDuration(playlist.trackCount, playlist.durationMs).toLowerCase()),
       onTap: () => openPlaylist(context, playlist.id),
       trailing: PopupMenuButton<VoidCallback>(
         onSelected: (a) => a(),

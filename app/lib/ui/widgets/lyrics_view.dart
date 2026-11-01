@@ -25,8 +25,7 @@ class LyricsView extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Text(
               l.lines.map((e) => e.text).join('\n'),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(height: 1.6),
-              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 15, height: 1.7),
             ),
           );
         }
@@ -46,7 +45,14 @@ class _SyncedLyrics extends ConsumerStatefulWidget {
 
 class _SyncedLyricsState extends ConsumerState<_SyncedLyrics> {
   late List<GlobalKey> _keys = _makeKeys();
+  final _scroll = ScrollController();
   int _current = -2;
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
 
   List<GlobalKey> _makeKeys() => List.generate(widget.lyrics.lines.length, (_) => GlobalKey());
 
@@ -64,10 +70,12 @@ class _SyncedLyricsState extends ConsumerState<_SyncedLyrics> {
     _current = i;
     if (i < 0) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctx = _keys[i].currentContext;
-      if (ctx != null) {
-        Scrollable.ensureVisible(
-          ctx,
+      // Only the lyrics list scrolls (Scrollable.ensureVisible would also
+      // scroll the page around it).
+      final ro = _keys[i].currentContext?.findRenderObject();
+      if (ro != null && _scroll.hasClients) {
+        _scroll.position.ensureVisible(
+          ro,
           alignment: 0.4,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
@@ -83,9 +91,10 @@ class _SyncedLyricsState extends ConsumerState<_SyncedLyrics> {
     final cur = widget.lyrics.lineAt(pos);
     _follow(cur);
     final scheme = Theme.of(context).colorScheme;
-    final base = Theme.of(context).textTheme.titleLarge!;
+    final base = Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 16);
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 120),
+      controller: _scroll,
+      padding: const EdgeInsets.symmetric(vertical: 80),
       itemCount: lines.length,
       itemBuilder: (_, i) {
         final active = i == cur;
@@ -98,11 +107,11 @@ class _SyncedLyricsState extends ConsumerState<_SyncedLyrics> {
             child: AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               style: base.copyWith(
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                color: active ? scheme.onSurface : scheme.onSurfaceVariant.withValues(alpha: i < cur ? 0.5 : 0.8),
+                fontSize: active ? 19 : 16,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                color: active ? scheme.onSurface : scheme.onSurfaceVariant.withValues(alpha: i < cur ? 0.6 : 1),
               ),
-              textAlign: TextAlign.center,
-              child: Text(lines[i].text.isEmpty ? '♪' : lines[i].text),
+              child: Text('${active ? '> ' : ''}${lines[i].text.isEmpty ? '♪' : lines[i].text}'),
             ),
           ),
         );

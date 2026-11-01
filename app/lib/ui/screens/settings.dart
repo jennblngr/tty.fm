@@ -33,7 +33,7 @@ class SettingsScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Réglages')),
+      appBar: AppBar(title: const Text('réglages')),
       body: ListView(
         children: [
           const _Header('Serveur'),
@@ -133,9 +133,17 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-    child: Text(
-      title,
-      style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
+    child: Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: '\$ ',
+            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          ),
+          TextSpan(text: title.toLowerCase()),
+        ],
+      ),
+      style: const TextStyle(fontWeight: FontWeight.w700),
     ),
   );
 }

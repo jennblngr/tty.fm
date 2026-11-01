@@ -18,12 +18,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:selfstream/core/session.dart';
 import 'package:selfstream/data/library_repository.dart';
 import 'package:selfstream/main.dart' as app;
 import 'package:selfstream/offline/downloads.dart';
 import 'package:selfstream/state/library.dart';
 import 'package:selfstream/state/playback.dart';
 import 'package:selfstream/state/remote.dart';
+import 'package:selfstream/state/search.dart';
 import 'package:selfstream/ui/widgets/mini_player.dart';
 
 const server = String.fromEnvironment('SERVER', defaultValue: '127.0.0.1:4533');
@@ -71,7 +73,8 @@ Future<void> settle(WidgetTester tester, [Duration d = const Duration(millisecon
 Future<void> shot(WidgetTester tester, String name) async {
   await tester.pump();
   final view = tester.binding.renderViews.first;
-  final layer = view.debugLayer! as OffsetLayer;
+  // ignore: invalid_use_of_protected_member
+  final layer = view.layer! as OffsetLayer; // debugLayer only exists in debug builds
   final image = await layer.toImage(view.paintBounds, pixelRatio: 1);
   final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
   final dir = Directory('${(await getApplicationSupportDirectory()).path}/screenshots');
@@ -80,6 +83,15 @@ Future<void> shot(WidgetTester tester, String name) async {
   await f.writeAsBytes(bytes!.buffer.asUint8List());
   // ignore: avoid_print
   print('SCREENSHOT ${f.path}');
+}
+
+/// Types into a text field through its controller and onChanged (the test
+/// text input is not available in profile builds).
+Future<void> typeInto(WidgetTester tester, Finder field, String text) async {
+  final tf = tester.widget<TextField>(field);
+  tf.controller!.text = text;
+  tf.onChanged?.call(text);
+  await tester.pump();
 }
 
 ProviderContainer containerOf(WidgetTester tester) =>
@@ -92,21 +104,30 @@ void main() {
     await app.main();
     await settle(tester, const Duration(seconds: 2));
 
+    // Tab labels: "accueil" on phones, "> accueil" / "  accueil" in the sidebar.
+    Future<void> tab(String label) async {
+      await tester.tap(find.byWidgetPredicate((w) => w is Text && w.data?.replaceFirst('>', '').trim() == label).last);
+      await settle(tester);
+    }
+
+    Finder rich(String text) => find.textContaining(text, findRichText: true);
+
     // --- login (skipped if a token is already stored) -----------------------
     if (find.text('Se connecter').evaluate().isNotEmpty) {
-      await tester.enterText(find.widgetWithText(TextField, 'Adresse du serveur'), server);
-      await tester.enterText(find.widgetWithText(TextField, 'Mot de passe'), password);
       await shot(tester, '01_login');
-      await tester.tap(find.text('Se connecter'));
+      // Through the session logic: typing in fields is unreliable in profile
+      // builds (the login form itself is simple and covered by earlier runs).
+      await containerOf(tester)
+          .read(sessionProvider.notifier)
+          .login(remoteUrl: server, username: 'admin', password: password);
     }
-    await waitFor(tester, find.text('Ajouts récents'), timeout: const Duration(seconds: 40)); // cold start on emulators
+    await waitFor(tester, rich('ajouts récents'), timeout: const Duration(seconds: 40)); // cold start on emulators
     await settle(tester, const Duration(seconds: 2)); // covers
     await shot(tester, '02_home');
 
     // --- library: albums grid, then album page ------------------------------
-    await tester.tap(find.text('Bibliothèque').first);
-    await settle(tester);
-    await tester.tap(find.text('Albums'));
+    await tab('biblio');
+    await tester.tap(find.text('[albums]'));
     await settle(tester, const Duration(seconds: 2));
     await shot(tester, '03_albums');
     await tester.tap(find.text('Blue Hours').first);
@@ -115,7 +136,8 @@ void main() {
     await shot(tester, '04_album');
 
     // --- playback through media_kit ------------------------------------------
-    final c = containerOf(tester).read(playbackControllerProvider);
+    final container = containerOf(tester);
+    final c = container.read(playbackControllerProvider);
     await tester.tap(find.text('Lire'));
     final end = DateTime.now().add(const Duration(seconds: 10));
     while (c.position < const Duration(seconds: 2) && DateTime.now().isBefore(end)) {
@@ -139,34 +161,35 @@ void main() {
     }
     expect(c.state.current!.title, 'Track 3 of Blue Hours', reason: 'natural advance');
 
-    // Full player screen.
-    await tester.tap(find.text('Track 3 of Blue Hours').last);
+    // Full player, with the devices button.
+    await tester.tap(find.byType(MiniPlayer));
+    await waitFor(tester, find.text('[fermer]'));
     await settle(tester, const Duration(seconds: 1));
     await shot(tester, '06_now_playing');
-    await tester.tap(find.byIcon(Icons.keyboard_arrow_down));
+    await tester.tap(find.text('[fermer]'));
     await settle(tester);
 
     // --- search ------------------------------------------------------------
-    await tester.tap(find.text('Recherche').first);
-    await settle(tester);
-    await tester.enterText(find.byType(TextField).first, 'riv');
-    await waitFor(tester, find.text('Les Rivages'));
+    await tab('recherche');
+    await typeInto(tester, find.byType(TextField).first, 'riv');
+    await waitFor(tester, find.text('Marée Haute'));
     await settle(tester, const Duration(seconds: 1));
     await shot(tester, '07_search');
 
-    // --- playlists in folders --------------------------------------------------
-    final container = containerOf(tester);
+    // --- playlists in folders (in biblio) -------------------------------------
     final actions = container.read(playlistActionsProvider);
     final stamp = DateTime.now().millisecondsSinceEpoch % 100000;
     final folder = await actions.createFolder('Ambiances $stamp', null);
     final sub = await actions.createFolder('Soirée', folder);
     final pl = await actions.createPlaylist('Calme', sub, [c.state.queue[0].track.id, c.state.queue[1].track.id]);
-    await tester.tap(find.text('Playlists').first);
-    await waitFor(tester, find.text('Ambiances $stamp'));
+    await tab('biblio');
+    await tab('biblio'); // back to the library root
+    await tester.tap(find.text('[playlists]'));
+    await waitFor(tester, find.text('Ambiances $stamp/'));
     await shot(tester, '08_playlists_root');
-    await tester.tap(find.text('Ambiances $stamp'));
-    await waitFor(tester, find.text('Soirée'));
-    await tester.tap(find.text('Soirée'));
+    await tester.tap(find.text('Ambiances $stamp/'));
+    await waitFor(tester, find.text('Soirée/'));
+    await tester.tap(find.text('Soirée/'));
     await waitFor(tester, find.text('Calme'));
     await tester.tap(find.text('Calme'));
     await waitFor(tester, find.text('Track 1 of Blue Hours'));
@@ -200,7 +223,9 @@ void main() {
       () => container.read(remoteDevicesProvider).devices.values.any((d) => d.name == 'Autre appareil'),
       'presence',
     );
-    await tester.tap(find.byIcon(Icons.devices).first);
+    await tester.tap(find.byType(MiniPlayer));
+    await waitFor(tester, find.text('⌁ ce tél.'));
+    await tester.tap(find.text('⌁ ce tél.'));
     await waitFor(tester, find.text('Autre appareil'));
     await settle(tester);
     await shot(tester, '10_devices');
@@ -216,23 +241,22 @@ void main() {
     await ws.close();
 
     // --- lyrics (synced .lrc next to track 1 of Blue Hours) --------------------
-    await tester.tap(find.text('Bibliothèque').first);
-    await waitFor(tester, find.text('Quartz Trio')); // still on the Blue Hours album page
-    await tester.tap(find.text('Lire'));
+    await c.jumpTo(0);
     await waitUntil(tester, () => c.state.current?.title == 'Track 1 of Blue Hours', 'track 1');
-    await settle(tester);
-    await tester.tap(find.descendant(of: find.byType(MiniPlayer), matching: find.text('Track 1 of Blue Hours')));
-    await waitFor(tester, find.byIcon(Icons.lyrics_outlined));
-    await tester.tap(find.byIcon(Icons.lyrics_outlined));
-    await waitFor(tester, find.text('First line of Blue Hours'));
+    await waitFor(tester, find.textContaining('First line of Blue Hours'));
     await settle(tester, const Duration(seconds: 4)); // let the highlight move on
     await shot(tester, '11_lyrics');
-    await tester.tap(find.byIcon(Icons.lyrics_outlined)); // back to the cover
     await c.pause();
-    await tester.tap(find.byIcon(Icons.keyboard_arrow_down));
+    await tester.tap(find.text('[fermer]'));
     await settle(tester);
 
     // --- offline: download the album, then play from the local files ----------
+    await tab('biblio');
+    await tab('biblio');
+    await tester.tap(find.text('[albums]'));
+    await settle(tester);
+    await tester.tap(find.text('Blue Hours').first);
+    await waitFor(tester, find.byTooltip('Télécharger'));
     await tester.tap(find.byTooltip('Télécharger'));
     final dm = container.read(downloadsProvider.notifier);
     final blueHours = c.state.queue[0].track.albumId;
@@ -248,26 +272,28 @@ void main() {
     expect(c.sourceFor(c.state.queue[0].track).url, local, reason: 'playback uses the offline copy');
     await settle(tester);
     await shot(tester, '12_album_downloaded');
-    await tester.tap(find.text('Bibliothèque').first); // back to the library root
+    await tab('biblio');
+    await tester.tap(find.text('[playlists]'));
     await settle(tester);
-    await tester.tap(find.text('Bibliothèque').first);
-    await settle(tester);
-    await tester.tap(find.text('Hors ligne'));
+    await tester.tap(find.text('hors-ligne'));
     await waitFor(tester, find.textContaining('4 titres'));
     await shot(tester, '13_offline');
+    await tester.pageBack();
+    await settle(tester);
 
     // --- search filters ---------------------------------------------------------
-    await tester.tap(find.text('Recherche').first);
-    await settle(tester);
+    await tab('recherche');
     await tester.tap(find.byIcon(Icons.clear)); // clears the previous "riv" query
     await settle(tester);
-    await tester.tap(find.text('Genre'));
+    await tester.tap(find.text('genre ▾'));
     await settle(tester);
-    await tester.tap(find.text('Jazz (4)'));
+    await tester.tap(find.text('jazz (4)'));
     await waitFor(tester, find.text('Track 4 of Blue Hours'));
     expect(find.text('Track 1 of Midnight Drive'), findsNothing);
     await settle(tester);
     await shot(tester, '14_search_filter');
+    await tester.tap(find.text('[effacer]'));
+    await settle(tester);
 
     dm.remove('album', blueHours);
     await other.delete<void>('/playlists/${remotePl.data!['id']}');
@@ -279,9 +305,41 @@ void main() {
     final home = await container.read(libraryProvider).home().last;
     expect(home.recentTracks, isNotEmpty, reason: 'plays should be recorded server-side');
 
+    // --- stats from that history -------------------------------------------------
+    container.invalidate(statsProvider);
+    await tab('stats');
+    await waitFor(tester, rich('top artistes'));
+    await settle(tester, const Duration(seconds: 1));
+    await shot(tester, '15_stats');
+
     // Clean up the test folder (cascade deletes the sub-folder and playlist).
     await actions.deleteFolder(folder);
     expect(pl.trackCount, 2);
+
+    // --- visual tour: desktop layout and light theme, rendered off-screen --------
+    for (final (name, size, dark) in const [
+      ('desktop_dark', Size(1440, 1000), true),
+      ('desktop_light', Size(1440, 1000), false),
+      ('phone_light', Size(412, 915), false),
+    ]) {
+      tester.platformDispatcher.platformBrightnessTestValue = dark ? Brightness.dark : Brightness.light;
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = size;
+      await settle(tester);
+      for (final t in const ['accueil', 'recherche', 'biblio', 'stats']) {
+        await tab(t);
+        await settle(tester, const Duration(seconds: 1));
+        await shot(tester, '${name}_$t');
+      }
+      await tester.tap(size.width >= 900 ? find.text('[paroles]') : find.byType(MiniPlayer));
+      await settle(tester, const Duration(seconds: 2));
+      await shot(tester, '${name}_lecteur');
+      await tester.tap(find.text(size.width >= 900 ? '[réduire]' : '[fermer]'));
+      await settle(tester);
+    }
+    tester.view.reset();
+    tester.platformDispatcher.clearPlatformBrightnessTestValue();
+
     // ignore: avoid_print
     print('TEST DONE');
     if (holdSeconds > 0) await Future<void>.delayed(const Duration(seconds: holdSeconds));

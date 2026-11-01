@@ -6,15 +6,12 @@ import '../core/session.dart';
 import '../core/settings.dart';
 import 'screens/login.dart';
 import 'shell.dart';
+import 'theme.dart';
 
-/// Theme lives here only, so a redesign touches this file and the widgets,
-/// never the state or playback code.
-ThemeData _theme(Brightness b) => ThemeData(
-  colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF5B6EF5), brightness: b),
-  useMaterial3: true,
-  visualDensity: VisualDensity.adaptivePlatformDensity,
-  listTileTheme: const ListTileThemeData(contentPadding: EdgeInsets.symmetric(horizontal: 16)),
-);
+// The look lives in theme.dart and the widgets, never in the state or
+// playback code.
+final _dark = ttyTheme(Tty.mocha);
+final _light = ttyTheme(Tty.latte);
 
 class SelfstreamApp extends ConsumerWidget {
   const SelfstreamApp({super.key});
@@ -27,8 +24,8 @@ class SelfstreamApp extends ConsumerWidget {
     return MaterialApp(
       title: appDisplayName,
       debugShowCheckedModeBanner: false,
-      theme: _theme(Brightness.light),
-      darkTheme: _theme(Brightness.dark),
+      theme: _light,
+      darkTheme: _dark,
       themeMode: themeMode,
       home: session.when(
         loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),

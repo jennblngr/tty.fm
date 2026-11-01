@@ -11,6 +11,7 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	_ "time/tzdata" // local time for stats even in a minimal image (TZ env)
 
 	"selfstream/internal/api"
 	"selfstream/internal/app"

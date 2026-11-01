@@ -10,3 +10,9 @@ final searchFacetsProvider = StreamProvider<SearchFacets>((ref) => ref.watch(lib
 final lyricsProvider = FutureProvider.autoDispose.family<Lyrics?, int>(
   (ref, id) => ref.watch(libraryProvider).lyrics(id),
 );
+
+/// Listening stats for a period in days (0: all time). Refreshed when new
+/// plays are recorded (home refresh) or on demand.
+final statsProvider = StreamProvider.autoDispose.family<ListeningStats, int>((ref, days) {
+  return ref.watch(libraryProvider).stats(days);
+});

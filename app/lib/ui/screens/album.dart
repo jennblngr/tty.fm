@@ -7,7 +7,9 @@ import '../dialogs.dart';
 import '../format.dart';
 import '../nav.dart';
 import '../widgets/async_view.dart';
+import '../theme.dart';
 import '../widgets/cover.dart';
+import '../widgets/tty.dart';
 import '../widgets/download_button.dart';
 import '../widgets/track_tile.dart';
 
@@ -32,7 +34,8 @@ class AlbumScreen extends ConsumerWidget {
             tracks: data.value?.$2,
           ),
           IconButton(
-            icon: Icon(fav ? Icons.favorite : Icons.favorite_border),
+            tooltip: fav ? 'Retirer des favoris' : 'Ajouter aux favoris',
+            icon: HeartIcon(fav, size: 22),
             onPressed: () => guard(context, () => ref.read(favoritesProvider.notifier).toggle('albums', id)),
           ),
         ],
@@ -43,39 +46,48 @@ class AlbumScreen extends ConsumerWidget {
         builder: (d) {
           final (album, tracks) = d;
           final multiDisc = tracks.map((t) => t.discNo ?? 1).toSet().length > 1;
-          final text = Theme.of(context).textTheme;
+          final tty = Tty.of(context);
           return ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 20),
                 child: Wrap(
                   spacing: 20,
                   runSpacing: 16,
                   crossAxisAlignment: WrapCrossAlignment.end,
                   children: [
-                    CoverImage(album.coverId, size: 200, radius: 10),
+                    CoverImage(album.coverId, size: 200, radius: 8, label: album.artist, seed: album.id),
                     ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 420),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(album.title, style: text.headlineSmall),
-                          const SizedBox(height: 4),
-                          InkWell(
-                            onTap: () => openArtist(context, album.artistId),
-                            child: Text(
-                              album.artist,
-                              style: text.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary),
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '\$ ',
+                                  style: TextStyle(color: tty.green),
+                                ),
+                                const TextSpan(text: 'album'),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 4),
                           Text(
+                            album.title.toLowerCase(),
+                            style: TextStyle(color: tty.accentFor(album.id), fontSize: 22, fontWeight: FontWeight.w700),
+                          ),
+                          InkWell(
+                            onTap: () => openArtist(context, album.artistId),
+                            child: Text(album.artist.toLowerCase(), style: TextStyle(color: tty.text)),
+                          ),
+                          Comment(
                             [
                               if (album.year != null) '${album.year}',
-                              if (album.genre != null) album.genre!,
-                              formatCountDuration(album.trackCount, album.durationMs),
+                              if (album.genre != null) album.genre!.toLowerCase(),
+                              formatCountDuration(album.trackCount, album.durationMs).toLowerCase(),
                             ].join(' · '),
-                            style: text.bodySmall,
                           ),
                           const SizedBox(height: 12),
                           Row(
@@ -119,7 +131,7 @@ class AlbumScreen extends ConsumerWidget {
                 if (multiDisc && (i == 0 || tracks[i].discNo != tracks[i - 1].discNo))
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                    child: Text('Disque ${tracks[i].discNo ?? 1}', style: text.labelLarge),
+                    child: TtySection('disque ${tracks[i].discNo ?? 1}', glyph: '◉', color: tty.peach),
                   ),
                 TrackTile(
                   tracks[i],

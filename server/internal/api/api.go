@@ -74,6 +74,7 @@ func (s *Server) Handler() http.Handler {
 	priv.HandleFunc("DELETE "+prefix+"/playlists/{id}/tracks/{entry}", s.notify("playlists", s.removePlaylistTrack))
 
 	priv.HandleFunc("POST "+prefix+"/plays", s.addPlays)
+	priv.HandleFunc("GET "+prefix+"/stats", s.stats)
 	priv.HandleFunc("GET "+prefix+"/favorites", s.favorites)
 	priv.HandleFunc("PUT "+prefix+"/favorites/{kind}/{id}", s.notify("favorites", s.setFavorite(true)))
 	priv.HandleFunc("DELETE "+prefix+"/favorites/{kind}/{id}", s.notify("favorites", s.setFavorite(false)))

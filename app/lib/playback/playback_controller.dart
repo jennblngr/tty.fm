@@ -24,6 +24,8 @@ class PlaybackState {
     this.volume = 1.0,
     this.duration = Duration.zero,
     this.error,
+    this.contextKind,
+    this.contextId,
   });
 
   final List<QueueItem> queue;
@@ -35,6 +37,10 @@ class PlaybackState {
   final double volume;
   final Duration duration;
   final String? error;
+
+  /// Where the queue came from ("album", "playlist", …) and its id.
+  final String? contextKind;
+  final int? contextId;
 
   Track? get current => index >= 0 && index < queue.length ? queue[index].track : null;
   bool get hasNext => index < queue.length - 1 || (repeat == RepeatMode.all && queue.isNotEmpty);
@@ -119,6 +125,8 @@ class PlaybackController {
       // Transcoded streams may not report a duration: trust the library.
       duration: _engineDuration > Duration.zero ? _engineDuration : (cur?.duration ?? Duration.zero),
       error: _error,
+      contextKind: _contextKind,
+      contextId: _contextId,
     );
     if (!_states.isClosed) _states.add(_state);
   }

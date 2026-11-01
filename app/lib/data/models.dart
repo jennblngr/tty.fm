@@ -28,6 +28,7 @@ class Album {
     this.coverId,
     this.trackCount = 0,
     this.durationMs = 0,
+    this.createdAt,
   });
 
   final int id;
@@ -40,6 +41,9 @@ class Album {
   final int trackCount;
   final int durationMs;
 
+  /// When the album entered the library.
+  final DateTime? createdAt;
+
   factory Album.fromJson(Map<String, dynamic> j) => Album(
     id: j['id'] as int,
     title: j['title'] as String,
@@ -50,6 +54,7 @@ class Album {
     coverId: j['cover_id'] as int?,
     trackCount: j['track_count'] as int? ?? 0,
     durationMs: j['duration_ms'] as int? ?? 0,
+    createdAt: j['created_at'] == null ? null : DateTime.fromMillisecondsSinceEpoch((j['created_at'] as int) * 1000),
   );
 }
 
@@ -65,6 +70,7 @@ class Track {
     this.trackNo,
     this.discNo,
     this.year,
+    this.genre,
     required this.durationMs,
     this.format = '',
     this.bitrate,
@@ -83,6 +89,7 @@ class Track {
   final int? trackNo;
   final int? discNo;
   final int? year;
+  final String? genre;
   final int durationMs;
   final String format;
   final int? bitrate;
@@ -103,6 +110,7 @@ class Track {
     trackNo: j['track_no'] as int?,
     discNo: j['disc_no'] as int?,
     year: j['year'] as int?,
+    genre: j['genre'] as String?,
     durationMs: j['duration_ms'] as int,
     format: j['format'] as String? ?? '',
     bitrate: j['bitrate'] as int?,
@@ -122,6 +130,7 @@ class Track {
     'track_no': trackNo,
     'disc_no': discNo,
     'year': year,
+    'genre': genre,
     'duration_ms': durationMs,
     'format': format,
     'bitrate': bitrate,
@@ -410,4 +419,63 @@ class Lyrics {
     }
     return i;
   }
+}
+
+class NamedTotal {
+  const NamedTotal(this.id, this.name, this.ms);
+  final int? id;
+  final String name;
+  final int ms;
+
+  factory NamedTotal.fromJson(Map<String, dynamic> j) =>
+      NamedTotal(j['id'] as int?, j['name'] as String? ?? '', j['ms'] as int? ?? 0);
+}
+
+/// Listening history summary over a period (days 0 = all time).
+class ListeningStats {
+  const ListeningStats({
+    required this.days,
+    required this.totalMs,
+    this.prevTotalMs,
+    required this.plays,
+    required this.distinctTracks,
+    required this.weekdayAvgMin,
+    required this.hourMs,
+    this.favoriteHour,
+    required this.topArtists,
+    required this.topGenres,
+    required this.topTracks,
+    this.discovery,
+  });
+
+  final int days;
+  final int totalMs;
+  final int? prevTotalMs;
+  final int plays;
+  final int distinctTracks;
+  final List<int> weekdayAvgMin; // Monday first
+  final List<int> hourMs;
+  final int? favoriteHour;
+  final List<NamedTotal> topArtists;
+  final List<NamedTotal> topGenres;
+  final List<(Track, int)> topTracks;
+  final NamedTotal? discovery;
+
+  factory ListeningStats.fromJson(Map<String, dynamic> j) => ListeningStats(
+    days: j['days'] as int? ?? 0,
+    totalMs: j['total_ms'] as int? ?? 0,
+    prevTotalMs: j['prev_total_ms'] as int?,
+    plays: j['plays'] as int? ?? 0,
+    distinctTracks: j['distinct_tracks'] as int? ?? 0,
+    weekdayAvgMin: (j['weekday_avg_min'] as List? ?? List.filled(7, 0)).cast<int>(),
+    hourMs: (j['hour_ms'] as List? ?? List.filled(24, 0)).cast<int>(),
+    favoriteHour: j['favorite_hour'] as int?,
+    topArtists: [for (final a in j['top_artists'] as List? ?? const []) NamedTotal.fromJson(a as Map<String, dynamic>)],
+    topGenres: [for (final a in j['top_genres'] as List? ?? const []) NamedTotal.fromJson(a as Map<String, dynamic>)],
+    topTracks: [
+      for (final t in j['top_tracks'] as List? ?? const [])
+        (Track.fromJson((t as Map)['track'] as Map<String, dynamic>), t['count'] as int),
+    ],
+    discovery: j['discovery'] == null ? null : NamedTotal.fromJson(j['discovery'] as Map<String, dynamic>),
+  );
 }

@@ -108,3 +108,59 @@ final positionProvider = StreamProvider<Duration>((ref) {
 
 /// The currently playing track (rebuilds only when it changes).
 final currentTrackProvider = Provider<Track?>((ref) => ref.watch(playbackStateProvider.select((s) => s.current)));
+
+/// Sleep timer: pause after a delay, or at the end of the current track.
+class SleepTimerState {
+  const SleepTimerState({this.endsAt, this.endOfTrack = false});
+  final DateTime? endsAt;
+  final bool endOfTrack;
+}
+
+class SleepTimer extends Notifier<SleepTimerState?> {
+  Timer? _timer;
+  StreamSubscription<PlaybackState>? _sub;
+
+  @override
+  SleepTimerState? build() {
+    ref.onDispose(_cancel);
+    return null;
+  }
+
+  void _cancel() {
+    _timer?.cancel();
+    _sub?.cancel();
+    _timer = null;
+    _sub = null;
+  }
+
+  void off() {
+    _cancel();
+    state = null;
+  }
+
+  void after(Duration d) {
+    _cancel();
+    final c = ref.read(playbackControllerProvider);
+    _timer = Timer(d, () {
+      c.pause();
+      off();
+    });
+    state = SleepTimerState(endsAt: DateTime.now().add(d));
+  }
+
+  void atEndOfTrack() {
+    _cancel();
+    final c = ref.read(playbackControllerProvider);
+    final uid = c.state.index >= 0 ? c.state.queue[c.state.index].uid : null;
+    _sub = c.states.listen((s) {
+      final now = s.index >= 0 && s.index < s.queue.length ? s.queue[s.index].uid : null;
+      if (now != uid || !s.playing && s.index == s.queue.length - 1) {
+        if (now != uid) c.pause();
+        off();
+      }
+    });
+    state = const SleepTimerState(endOfTrack: true);
+  }
+}
+
+final sleepTimerProvider = NotifierProvider<SleepTimer, SleepTimerState?>(SleepTimer.new);
