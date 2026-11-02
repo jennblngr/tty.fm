@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme.dart';
 
@@ -17,35 +18,46 @@ class TtyPrompt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Tty.of(context);
-    final style = Theme.of(context).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.w400);
+    // 15 px on desktop, body size (13 px) on mobile, as on the mockups.
+    final text = Theme.of(context).textTheme;
+    final wide = MediaQuery.sizeOf(context).width >= 900;
+    final style = (wide ? text.titleMedium! : text.bodyMedium!).copyWith(fontWeight: FontWeight.w400);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    if (brand != null)
+        // As tall as a [SquareIconButton], so that the title sits at the
+        // same height whether the header has icons or not.
+        ConstrainedBox(
+          constraints: BoxConstraints(minHeight: wide ? 36 : 40),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      if (brand != null)
+                        TextSpan(
+                          text: '$brand ',
+                          style: TextStyle(color: c.mauve),
+                        ),
                       TextSpan(
-                        text: '$brand ',
-                        style: TextStyle(color: c.mauve),
+                        text: '\$ ',
+                        style: TextStyle(color: c.green),
                       ),
-                    TextSpan(
-                      text: '\$ ',
-                      style: TextStyle(color: c.green),
-                    ),
-                    TextSpan(text: command),
-                  ],
+                      TextSpan(text: command),
+                    ],
+                  ),
+                  style: style,
                 ),
-                style: style,
               ),
-            ),
-            ?trailing,
-          ],
+              ?trailing,
+            ],
+          ),
         ),
-        if (comment != null) Comment(comment!),
+        // 12 px before the comment, as on the mockups: from the title text on
+        // mobile (the 40 px row already leaves ~10 px under its 19.5 px
+        // line), from the row on desktop.
+        if (comment != null) ...[SizedBox(height: wide ? 12 : 2), Comment(comment!)],
       ],
     );
   }
@@ -431,18 +443,21 @@ String relativeDay(DateTime t) {
 String greeting() => DateTime.now().hour >= 18 || DateTime.now().hour < 5 ? 'bonsoir' : 'bonjour';
 
 /// Icon button in a square box: 40×40 on mobile, 36×36 on desktop. Filled
-/// icons, muted when disabled.
+/// icons, muted when disabled. [svg] (see icons.dart) replaces [icon] for
+/// the icons drawn on the mockups.
 class SquareIconButton extends StatelessWidget {
   const SquareIconButton({
     super.key,
-    required this.icon,
+    this.icon,
+    this.svg,
     required this.tooltip,
     required this.onPressed,
     this.color,
     this.size = 22,
     this.badge,
-  });
-  final IconData icon;
+  }) : assert((icon == null) != (svg == null), 'icon or svg');
+  final IconData? icon;
+  final String? svg;
   final String tooltip;
   final VoidCallback? onPressed;
   final Color? color;
@@ -453,6 +468,7 @@ class SquareIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Tty.of(context);
     final box = MediaQuery.sizeOf(context).width >= 900 ? 36.0 : 40.0;
+    final fg = onPressed == null ? c.empty : (color ?? c.text);
     return Tooltip(
       message: tooltip,
       child: InkWell(
@@ -463,7 +479,16 @@ class SquareIconButton extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              Icon(icon, size: size, color: onPressed == null ? c.empty : (color ?? c.text), semanticLabel: tooltip),
+              if (svg != null)
+                SvgPicture.string(
+                  svg!,
+                  width: size,
+                  height: size,
+                  colorFilter: ColorFilter.mode(fg, BlendMode.srcIn),
+                  semanticsLabel: tooltip,
+                )
+              else
+                Icon(icon, size: size, color: fg, semanticLabel: tooltip),
               if (badge != null)
                 Positioned(
                   top: box / 2 - size / 2 - 1,

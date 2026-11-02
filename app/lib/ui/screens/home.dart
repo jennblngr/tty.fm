@@ -5,6 +5,7 @@ import '../../app_info.dart';
 import '../../data/models.dart';
 import '../../state/library.dart';
 import '../../state/playback.dart';
+import '../icons.dart';
 import '../nav.dart';
 import '../shell.dart';
 import '../theme.dart';
@@ -49,9 +50,11 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 )
               : Transform.translate(
-                  offset: const Offset(8, 0),
+                  // Box 40, icon 20: shifted by the 10 px of padding so the
+                  // gear lines up with the 16 px page margin, as on 01.
+                  offset: const Offset(10, 0),
                   child: SquareIconButton(
-                    icon: Icons.settings,
+                    svg: gearSvg,
                     size: 20,
                     color: c.muted,
                     tooltip: 'Réglages',
