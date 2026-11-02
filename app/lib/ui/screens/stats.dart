@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app_info.dart';
 import '../../data/models.dart';
 import '../../core/network.dart';
 import '../../offline/downloads.dart';
@@ -57,7 +58,7 @@ class StatsScreen extends ConsumerWidget {
           gap: 20,
           onRefresh: () => ref.refresh(statsProvider(days).future),
           children: [
-            TtyPrompt(wide ? 'stats' : 'whoami', trailing: periods),
+            TtyPrompt(wide ? 'stats' : 'whoami', brand: wide ? null : appDisplayName, trailing: periods),
             if (wide) TtyGrid(minWidth: 360, spacing: 20, children: panels) else ...panels,
             if (!wide) const _Shortcuts(),
           ],

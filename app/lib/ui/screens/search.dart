@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app_info.dart';
 import '../../core/api_client.dart';
 import '../../data/library_repository.dart';
 import '../../data/models.dart';
@@ -197,7 +198,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return TtyPage(
       gap: 16,
       children: [
-        TtyPrompt(wide ? 'recherche' : 'grep'),
+        TtyPrompt(wide ? 'recherche' : 'grep', brand: wide ? null : appDisplayName),
         input,
         Row(
           children: [

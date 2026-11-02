@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app_info.dart';
 import '../../offline/downloads.dart';
 import '../../state/library.dart';
 import '../../state/playback.dart';
@@ -90,8 +91,10 @@ class _Header extends ConsumerWidget {
     final stats = ref.watch(libraryStatsProvider).value;
     final playlists = ref.watch(playlistTreeProvider).value?.allPlaylists.length;
     final offline = ref.watch(downloadsProvider.select((s) => s.tracks.length));
+    final wide = MediaQuery.sizeOf(context).width >= desktopWidth;
     return TtyPrompt(
       'ls ~/biblio',
+      brand: wide ? null : appDisplayName,
       comment: [
         if (playlists != null) '$playlists playlists',
         if (stats != null) '${stats.artists} artistes',
