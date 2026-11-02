@@ -67,21 +67,29 @@ class CoverImage extends ConsumerWidget {
 
 /// 2×2 mosaic of album covers for playlists.
 class PlaylistCover extends StatelessWidget {
-  const PlaylistCover(this.coverIds, {super.key, this.size = 48, this.label = '', this.seed});
+  const PlaylistCover(this.coverIds, {super.key, this.size = 48, this.radius = 6, this.label = '', this.seed});
 
   final List<int> coverIds;
   final double size;
+  final double radius;
   final String label;
   final int? seed;
 
   @override
   Widget build(BuildContext context) {
     if (coverIds.length < 4) {
-      return CoverImage(coverIds.firstOrNull, size: size, label: label, seed: seed, glyph: label.isEmpty ? '≡' : null);
+      return CoverImage(
+        coverIds.firstOrNull,
+        size: size,
+        radius: radius,
+        label: label,
+        seed: seed,
+        glyph: label.isEmpty ? '≡' : null,
+      );
     }
     final half = size / 2;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(radius),
       child: SizedBox(
         width: size,
         height: size,

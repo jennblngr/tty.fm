@@ -288,15 +288,41 @@ class SearchResult {
   );
 }
 
+/// A "recently played" shortcut: what plays were started from. Exactly one
+/// of [album], [artist] and [playlist] is set.
+class RecentItem {
+  const RecentItem.album(Album this.album) : artist = null, playlist = null;
+  const RecentItem.artist(Artist this.artist) : album = null, playlist = null;
+  const RecentItem.playlist(Playlist this.playlist) : album = null, artist = null;
+
+  final Album? album;
+  final Artist? artist;
+  final Playlist? playlist;
+
+  /// Null for a kind this version does not know.
+  static RecentItem? fromJson(Map<String, dynamic> j) => switch (j['kind']) {
+    'album' => RecentItem.album(Album.fromJson(j['album'] as Map<String, dynamic>)),
+    'artist' => RecentItem.artist(Artist.fromJson(j['artist'] as Map<String, dynamic>)),
+    'playlist' => RecentItem.playlist(Playlist.fromJson(j['playlist'] as Map<String, dynamic>)),
+    _ => null,
+  };
+}
+
 class HomeData {
   const HomeData({this.recentlyAdded = const [], this.recentlyPlayed = const []});
 
   final List<Album> recentlyAdded;
-  final List<Album> recentlyPlayed;
+  final List<RecentItem> recentlyPlayed;
 
   factory HomeData.fromJson(Map<String, dynamic> j) => HomeData(
     recentlyAdded: [for (final a in j['recently_added'] as List) Album.fromJson(a as Map<String, dynamic>)],
-    recentlyPlayed: [for (final a in j['recently_played_albums'] as List) Album.fromJson(a as Map<String, dynamic>)],
+    recentlyPlayed: j['recently_played'] is List
+        ? [for (final i in j['recently_played'] as List) ?RecentItem.fromJson(i as Map<String, dynamic>)]
+        // Servers before the mixed list, and cached responses from them.
+        : [
+            for (final a in j['recently_played_albums'] as List? ?? const [])
+              RecentItem.album(Album.fromJson(a as Map<String, dynamic>)),
+          ],
   );
 }
 

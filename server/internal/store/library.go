@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -417,10 +418,74 @@ func (db *DB) TrackFileInfo(ctx context.Context, id int64) (TrackFileInfo, error
 	return f, notFound(err)
 }
 
-// RecentlyPlayedAlbums returns distinct albums from recent plays.
-func (db *DB) RecentlyPlayedAlbums(ctx context.Context, limit int) ([]Album, error) {
-	return db.albumList(ctx, strings.Replace(albumSelect, "FROM albums al",
-		`FROM (SELECT t.album_id, MAX(p.started_at) AS last FROM plays p JOIN tracks t ON t.id = p.track_id
-		       GROUP BY t.album_id) rp JOIN albums al ON al.id = rp.album_id`, 1)+
-		" ORDER BY rp.last DESC LIMIT ?", clampLimit(limit))
+// RecentItem is one "recently played" shortcut: the album, artist or
+// playlist plays were started from. Exactly one of the pointers is set.
+type RecentItem struct {
+	Kind     string    `json:"kind"` // album, artist, playlist
+	Album    *Album    `json:"album,omitempty"`
+	Artist   *Artist   `json:"artist,omitempty"`
+	Playlist *Playlist `json:"playlist,omitempty"`
+}
+
+// RecentlyPlayed returns what recent plays were started from, most recent
+// first. A play started from a playlist or an artist counts for it; any
+// other play counts for the track's album.
+func (db *DB) RecentlyPlayed(ctx context.Context, limit int) ([]RecentItem, error) {
+	type key struct {
+		kind string
+		id   int64
+	}
+	rows, err := db.r.QueryContext(ctx, `
+		SELECT kind, id FROM (
+		  SELECT CASE WHEN p.context_kind IN ('playlist', 'artist') AND p.context_id IS NOT NULL
+		              THEN p.context_kind ELSE 'album' END AS kind,
+		         CASE WHEN p.context_kind IN ('playlist', 'artist') AND p.context_id IS NOT NULL
+		              THEN p.context_id ELSE t.album_id END AS id,
+		         MAX(p.started_at) AS last
+		  FROM plays p JOIN tracks t ON t.id = p.track_id
+		  GROUP BY 1, 2)
+		WHERE (kind = 'album'    AND id IN (SELECT id FROM albums WHERE track_count > 0))
+		   OR (kind = 'artist'   AND id IN (SELECT id FROM artists))
+		   OR (kind = 'playlist' AND id IN (SELECT id FROM playlists))
+		ORDER BY last DESC LIMIT ?`, clampLimit(limit))
+	if err != nil {
+		return nil, err
+	}
+	var keys []key
+	for rows.Next() {
+		var k key
+		if err := rows.Scan(&k.kind, &k.id); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		keys = append(keys, k)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	out := []RecentItem{}
+	for _, k := range keys {
+		it := RecentItem{Kind: k.kind}
+		switch k.kind {
+		case "album":
+			a, e := db.Album(ctx, k.id)
+			it.Album, err = &a, e
+		case "artist":
+			a, e := db.Artist(ctx, k.id)
+			it.Artist, err = &a, e
+		case "playlist":
+			p, e := db.Playlist(ctx, k.id)
+			it.Playlist, err = &p, e
+		}
+		if errors.Is(err, ErrNotFound) { // e.g. an artist left with no present track
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, it)
+	}
+	return out, nil
 }

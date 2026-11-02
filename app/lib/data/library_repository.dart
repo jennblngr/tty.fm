@@ -63,6 +63,12 @@ class LibraryRepository {
     return (Album.fromJson(m['album'] as Map<String, dynamic>), _list(m['tracks'], Track.fromJson));
   });
 
+  /// Every track of [albums], album after album, for playing an artist.
+  Future<List<Track>> albumsTracks(List<Album> albums) async {
+    final all = await Future.wait([for (final a in albums) album(a.id).last]);
+    return [for (final (_, tracks) in all) ...tracks];
+  }
+
   /// Search goes straight to the server (FTS answers in milliseconds);
   /// [cancel] aborts the previous keystroke's request.
   /// Text search, optionally narrowed by [filter]. Filter-only searches list

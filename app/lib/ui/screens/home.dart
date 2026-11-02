@@ -77,12 +77,25 @@ class HomeScreen extends ConsumerWidget {
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FavoritesScreen())),
             trailing: favCount > 0 ? '$favCount' : null,
           ),
-          for (final a in h.recentlyPlayed.take(wide ? 7 : 3))
-            _Chip(
-              label: '${a.artist} — ${a.title}'.toLowerCase(),
-              tile: CoverImage(a.coverId, size: tile, radius: 0, label: a.artist, seed: a.id),
-              onTap: () => openAlbum(context, a.id),
-            ),
+          for (final r in h.recentlyPlayed.take(wide ? 7 : 3))
+            if (r.album case final a?)
+              _Chip(
+                label: '${a.artist} — ${a.title}'.toLowerCase(),
+                tile: CoverImage(a.coverId, size: tile, radius: 0, label: a.artist, seed: a.id),
+                onTap: () => openAlbum(context, a.id),
+              )
+            else if (r.artist case final a?)
+              _Chip(
+                label: a.name.toLowerCase(),
+                tile: CoverImage(a.coverId, size: tile, radius: 0, label: a.name, seed: a.id),
+                onTap: () => openArtist(context, a.id),
+              )
+            else if (r.playlist case final p?)
+              _Chip(
+                label: p.name.toLowerCase(),
+                tile: PlaylistCover(p.coverIds, size: tile, radius: 0, label: p.name, seed: p.id),
+                onTap: () => openPlaylist(context, p.id),
+              ),
         ];
 
         final added = Column(
