@@ -2,7 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ttyfm/data/models.dart';
 import 'package:ttyfm/ui/daily_message.dart';
 
-Album _album(DateTime added) => Album(id: 1, title: 'faune', artistId: 1, artist: 'x', createdAt: added);
+RecentAddition _album(DateTime added) => RecentAddition(
+  album: Album(id: 1, title: 'faune', artistId: 1, artist: 'x', trackCount: 3),
+  tracks: 3,
+  addedAt: added,
+);
 
 ListeningStats _stats({int totalMs = 0, int? prevTotalMs, List<(Track, int)> top = const []}) => ListeningStats(
   days: 30,

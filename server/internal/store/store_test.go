@@ -455,3 +455,41 @@ func TestRecentlyPlayed(t *testing.T) {
 		t.Fatalf("got %v, want %s", got, want)
 	}
 }
+
+func TestRecentAdditions(t *testing.T) {
+	db := openTest(t)
+	ctx := context.Background()
+	seed(t, db,
+		TrackFile{Path: "a/1.flac", Title: "A1", Artist: "Faune", Album: "Racines", TrackNo: 1},
+		TrackFile{Path: "a/2.flac", Title: "A2", Artist: "Faune", Album: "Racines", TrackNo: 2},
+		TrackFile{Path: "b/1.flac", Title: "B1", Artist: "Kassette", Album: "Cassette 92", TrackNo: 1})
+	// Back-date everything: Racines a day ago, Cassette 92 two days ago.
+	if _, err := db.w.ExecContext(ctx, `UPDATE tracks SET created_at = created_at - 86400`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.w.ExecContext(ctx, `UPDATE tracks SET created_at = created_at - 86400 WHERE title = 'B1'`); err != nil {
+		t.Fatal(err)
+	}
+	// Three more Racines tracks today: the latest batch is those three.
+	seed(t, db,
+		TrackFile{Path: "a/3.flac", Title: "A3", Artist: "Faune", Album: "Racines", TrackNo: 3},
+		TrackFile{Path: "a/4.flac", Title: "A4", Artist: "Faune", Album: "Racines", TrackNo: 4},
+		TrackFile{Path: "a/5.flac", Title: "A5", Artist: "Faune", Album: "Racines", TrackNo: 5})
+
+	got, err := db.RecentAdditions(ctx, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("want 2 additions, got %+v", got)
+	}
+	if got[0].Album.Title != "Racines" || got[0].Tracks != 3 || got[0].Album.TrackCount != 5 {
+		t.Fatalf("partial batch: %+v", got[0])
+	}
+	if got[1].Album.Title != "Cassette 92" || got[1].Tracks != 1 || got[1].Album.TrackCount != 1 {
+		t.Fatalf("whole album: %+v", got[1])
+	}
+	if got[0].AddedAt <= got[1].AddedAt {
+		t.Fatalf("order: %+v", got)
+	}
+}

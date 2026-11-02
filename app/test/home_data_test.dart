@@ -42,4 +42,31 @@ void main() {
     });
     expect(h.recentlyPlayed.single.album?.title, 'halo');
   });
+
+  test('recently added: batches, or whole albums from older servers', () {
+    const racines = {
+      'id': 1,
+      'title': 'racines',
+      'artist_id': 2,
+      'artist': 'faune',
+      'track_count': 5,
+      'duration_ms': 0,
+    };
+    final h = HomeData.fromJson({
+      'recent_additions': [
+        {'album': racines, 'tracks': 3, 'added_at': 1700000000},
+      ],
+      'recently_played': [],
+    });
+    final r = h.recentlyAdded.single;
+    expect((r.tracks, r.wholeAlbum, r.addedAt), (3, false, DateTime.fromMillisecondsSinceEpoch(1700000000000)));
+
+    final old = HomeData.fromJson({
+      'recently_added': [
+        {...racines, 'created_at': 1700000000},
+      ],
+      'recently_played': [],
+    });
+    expect((old.recentlyAdded.single.tracks, old.recentlyAdded.single.wholeAlbum), (5, true));
+  });
 }

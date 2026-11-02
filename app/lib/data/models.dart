@@ -308,14 +308,41 @@ class RecentItem {
   };
 }
 
+/// A "recently added" row: the [tracks] of [album] added in one go.
+class RecentAddition {
+  const RecentAddition({required this.album, required this.tracks, this.addedAt});
+
+  final Album album;
+  final int tracks;
+  final DateTime? addedAt;
+
+  /// The whole album came in, not a few tracks of it.
+  bool get wholeAlbum => tracks >= album.trackCount;
+
+  factory RecentAddition.fromJson(Map<String, dynamic> j) => RecentAddition(
+    album: Album.fromJson(j['album'] as Map<String, dynamic>),
+    tracks: j['tracks'] as int,
+    addedAt: DateTime.fromMillisecondsSinceEpoch((j['added_at'] as int) * 1000),
+  );
+
+  /// Servers before batches send whole albums.
+  factory RecentAddition.ofAlbum(Album a) => RecentAddition(album: a, tracks: a.trackCount, addedAt: a.createdAt);
+}
+
 class HomeData {
   const HomeData({this.recentlyAdded = const [], this.recentlyPlayed = const []});
 
-  final List<Album> recentlyAdded;
+  final List<RecentAddition> recentlyAdded;
   final List<RecentItem> recentlyPlayed;
 
   factory HomeData.fromJson(Map<String, dynamic> j) => HomeData(
-    recentlyAdded: [for (final a in j['recently_added'] as List) Album.fromJson(a as Map<String, dynamic>)],
+    recentlyAdded: j['recent_additions'] is List
+        ? [for (final a in j['recent_additions'] as List) RecentAddition.fromJson(a as Map<String, dynamic>)]
+        // Servers before batches, and cached responses from them.
+        : [
+            for (final a in j['recently_added'] as List? ?? const [])
+              RecentAddition.ofAlbum(Album.fromJson(a as Map<String, dynamic>)),
+          ],
     recentlyPlayed: j['recently_played'] is List
         ? [for (final i in j['recently_played'] as List) ?RecentItem.fromJson(i as Map<String, dynamic>)]
         // Servers before the mixed list, and cached responses from them.

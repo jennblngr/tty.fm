@@ -266,9 +266,66 @@ func (db *DB) ArtistAlbums(ctx context.Context, artistID int64) ([]Album, error)
 	return db.albumList(ctx, albumSelect+" AND al.album_artist_id = ? ORDER BY al.year DESC, al.sort_title", artistID)
 }
 
-// RecentAlbums returns the most recently added albums.
-func (db *DB) RecentAlbums(ctx context.Context, limit int) ([]Album, error) {
-	return db.albumList(ctx, albumSelect+" ORDER BY al.created_at DESC, al.id DESC LIMIT ?", clampLimit(limit))
+// RecentAddition is one "recently added" row: the tracks of an album added
+// in one go. Tracks equals Album.TrackCount when the whole album came in.
+type RecentAddition struct {
+	Album   Album `json:"album"`
+	Tracks  int   `json:"tracks"`
+	AddedAt int64 `json:"added_at"`
+}
+
+// additionWindow: tracks of an album added within this many seconds of its
+// newest one belong to the same batch. Scans commit by 250 files and the
+// watcher picks up a copy file by file, so one batch spans several
+// timestamps.
+const additionWindow = 3600
+
+// RecentAdditions returns the latest batch of added tracks of each album,
+// most recent first.
+func (db *DB) RecentAdditions(ctx context.Context, limit int) ([]RecentAddition, error) {
+	rows, err := db.r.QueryContext(ctx, `
+		WITH last AS (
+		  SELECT album_id, MAX(created_at) AS at FROM tracks
+		  WHERE missing_since IS NULL GROUP BY album_id)
+		SELECT l.album_id, l.at, COUNT(*) FROM last l
+		JOIN tracks t ON t.album_id = l.album_id AND t.missing_since IS NULL
+		             AND t.created_at > l.at - ?
+		GROUP BY l.album_id ORDER BY l.at DESC, l.album_id DESC LIMIT ?`,
+		additionWindow, clampLimit(limit))
+	if err != nil {
+		return nil, err
+	}
+	type batch struct {
+		album  int64
+		at     int64
+		tracks int
+	}
+	var batches []batch
+	for rows.Next() {
+		var b batch
+		if err := rows.Scan(&b.album, &b.at, &b.tracks); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		batches = append(batches, b)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	out := []RecentAddition{}
+	for _, b := range batches {
+		a, err := db.Album(ctx, b.album)
+		if errors.Is(err, ErrNotFound) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, RecentAddition{Album: a, Tracks: b.tracks, AddedAt: b.at})
+	}
+	return out, nil
 }
 
 func (db *DB) albumList(ctx context.Context, q string, args ...any) ([]Album, error) {
