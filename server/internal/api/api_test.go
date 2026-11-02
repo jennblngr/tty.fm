@@ -205,7 +205,7 @@ func TestLibraryAndStream(t *testing.T) {
 	}
 	var home struct {
 		Added  []store.Album `json:"recently_added"`
-		Played []store.Track `json:"recently_played_tracks"`
+		Played []store.Album `json:"recently_played_albums"`
 	}
 	c.json("GET", "/home", nil, 200, &home)
 	if len(home.Added) != 1 || len(home.Played) != 1 {

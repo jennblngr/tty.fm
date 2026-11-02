@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app_info.dart';
 import '../../data/models.dart';
 import '../../state/library.dart';
-import '../../state/playback.dart';
 import '../icons.dart';
 import '../nav.dart';
 import '../shell.dart';
@@ -12,11 +11,10 @@ import '../theme.dart';
 import '../widgets/async_view.dart';
 import '../widgets/cover.dart';
 import '../widgets/tty.dart';
-import '../widgets/track_tile.dart';
 import 'favorites.dart';
 
-/// "$ accueil": recently played, recently added, last tracks. Daily mixes
-/// and new releases arrive with recommendations (phase 3).
+/// "$ accueil": recently played, recently added. Daily mixes, new releases
+/// and artist radios arrive with recommendations (phase 3).
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -63,17 +61,27 @@ class HomeScreen extends ConsumerWidget {
                 ),
         );
 
+        // One tile size for the chips and the recently added rows: 48 px on
+        // mobile, 52 px on desktop, as on the mockups.
+        final tile = wide ? 52.0 : 48.0;
         final played = <Widget>[
           _Chip(
             label: 'titres likés',
-            tile: InitialsTile('', size: 48, radius: 0, color: c.red, glyph: '♥'),
+            // The heart at the size of the mockup's "♥" (13 px text).
+            tile: Container(
+              width: tile,
+              height: tile,
+              color: c.tint(c.red),
+              alignment: Alignment.center,
+              child: HeartIcon(true, size: 12, color: c.red),
+            ),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FavoritesScreen())),
             trailing: favCount > 0 ? '$favCount' : null,
           ),
-          for (final a in h.recentlyPlayed.take(wide ? 7 : 5))
+          for (final a in h.recentlyPlayed.take(wide ? 7 : 3))
             _Chip(
               label: '${a.artist} — ${a.title}'.toLowerCase(),
-              tile: CoverImage(a.coverId, size: 48, radius: 0, label: a.artist, seed: a.id),
+              tile: CoverImage(a.coverId, size: tile, radius: 0, label: a.artist, seed: a.id),
               onTap: () => openAlbum(context, a.id),
             ),
         ];
@@ -81,16 +89,19 @@ class HomeScreen extends ConsumerWidget {
         final added = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Lists: ruled header on desktop only. On mobile, 4 px + the 8 px
+            // of the row: 12 px under the title, as above the grid.
             TtySection(
               'ajouts récents',
               glyph: '+',
               color: c.peach,
-              ruled: true,
+              ruled: wide,
               trailing: TtyLink('biblio', onTap: () => shell?.select(biblioTab)),
             ),
-            for (final a in h.recentlyAdded.take(wide ? 6 : 4))
+            if (!wide) const SizedBox(height: 4),
+            for (final a in h.recentlyAdded.take(2))
               TtyRow(
-                leading: CoverImage(a.coverId, size: 44, label: a.artist, seed: a.id),
+                leading: CoverImage(a.coverId, size: tile, label: a.artist, seed: a.id),
                 title: a.title.toLowerCase(),
                 titleColor: c.accentFor(a.id),
                 subtitle: [
@@ -98,21 +109,8 @@ class HomeScreen extends ConsumerWidget {
                   'album',
                   if (a.createdAt != null) 'ajouté ${relativeDay(a.createdAt!)}',
                 ].join(' · '),
-                trailing: a.year == null ? null : Text('${a.year}', style: TextStyle(color: c.muted)),
+                aside: a.year == null ? null : Text('${a.year}', style: TextStyle(color: c.muted)),
                 onTap: () => openAlbum(context, a.id),
-              ),
-          ],
-        );
-
-        final tracks = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TtySection('derniers titres', glyph: '♪', color: c.teal, ruled: true),
-            for (var i = 0; i < h.recentTracks.length && i < (wide ? 6 : 5); i++)
-              TrackTile(
-                h.recentTracks[i],
-                onTap: () =>
-                    ref.read(playbackControllerProvider).playTracks(h.recentTracks, index: i, contextKind: 'history'),
               ),
           ],
         );
@@ -125,27 +123,12 @@ class HomeScreen extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TtySection('écouté récemment', glyph: '↺', color: c.green),
-                  const SizedBox(height: 10),
+                  TtySection('écouté récemment', svg: recentSvg, color: c.green),
+                  const SizedBox(height: 12),
                   TtyGrid(minWidth: wide ? 220 : 150, maxColumns: wide ? 99 : 2, children: played),
                 ],
               ),
-            if (h.recentlyAdded.isNotEmpty || h.recentTracks.isNotEmpty)
-              wide
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: added),
-                        const SizedBox(width: 32),
-                        Expanded(child: h.recentTracks.isEmpty ? const SizedBox() : tracks),
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        if (h.recentlyAdded.isNotEmpty) added,
-                        if (h.recentTracks.isNotEmpty) ...[const SizedBox(height: 28), tracks],
-                      ],
-                    ),
+            if (h.recentlyAdded.isNotEmpty) added,
           ],
         );
       },
@@ -181,7 +164,7 @@ class _Chip extends StatelessWidget {
             tile,
             const SizedBox(width: 12),
             Expanded(
-              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5)),
+              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
             ),
             if (trailing != null) ...[
               Text(trailing!, style: TextStyle(color: c.muted, fontSize: 12)),

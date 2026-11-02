@@ -417,13 +417,6 @@ func (db *DB) TrackFileInfo(ctx context.Context, id int64) (TrackFileInfo, error
 	return f, notFound(err)
 }
 
-// RecentlyPlayed returns distinct recently played tracks, newest first.
-func (db *DB) RecentlyPlayed(ctx context.Context, limit int) ([]Track, error) {
-	return db.trackList(ctx, strings.Replace(trackSelect, "FROM tracks t",
-		"FROM (SELECT track_id, MAX(started_at) AS last FROM plays GROUP BY track_id) p JOIN tracks t ON t.id = p.track_id", 1)+
-		" ORDER BY p.last DESC LIMIT ?", clampLimit(limit))
-}
-
 // RecentlyPlayedAlbums returns distinct albums from recent plays.
 func (db *DB) RecentlyPlayedAlbums(ctx context.Context, limit int) ([]Album, error) {
 	return db.albumList(ctx, strings.Replace(albumSelect, "FROM albums al",

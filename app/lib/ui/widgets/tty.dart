@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../icons.dart';
 import '../theme.dart';
 
 // Small building blocks of the terminal look: "$ command" headers,
@@ -80,10 +81,21 @@ class Comment extends StatelessWidget {
 
 /// Section title with a coloured glyph ("↺ écouté récemment"), an optional
 /// muted comment and trailing links. [ruled] draws the thin line under it.
+/// [svg] (see icons.dart) draws the glyph for those JetBrains Mono lacks.
 class TtySection extends StatelessWidget {
-  const TtySection(this.title, {super.key, this.glyph, this.color, this.comment, this.trailing, this.ruled = false});
+  const TtySection(
+    this.title, {
+    super.key,
+    this.glyph,
+    this.svg,
+    this.color,
+    this.comment,
+    this.trailing,
+    this.ruled = false,
+  });
   final String title;
   final String? glyph;
+  final String? svg;
   final Color? color;
   final String? comment;
   final Widget? trailing;
@@ -100,7 +112,20 @@ class TtySection extends StatelessWidget {
           child: Text.rich(
             TextSpan(
               children: [
-                if (glyph == '♥')
+                if (svg != null)
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.middle,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: SvgPicture.string(
+                        svg!,
+                        width: 12,
+                        height: 12,
+                        colorFilter: ColorFilter.mode(color ?? c.green, BlendMode.srcIn),
+                      ),
+                    ),
+                  )
+                else if (glyph == '♥')
                   WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: Padding(
@@ -126,12 +151,20 @@ class TtySection extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        ?trailing,
+        if (trailing != null)
+          // One text line tall: the padding of a [TtyLink] overflows instead
+          // of pushing the content further below the title.
+          IntrinsicWidth(
+            child: SizedBox(
+              height: _lineHeight(context),
+              child: OverflowBox(maxHeight: double.infinity, child: trailing),
+            ),
+          ),
       ],
     );
     if (!ruled) return row;
     return Container(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 8),
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: c.border)),
@@ -139,6 +172,11 @@ class TtySection extends StatelessWidget {
       child: row,
     );
   }
+}
+
+double _lineHeight(BuildContext context) {
+  final style = DefaultTextStyle.of(context).style;
+  return (style.fontSize ?? 13) * (style.height ?? 1.5);
 }
 
 /// "[label]" link or toggle. Active: green and bold.
@@ -279,7 +317,7 @@ String initialsOf(String name) {
 
 /// Coloured square with initials (or a glyph), the design's stand-in for art.
 class InitialsTile extends StatelessWidget {
-  const InitialsTile(this.label, {super.key, this.seed = 0, this.size = 48, this.radius = 4, this.color, this.glyph});
+  const InitialsTile(this.label, {super.key, this.seed = 0, this.size = 48, this.radius = 6, this.color, this.glyph});
   final String label;
   final int seed;
   final double size;
@@ -297,7 +335,7 @@ class InitialsTile extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(color: c.tint(fg), borderRadius: BorderRadius.circular(radius)),
       child: glyph == '♥'
-          ? Icon(Icons.favorite, color: fg, size: size * 0.4)
+          ? HeartIcon(true, color: fg, size: size * 0.3)
           : Text(
               glyph ?? initialsOf(label),
               style: TextStyle(color: fg, fontWeight: FontWeight.w700, fontSize: (size * 0.3).clamp(11, 40)),
@@ -307,7 +345,9 @@ class InitialsTile extends StatelessWidget {
 }
 
 /// One line of a terminal list: leading tile, coloured title, "// subtitle",
-/// trailing bits. Used for tracks, albums and playlists alike.
+/// trailing bits. Used for tracks, albums and playlists alike. [aside] sits
+/// at the end of the title line, at the top of the block, rather than
+/// centred like [trailing].
 class TtyRow extends StatelessWidget {
   const TtyRow({
     super.key,
@@ -315,6 +355,7 @@ class TtyRow extends StatelessWidget {
     this.subtitle,
     this.leading,
     this.trailing,
+    this.aside,
     this.titleColor,
     this.onTap,
     this.bold = false,
@@ -325,6 +366,7 @@ class TtyRow extends StatelessWidget {
   final String? subtitle;
   final Widget? leading;
   final Widget? trailing;
+  final Widget? aside;
   final Color? titleColor;
   final VoidCallback? onTap;
   final bool bold;
@@ -333,11 +375,17 @@ class TtyRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Tty.of(context);
+    final titleText = Text(
+      title,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(color: titleColor ?? c.text, fontWeight: bold ? FontWeight.w700 : FontWeight.w400),
+    );
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(4),
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: dense ? 4 : 6),
+        padding: EdgeInsets.symmetric(vertical: dense ? 4 : 8),
         child: Row(
           children: [
             if (leading != null) ...[leading!, const SizedBox(width: 12)],
@@ -346,12 +394,10 @@ class TtyRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: titleColor ?? c.text, fontWeight: bold ? FontWeight.w700 : FontWeight.w400),
-                  ),
+                  if (aside == null)
+                    titleText
+                  else
+                    Row(children: [Expanded(child: titleText), const SizedBox(width: 8), aside!]),
                   if (subtitle != null) Comment(subtitle!, maxLines: 1),
                 ],
               ),
@@ -386,12 +432,13 @@ List<int> sparkline(int seed, {int length = 6}) {
   return [for (var i = 0; i < length; i++) (x = (x * 1103515245 + 12345) & 0x7fffffff) % 7 + 1];
 }
 
-/// Scrollable page body with the design's margins (wider on desktop).
+/// Scrollable page body with the design's margins and gap between sections
+/// (24 px on mobile, 32 px on desktop).
 class TtyPage extends StatelessWidget {
-  const TtyPage({super.key, required this.children, this.onRefresh, this.gap = 28});
+  const TtyPage({super.key, required this.children, this.onRefresh, this.gap});
   final List<Widget> children;
   final Future<void> Function()? onRefresh;
-  final double gap;
+  final double? gap;
 
   @override
   Widget build(BuildContext context) {
@@ -399,7 +446,7 @@ class TtyPage extends StatelessWidget {
     final list = ListView.separated(
       padding: wide ? const EdgeInsets.fromLTRB(32, 24, 32, 32) : const EdgeInsets.fromLTRB(16, 16, 16, 24),
       itemCount: children.length,
-      separatorBuilder: (_, _) => SizedBox(height: gap),
+      separatorBuilder: (_, _) => SizedBox(height: gap ?? (wide ? 32 : 24)),
       itemBuilder: (_, i) => children[i],
     );
     final body = onRefresh == null ? list : RefreshIndicator(onRefresh: onRefresh!, child: list);
@@ -508,7 +555,7 @@ class SquareIconButton extends StatelessWidget {
 }
 
 /// Like marker. An icon rather than "♥": Android draws that character as a
-/// colour emoji whatever the font.
+/// colour emoji whatever the font. Filled, it is the mockups' heart.
 class HeartIcon extends StatelessWidget {
   const HeartIcon(this.filled, {super.key, this.size = 16, this.color});
   final bool filled;
@@ -518,10 +565,8 @@ class HeartIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Tty.of(context);
-    return Icon(
-      filled ? Icons.favorite : Icons.favorite_border,
-      size: size,
-      color: color ?? (filled ? c.red : c.muted),
-    );
+    final fg = color ?? (filled ? c.red : c.muted);
+    if (!filled) return Icon(Icons.favorite_border, size: size, color: fg);
+    return SvgPicture.string(heartSvg, width: size, height: size, colorFilter: ColorFilter.mode(fg, BlendMode.srcIn));
   }
 }
