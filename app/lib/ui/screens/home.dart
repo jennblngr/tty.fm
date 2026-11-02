@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_info.dart';
-import '../../data/models.dart';
 import '../../state/library.dart';
+import '../daily_message.dart';
 import '../icons.dart';
 import '../nav.dart';
 import '../shell.dart';
@@ -23,6 +23,7 @@ class HomeScreen extends ConsumerWidget {
     final home = ref.watch(homeProvider);
     final favCount = ref.watch(favoritesProvider.select((f) => f.value?['tracks']?.length ?? 0));
     final wide = MediaQuery.sizeOf(context).width >= desktopWidth;
+    final message = ref.watch(dailyMessageProvider);
     final c = Tty.of(context);
     final shell = ShellScope.of(context);
 
@@ -33,9 +34,7 @@ class HomeScreen extends ConsumerWidget {
         final header = TtyPrompt(
           'accueil',
           brand: wide ? null : appDisplayName,
-          comment: h.recentlyAdded.isEmpty
-              ? '${greeting()}. bibliothèque vide : ajoute de la musique dans le dossier du NAS.'
-              : '${greeting()}. ${_addedRecently(h.recentlyAdded)}',
+          commentSpans: message?.spans(c) ?? [TextSpan(text: '${greeting()}.')],
           trailing: wide
               ? InkWell(
                   onTap: () => shell?.select(searchTab),
@@ -133,12 +132,6 @@ class HomeScreen extends ConsumerWidget {
         );
       },
     );
-  }
-
-  static String _addedRecently(List<Album> albums) {
-    final week = DateTime.now().subtract(const Duration(days: 7));
-    final n = albums.where((a) => a.createdAt != null && a.createdAt!.isAfter(week)).length;
-    return n == 0 ? 'rien de neuf cette semaine.' : '$n ajout${n > 1 ? 's' : ''} cette semaine.';
   }
 }
 

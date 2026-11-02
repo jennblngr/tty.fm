@@ -10,9 +10,10 @@ import '../theme.dart';
 /// Page header: "[brand] $ command", trailing actions, and an optional
 /// "// comment" line under it across the full width.
 class TtyPrompt extends StatelessWidget {
-  const TtyPrompt(this.command, {super.key, this.comment, this.trailing, this.brand});
+  const TtyPrompt(this.command, {super.key, this.comment, this.commentSpans, this.trailing, this.brand});
   final String command;
   final String? comment;
+  final List<InlineSpan>? commentSpans; // one line, in place of [comment]
   final Widget? trailing;
   final String? brand; // "tty.fm", in mauve before the prompt
 
@@ -58,21 +59,30 @@ class TtyPrompt extends StatelessWidget {
         // 12 px before the comment, as on the mockups: from the title text on
         // mobile (the 40 px row already leaves ~10 px under its 19.5 px
         // line), from the row on desktop.
-        if (comment != null) ...[SizedBox(height: wide ? 12 : 2), Comment(comment!)],
+        if (comment != null || commentSpans != null) ...[
+          SizedBox(height: wide ? 12 : 2),
+          commentSpans != null ? Comment.rich(commentSpans!) : Comment(comment!),
+        ],
       ],
     );
   }
 }
 
-/// Muted "// text".
+/// Muted "// text". [Comment.rich]: on one line, spans with their own
+/// colours (the home's message of the day).
 class Comment extends StatelessWidget {
-  const Comment(this.text, {super.key, this.maxLines});
+  const Comment(this.text, {super.key, this.maxLines}) : spans = null;
+  const Comment.rich(this.spans, {super.key}) : text = '', maxLines = 1;
   final String text;
+  final List<InlineSpan>? spans;
   final int? maxLines;
 
   @override
-  Widget build(BuildContext context) => Text(
-    '// $text',
+  Widget build(BuildContext context) => Text.rich(
+    TextSpan(
+      text: '// ',
+      children: spans ?? [TextSpan(text: text)],
+    ),
     maxLines: maxLines,
     overflow: maxLines == null ? null : TextOverflow.ellipsis,
     style: TextStyle(color: Tty.of(context).muted),
@@ -397,7 +407,13 @@ class TtyRow extends StatelessWidget {
                   if (aside == null)
                     titleText
                   else
-                    Row(children: [Expanded(child: titleText), const SizedBox(width: 8), aside!]),
+                    Row(
+                      children: [
+                        Expanded(child: titleText),
+                        const SizedBox(width: 8),
+                        aside!,
+                      ],
+                    ),
                   if (subtitle != null) Comment(subtitle!, maxLines: 1),
                 ],
               ),
@@ -487,7 +503,10 @@ String relativeDay(DateTime t) {
 }
 
 /// "bonjour" / "bonsoir" depending on the hour.
-String greeting() => DateTime.now().hour >= 18 || DateTime.now().hour < 5 ? 'bonsoir' : 'bonjour';
+String greeting([DateTime? now]) {
+  final h = (now ?? DateTime.now()).hour;
+  return h >= 18 || h < 5 ? 'bonsoir' : 'bonjour';
+}
 
 /// Icon button in a square box: 40×40 on mobile, 36×36 on desktop. Filled
 /// icons, muted when disabled. [svg] (see icons.dart) replaces [icon] for
