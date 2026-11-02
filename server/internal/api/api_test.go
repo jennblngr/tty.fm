@@ -204,11 +204,11 @@ func TestLibraryAndStream(t *testing.T) {
 		t.Fatalf("plays: %+v", rec)
 	}
 	var home struct {
-		Added  []store.Album      `json:"recently_added"`
-		Played []store.RecentItem `json:"recently_played"`
+		Added  []store.RecentAddition `json:"recent_additions"`
+		Played []store.RecentItem     `json:"recently_played"`
 	}
 	c.json("GET", "/home", nil, 200, &home)
-	if len(home.Added) != 1 || len(home.Played) != 1 || home.Played[0].Album == nil {
+	if len(home.Added) != 1 || home.Added[0].Tracks != home.Added[0].Album.TrackCount || len(home.Played) != 1 || home.Played[0].Album == nil {
 		t.Fatalf("home: %+v", home)
 	}
 

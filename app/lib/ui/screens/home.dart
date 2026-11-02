@@ -111,19 +111,23 @@ class HomeScreen extends ConsumerWidget {
               trailing: TtyLink('biblio', onTap: () => shell?.select(biblioTab)),
             ),
             if (!wide) const SizedBox(height: 4),
-            for (final a in h.recentlyAdded.take(2))
-              TtyRow(
-                leading: CoverImage(a.coverId, size: tile, label: a.artist, seed: a.id),
-                title: a.title.toLowerCase(),
-                titleColor: c.accentFor(a.id),
-                subtitle: [
-                  a.artist.toLowerCase(),
-                  'album',
-                  if (a.createdAt != null) 'ajouté ${relativeDay(a.createdAt!)}',
-                ].join(' · '),
-                aside: a.year == null ? null : Text('${a.year}', style: TextStyle(color: c.muted)),
-                onTap: () => openAlbum(context, a.id),
-              ),
+            for (final r in h.recentlyAdded.take(2))
+              if (r.album case final a)
+                TtyRow(
+                  leading: CoverImage(a.coverId, size: tile, label: a.artist, seed: a.id),
+                  title: a.title.toLowerCase(),
+                  titleColor: c.accentFor(a.id),
+                  // "album · ajouté hier" for a whole album, "3 titres ·
+                  // ajoutés il y a 2 j" for a few tracks of it.
+                  subtitle: [
+                    a.artist.toLowerCase(),
+                    if (r.wholeAlbum) 'album' else '${r.tracks} titre${r.tracks > 1 ? 's' : ''}',
+                    if (r.addedAt != null)
+                      '${r.wholeAlbum || r.tracks == 1 ? 'ajouté' : 'ajoutés'} ${relativeDay(r.addedAt!)}',
+                  ].join(' · '),
+                  aside: a.year == null ? null : Text('${a.year}', style: TextStyle(color: c.muted)),
+                  onTap: () => openAlbum(context, a.id),
+                ),
           ],
         );
 

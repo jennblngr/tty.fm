@@ -76,7 +76,7 @@ DailyMessage pickDailyMessage({
 
   // P2: albums added since the last opening (the last week the first time).
   final since = lastOpen ?? now.subtract(const Duration(days: 7));
-  final added = home.recentlyAdded.where((a) => a.createdAt != null && a.createdAt!.isAfter(since)).length;
+  final added = home.recentlyAdded.where((a) => a.addedAt != null && a.addedAt!.isAfter(since)).length;
   if (added > 0) {
     final s = added > 1 ? 's' : '';
     return DailyMessage('ajouts.recents', '', '$added', ' ajout$s récent$s.');

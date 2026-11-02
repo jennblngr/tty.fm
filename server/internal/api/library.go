@@ -81,7 +81,7 @@ func (s *Server) deleteDevice(w http.ResponseWriter, r *http.Request) {
 func (s *Server) home(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	limit := queryInt(r, "limit", 20)
-	recent, err := s.DB.RecentAlbums(ctx, limit)
+	added, err := s.DB.RecentAdditions(ctx, limit)
 	if err != nil {
 		s.fail(w, r, err)
 		return
@@ -92,8 +92,8 @@ func (s *Server) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"recently_added":  recent,
-		"recently_played": played,
+		"recent_additions": added,
+		"recently_played":  played,
 	})
 }
 
