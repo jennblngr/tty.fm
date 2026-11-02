@@ -106,7 +106,7 @@ Les couleurs d'accent viennent du **thème** : l'utilisateur ne choisit plus de 
 
 ### Espacements
 
-Échelle unique : **2 · 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64**. Arrondir à la valeur la plus proche (égalité → au-dessus). Rayons : 4 (petites pochettes), 6 (boutons, tuiles), 8 (cartes), 16 (panneau du bas).
+Échelle unique : **2 · 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64**. Arrondir à la valeur la plus proche (égalité → au-dessus). Rayons : 6 (pochettes, boutons, tuiles), 8 (cartes, grandes pochettes), 16 (panneau du bas). Les maquettes mettent encore 4 aux petites pochettes : c'est 6 qui fait foi.
 
 ### Icônes
 

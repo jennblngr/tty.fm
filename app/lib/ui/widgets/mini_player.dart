@@ -7,6 +7,7 @@ import '../../state/library.dart';
 import '../../state/playback.dart';
 import '../../state/remote.dart';
 import '../format.dart';
+import '../icons.dart';
 import '../nav.dart';
 import '../screens/devices.dart';
 import '../theme.dart';
@@ -97,7 +98,8 @@ class MiniPlayer extends ConsumerWidget {
               ),
               const SizedBox(width: 4),
               SquareIconButton(
-                icon: Icons.favorite,
+                svg: heartSvg,
+                size: 24,
                 color: fav ? c.red : c.muted,
                 tooltip: fav ? 'Retirer des titres likés' : 'Ajouter aux titres likés',
                 onPressed: () => ref.read(favoritesProvider.notifier).toggle('tracks', track.id),

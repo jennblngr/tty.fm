@@ -404,7 +404,7 @@ func TestFavoritesAndPlays(t *testing.T) {
 	if err != nil || n != 1 {
 		t.Fatalf("plays: n=%d err=%v", n, err)
 	}
-	recent, _ := db.RecentlyPlayed(ctx, 10)
+	recent, _ := db.RecentlyPlayedAlbums(ctx, 10)
 	if len(recent) != 1 {
 		t.Fatalf("recent: %+v", recent)
 	}

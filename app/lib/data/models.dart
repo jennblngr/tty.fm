@@ -289,16 +289,14 @@ class SearchResult {
 }
 
 class HomeData {
-  const HomeData({this.recentlyAdded = const [], this.recentlyPlayed = const [], this.recentTracks = const []});
+  const HomeData({this.recentlyAdded = const [], this.recentlyPlayed = const []});
 
   final List<Album> recentlyAdded;
   final List<Album> recentlyPlayed;
-  final List<Track> recentTracks;
 
   factory HomeData.fromJson(Map<String, dynamic> j) => HomeData(
     recentlyAdded: [for (final a in j['recently_added'] as List) Album.fromJson(a as Map<String, dynamic>)],
     recentlyPlayed: [for (final a in j['recently_played_albums'] as List) Album.fromJson(a as Map<String, dynamic>)],
-    recentTracks: [for (final t in j['recently_played_tracks'] as List) Track.fromJson(t as Map<String, dynamic>)],
   );
 }
 

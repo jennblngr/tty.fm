@@ -303,7 +303,7 @@ void main() {
     await c.pause();
     await container.read(playReporterProvider).flush();
     final home = await container.read(libraryProvider).home().last;
-    expect(home.recentTracks, isNotEmpty, reason: 'plays should be recorded server-side');
+    expect(home.recentlyPlayed, isNotEmpty, reason: 'plays should be recorded server-side');
 
     // --- stats from that history -------------------------------------------------
     container.invalidate(statsProvider);

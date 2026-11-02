@@ -14,7 +14,7 @@ class CoverImage extends ConsumerWidget {
     this.coverId, {
     super.key,
     this.size = 48,
-    this.radius = 4,
+    this.radius = 6,
     this.label = '',
     this.seed,
     this.glyph,
@@ -81,7 +81,7 @@ class PlaylistCover extends StatelessWidget {
     }
     final half = size / 2;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(6),
       child: SizedBox(
         width: size,
         height: size,
