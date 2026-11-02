@@ -404,8 +404,54 @@ func TestFavoritesAndPlays(t *testing.T) {
 	if err != nil || n != 1 {
 		t.Fatalf("plays: n=%d err=%v", n, err)
 	}
-	recent, _ := db.RecentlyPlayedAlbums(ctx, 10)
-	if len(recent) != 1 {
+	recent, _ := db.RecentlyPlayed(ctx, 10)
+	if len(recent) != 1 || recent[0].Kind != "album" {
 		t.Fatalf("recent: %+v", recent)
+	}
+}
+
+func TestRecentlyPlayed(t *testing.T) {
+	db := openTest(t)
+	ctx := context.Background()
+	ids := seed(t, db,
+		TrackFile{Path: "a.flac", Title: "A", Artist: "X", Album: "Y"},
+		TrackFile{Path: "b.flac", Title: "B", Artist: "Z", Album: "W"})
+	pl, _ := db.CreatePlaylist(ctx, "Chill", nil)
+	gone, _ := db.CreatePlaylist(ctx, "Gone", nil)
+	a, _ := db.Track(ctx, ids[0])
+
+	if _, err := db.AddPlays(ctx, 0, []Play{
+		{TrackID: ids[0], StartedAt: 1000, ListenedMs: 1000, ContextKind: "album", ContextID: a.AlbumID},
+		{TrackID: ids[1], StartedAt: 2000, ListenedMs: 1000, ContextKind: "playlist", ContextID: pl},
+		{TrackID: ids[0], StartedAt: 3000, ListenedMs: 1000, ContextKind: "artist", ContextID: a.ArtistID},
+		{TrackID: ids[1], StartedAt: 4000, ListenedMs: 1000, ContextKind: "search"},
+		{TrackID: ids[1], StartedAt: 5000, ListenedMs: 1000, ContextKind: "playlist", ContextID: gone},
+		{TrackID: ids[0], StartedAt: 6000, ListenedMs: 1000, ContextKind: "album", ContextID: a.AlbumID},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.DeletePlaylist(ctx, gone); err != nil {
+		t.Fatal(err)
+	}
+
+	recent, err := db.RecentlyPlayed(ctx, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, it := range recent {
+		switch it.Kind {
+		case "album":
+			got = append(got, "album:"+it.Album.Title)
+		case "artist":
+			got = append(got, "artist:"+it.Artist.Name)
+		case "playlist":
+			got = append(got, "playlist:"+it.Playlist.Name)
+		}
+	}
+	// Y again at 6000; W from search at 4000; the deleted playlist is gone.
+	want := "[album:Y album:W artist:X playlist:Chill]"
+	if fmt.Sprint(got) != want {
+		t.Fatalf("got %v, want %s", got, want)
 	}
 }

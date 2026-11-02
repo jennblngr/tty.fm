@@ -86,14 +86,14 @@ func (s *Server) home(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
-	played, err := s.DB.RecentlyPlayedAlbums(ctx, limit)
+	played, err := s.DB.RecentlyPlayed(ctx, limit)
 	if err != nil {
 		s.fail(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"recently_added":         recent,
-		"recently_played_albums": played,
+		"recently_added":  recent,
+		"recently_played": played,
 	})
 }
 
