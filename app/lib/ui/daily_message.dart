@@ -18,7 +18,7 @@ import 'widgets/tty.dart';
 /// Nothing eligible: "bonjour." or "bonsoir." alone.
 ///
 /// Variants needing data the app doesn't have yet (audio analysis, mixes,
-/// release tracking, streaks, rétro) are left out until it exists.
+/// release tracking, rétro) are left out until it exists.
 class DailyMessage {
   const DailyMessage(this.id, this.pre, [this.highlight = '', this.post = '', this.tone = Tone.green, this.seed = 0]);
 
@@ -34,6 +34,7 @@ class DailyMessage {
   Color color(Tty c) => switch (tone) {
     Tone.green => c.green,
     Tone.peach => c.peach,
+    Tone.teal => c.teal,
     Tone.accent => c.accentFor(seed),
   };
 
@@ -50,7 +51,7 @@ class DailyMessage {
 }
 
 /// Numbers in green, names in the colour of their element, as on the mockup.
-enum Tone { green, peach, accent }
+enum Tone { green, peach, teal, accent }
 
 const maxLength = 45;
 
@@ -82,11 +83,29 @@ DailyMessage pickDailyMessage({
     return DailyMessage('ajouts.recents', '', '$added', ' ajout$s récent$s.');
   }
 
+  final moments = home.moments;
+  final anniversary = moments.anniversary;
+  final evening = moments.eveningGenre;
   final pool = <DailyMessage>[
     // P3
+    if (moments.streakDays >= 3 && moments.streakDays >= moments.streakRecord)
+      DailyMessage('serie.record', '', '${moments.streakDays} jours', " d'écoute d'affilée. record !"),
     if (month != null && now.day >= 7 && month.totalMs >= 3600000) _month(month),
     // P4
+    if (now.hour >= 18 && evening != null && evening.isNotEmpty)
+      _fit(DailyMessage('moment.soir', 'bonsoir. un peu de ', evening.toLowerCase(), ' pour finir ?', Tone.teal)),
     if (now.hour < 5) DailyMessage('moment.nuit', 'il est ${now.hour}h. nuit calme, ', '< 90 bpm', ' ?', Tone.peach),
+    if (anniversary != null)
+      _fit(
+        DailyMessage(
+          'souvenir.decouverte',
+          'il y a ${anniversary.years} an${anniversary.years > 1 ? 's' : ''}, tu découvrais ',
+          anniversary.artist.toLowerCase(),
+          '.',
+          Tone.accent,
+          anniversary.artistId,
+        ),
+      ),
     if (last30 != null && last30.topTracks.isNotEmpty && last30.topTracks.first.$2 > 30)
       _fit(
         DailyMessage(

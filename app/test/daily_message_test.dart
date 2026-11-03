@@ -72,11 +72,20 @@ void main() {
   });
 
   test('every message holds on one line', () {
-    final night = DateTime(2026, 11, 30, 4);
     final s = _stats(totalMs: 999 * 3600000, prevTotalMs: 1, top: [(_track('x' * 60), 999)]);
-    for (var seed = 0; seed < 20; seed++) {
-      final m = pickDailyMessage(now: night, home: old, month: s, last30: s, milestone: 100000, seed: seed);
-      expect(m.text.length, lessThanOrEqualTo(maxLength), reason: m.text);
+    final home = HomeData(
+      recentlyAdded: old.recentlyAdded,
+      moments: Moments(
+        streakDays: 999,
+        anniversary: (artistId: 1, artist: 'y' * 60, years: 99),
+        eveningGenre: 'z' * 60,
+      ),
+    );
+    for (final now in [DateTime(2026, 11, 30, 4), DateTime(2026, 11, 30, 23)]) {
+      for (var seed = 0; seed < 30; seed++) {
+        final m = pickDailyMessage(now: now, home: home, month: s, last30: s, milestone: 100000, seed: seed);
+        expect(m.text.length, lessThanOrEqualTo(maxLength), reason: m.text);
+      }
     }
   });
 
@@ -90,5 +99,51 @@ void main() {
     expect(checkMilestone(10200, store1, now.add(const Duration(hours: 5))).$1, 10000);
     expect(checkMilestone(10200, store1, now.add(const Duration(days: 2))).$1, isNull);
     expect(pickDailyMessage(now: noon, home: old, milestone: 5000).text, '// 5 000 titres dans ta biblio.');
+  });
+
+  test('a listening streak that beats the record', () {
+    HomeData home(int days, int record) => HomeData(
+      recentlyAdded: old.recentlyAdded,
+      moments: Moments(streakDays: days, streakRecord: record),
+    );
+    expect(pickDailyMessage(now: noon, home: home(9, 7)).text, "// 9 jours d'écoute d'affilée. record !");
+    expect(pickDailyMessage(now: noon, home: home(9, 12)).id, 'repli.salut');
+    expect(pickDailyMessage(now: noon, home: home(2, 0)).id, 'repli.salut');
+  });
+
+  test('the anniversary of a discovery', () {
+    final home = HomeData(
+      recentlyAdded: old.recentlyAdded,
+      moments: const Moments(anniversary: (artistId: 4, artist: 'Nova Kid', years: 2)),
+    );
+    final m = pickDailyMessage(now: noon, home: home);
+    expect(m.text, '// il y a 2 ans, tu découvrais nova kid.');
+    expect(m.seed, 4);
+  });
+
+  test('the evening genre, from 18h', () {
+    final home = HomeData(
+      recentlyAdded: old.recentlyAdded,
+      moments: const Moments(eveningGenre: 'Lo-Fi'),
+    );
+    expect(
+      pickDailyMessage(now: DateTime(2026, 11, 12, 21), home: home).text,
+      '// bonsoir. un peu de lo-fi pour finir ?',
+    );
+    expect(pickDailyMessage(now: noon, home: home).id, 'repli.salut');
+  });
+
+  test('moments from the server, and from servers without them', () {
+    final h = HomeData.fromJson({
+      'moments': {
+        'streak': {'days': 4, 'record': 3},
+        'anniversary': {'artist_id': 2, 'artist': 'Veteran', 'years': 1},
+        'evening_genre': 'Jazz',
+      },
+    });
+    expect(h.moments.streakDays, 4);
+    expect(h.moments.anniversary?.artist, 'Veteran');
+    expect(h.moments.eveningGenre, 'Jazz');
+    expect(HomeData.fromJson(const {}).moments.streakDays, 0);
   });
 }
