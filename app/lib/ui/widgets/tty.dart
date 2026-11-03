@@ -472,10 +472,20 @@ class TtyPage extends StatelessWidget {
 
 /// Lays children in as many columns of at least [minWidth] as fit.
 class TtyGrid extends StatelessWidget {
-  const TtyGrid({super.key, required this.children, this.minWidth = 220, this.spacing = 8, this.maxColumns = 99});
+  const TtyGrid({
+    super.key,
+    required this.children,
+    this.minWidth = 220,
+    this.spacing = 8,
+    this.runSpacing,
+    this.maxColumns = 99,
+  });
   final List<Widget> children;
   final double minWidth;
+
+  /// Between columns; between rows too unless [runSpacing] is set.
   final double spacing;
+  final double? runSpacing;
   final int maxColumns;
 
   @override
@@ -485,7 +495,7 @@ class TtyGrid extends StatelessWidget {
       final w = (box.maxWidth - spacing * (cols - 1)) / cols;
       return Wrap(
         spacing: spacing,
-        runSpacing: spacing,
+        runSpacing: runSpacing ?? spacing,
         children: [for (final c in children) SizedBox(width: w, child: c)],
       );
     },
