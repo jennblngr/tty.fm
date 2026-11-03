@@ -42,10 +42,10 @@ class HomeScreen extends ConsumerWidget {
                   onTap: () => shell?.select(searchTab),
                   borderRadius: BorderRadius.circular(6),
                   child: Container(
-                    width: 280,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    constraints: const BoxConstraints(minWidth: 260),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(color: c.surface, borderRadius: BorderRadius.circular(6)),
-                    child: Text('> grep titre, artiste, album…', style: TextStyle(color: c.muted)),
+                    child: Text('> grep titre, artiste, bpm:…', style: TextStyle(color: c.muted)),
                   ),
                 )
               : Transform.translate(
@@ -128,23 +128,33 @@ class HomeScreen extends ConsumerWidget {
               trailing: TtyLink('biblio', onTap: () => shell?.select(biblioTab)),
             ),
             if (!wide) const SizedBox(height: 4),
-            for (final r in h.recentlyAdded.take(2))
-              if (r.album case final a)
-                TtyRow(
-                  leading: CoverImage(a.coverId, size: tile, label: a.artist, seed: a.id),
-                  title: a.title.toLowerCase(),
-                  titleColor: c.accentFor(a.id),
-                  // "album · ajouté hier" for a whole album, "3 titres ·
-                  // ajoutés il y a 2 j" for a few tracks of it.
-                  subtitle: [
-                    a.artist.toLowerCase(),
-                    if (r.wholeAlbum) 'album' else '${r.tracks} titre${r.tracks > 1 ? 's' : ''}',
-                    if (r.addedAt != null)
-                      '${r.wholeAlbum || r.tracks == 1 ? 'ajouté' : 'ajoutés'} ${relativeDay(r.addedAt!)}',
-                  ].join(' · '),
-                  aside: a.year == null ? null : Text('${a.year}', style: TextStyle(color: c.muted)),
-                  onTap: () => openAlbum(context, a.id),
-                ),
+            // Desktop: two columns of at least 300 px, 32 px apart, as on
+            // the mockup (grid gap 0 32 px).
+            TtyGrid(
+              minWidth: 300,
+              spacing: 32,
+              runSpacing: 0,
+              maxColumns: wide ? 2 : 1,
+              children: [
+                for (final r in h.recentlyAdded.take(2))
+                  if (r.album case final a)
+                    TtyRow(
+                      leading: CoverImage(a.coverId, size: tile, label: a.artist, seed: a.id),
+                      title: a.title.toLowerCase(),
+                      titleColor: c.accentFor(a.id),
+                      // "album · ajouté hier" for a whole album, "3 titres ·
+                      // ajoutés il y a 2 j" for a few tracks of it.
+                      subtitle: [
+                        a.artist.toLowerCase(),
+                        if (r.wholeAlbum) 'album' else '${r.tracks} titre${r.tracks > 1 ? 's' : ''}',
+                        if (r.addedAt != null)
+                          '${r.wholeAlbum || r.tracks == 1 ? 'ajouté' : 'ajoutés'} ${relativeDay(r.addedAt!)}',
+                      ].join(' · '),
+                      aside: a.year == null ? null : Text('${a.year}', style: TextStyle(color: c.muted)),
+                      onTap: () => openAlbum(context, a.id),
+                    ),
+              ],
+            ),
           ],
         );
 
