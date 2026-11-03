@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_info.dart';
 import '../../state/library.dart';
+import '../../state/notifications.dart';
 import '../daily_message.dart';
 import '../icons.dart';
 import '../nav.dart';
@@ -24,6 +25,7 @@ class HomeScreen extends ConsumerWidget {
     final favCount = ref.watch(favoritesProvider.select((f) => f.value?['tracks']?.length ?? 0));
     final wide = MediaQuery.sizeOf(context).width >= desktopWidth;
     final message = ref.watch(dailyMessageProvider);
+    final unread = ref.watch(unreadNotificationsProvider);
     final c = Tty.of(context);
     final shell = ShellScope.of(context);
 
@@ -50,12 +52,27 @@ class HomeScreen extends ConsumerWidget {
                   // Box 40, icon 20: shifted by the 10 px of padding so the
                   // gear lines up with the 16 px page margin, as on 01.
                   offset: const Offset(10, 0),
-                  child: SquareIconButton(
-                    svg: gearSvg,
-                    size: 20,
-                    color: c.muted,
-                    tooltip: 'Réglages',
-                    onPressed: () => openSettings(context),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SquareIconButton(
+                        svg: bellSvg,
+                        size: 20,
+                        color: c.muted,
+                        badge: unread > 0 ? c.peach : null,
+                        tooltip: unread > 0
+                            ? 'Notifications, $unread non lue${unread > 1 ? 's' : ''}'
+                            : 'Notifications',
+                        onPressed: () => openNotifications(context),
+                      ),
+                      SquareIconButton(
+                        svg: gearSvg,
+                        size: 20,
+                        color: c.muted,
+                        tooltip: 'Réglages',
+                        onPressed: () => openSettings(context),
+                      ),
+                    ],
                   ),
                 ),
         );

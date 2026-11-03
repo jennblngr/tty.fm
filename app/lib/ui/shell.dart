@@ -5,12 +5,15 @@ import '../app_info.dart';
 import '../data/library_repository.dart';
 import '../data/models.dart';
 import '../state/library.dart';
+import '../state/notifications.dart';
 import '../state/playback.dart';
 import 'dialogs.dart';
+import 'icons.dart';
 import 'nav.dart';
 import 'screens/favorites.dart';
 import 'screens/home.dart';
 import 'screens/library.dart';
+import 'screens/notifications.dart';
 import 'screens/playlist.dart';
 import 'screens/playlists.dart';
 import 'screens/search.dart';
@@ -34,6 +37,7 @@ const _tabs = [
   _Tab('stats', StatsScreen()),
 ];
 
+const homeTab = 0;
 const searchTab = 1;
 const biblioTab = 2;
 
@@ -244,6 +248,7 @@ class _Sidebar extends ConsumerWidget {
     final tree = ref.watch(playlistTreeProvider).value;
     final favCount = ref.watch(favoritesProvider.select((f) => f.value?['tracks']?.length));
     final stats = ref.watch(libraryStatsProvider).value;
+    final unread = ref.watch(unreadNotificationsProvider);
     final playingPlaylist = ref.watch(
       playbackStateProvider.select((s) => s.contextKind == 'playlist' && s.playing ? s.contextId : null),
     );
@@ -299,9 +304,38 @@ class _Sidebar extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            appDisplayName,
-            style: TextStyle(color: c.mauve, fontWeight: FontWeight.w700, fontSize: 15),
+          // Bell and gear on the right, as on the desktop mockups (D7).
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  appDisplayName,
+                  style: TextStyle(color: c.mauve, fontWeight: FontWeight.w700, fontSize: 15),
+                ),
+              ),
+              Transform.translate(
+                offset: const Offset(9, 0), // gear on the sidebar's margin
+                child: Row(
+                  children: [
+                    SquareIconButton(
+                      svg: bellSvg,
+                      size: 18,
+                      color: c.muted,
+                      badge: unread > 0 ? c.peach : null,
+                      tooltip: unread > 0 ? 'Notifications, $unread non lue${unread > 1 ? 's' : ''}' : 'Notifications',
+                      onPressed: () => onOpen(homeTab, const NotificationsScreen()),
+                    ),
+                    SquareIconButton(
+                      svg: gearSvg,
+                      size: 18,
+                      color: c.muted,
+                      tooltip: 'Réglages',
+                      onPressed: () => openSettings(context),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 24),
           for (var i = 0; i < _tabs.length; i++) navItem(i),
@@ -346,7 +380,6 @@ class _Sidebar extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           if (stats != null) Comment('${stats.tracks} titres · ${stats.albums} albums'),
-          TtyLink('réglages', onTap: () => openSettings(context)),
         ],
       ),
     );

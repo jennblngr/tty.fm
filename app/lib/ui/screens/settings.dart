@@ -8,7 +8,9 @@ import '../../core/network.dart';
 import '../../core/session.dart';
 import '../../core/settings.dart';
 import '../../data/library_repository.dart';
+import '../../data/notifications.dart';
 import '../../offline/downloads.dart';
+import '../../state/notifications.dart';
 import '../dialogs.dart';
 import '../theme.dart';
 import '../widgets/async_view.dart';
@@ -98,6 +100,8 @@ class SettingsScreen extends ConsumerWidget {
                 }
               },
             ),
+            const _Header('Notifications'),
+            const _Notifications(),
             const _Header('Apparence'),
             const _Appearance(),
             const _Header('Compte'),
@@ -478,4 +482,33 @@ class _Header extends StatelessWidget {
     ),
     style: const TextStyle(fontWeight: FontWeight.w700),
   );
+}
+
+/// One switch per kind the server generates, stored on the server.
+class _Notifications extends ConsumerWidget {
+  const _Notifications();
+
+  static const _labels = {'added': ('Titres ajoutés', 'Quand des titres arrivent dans la bibliothèque')};
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final set = ref.watch(notificationSettingsProvider).value;
+    if (set == null) return const SizedBox.shrink();
+    return Column(
+      children: [
+        for (final MapEntry(key: kind, value: on) in set.entries)
+          if (_labels[kind] case (final title, final subtitle))
+            SwitchListTile(
+              title: Text(title),
+              subtitle: Text(subtitle),
+              value: on,
+              onChanged: (v) => guard(context, () async {
+                await ref.read(notificationsRepositoryProvider).setEnabled(kind, v);
+                ref.invalidate(notificationSettingsProvider);
+                ref.invalidate(notificationsProvider);
+              }),
+            ),
+      ],
+    );
+  }
 }

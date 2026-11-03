@@ -9,6 +9,7 @@ import '../offline/downloads.dart';
 import '../playback/audio_engine.dart';
 import '../playback/playback_controller.dart';
 import 'library.dart';
+import 'notifications.dart';
 import 'playback.dart';
 import 'search.dart';
 
@@ -208,6 +209,9 @@ final liveSyncProvider = Provider<void>((ref) {
         ref.invalidate(artistProvider);
         ref.invalidate(albumProvider);
         ref.invalidate(searchFacetsProvider);
+        ref.invalidate(notificationsProvider); // generated from the additions
+      case 'notifications':
+        ref.invalidate(notificationsProvider);
       case 'playlists':
         ref.invalidate(playlistTreeProvider);
         ref.invalidate(playlistTracksProvider);
@@ -272,7 +276,7 @@ final liveSyncProvider = Provider<void>((ref) {
         case 'hello':
           if (hadConnection) {
             // Reconnected: we may have missed changes.
-            for (final w in const ['library', 'playlists', 'favorites']) {
+            for (final w in const ['library', 'playlists', 'favorites', 'notifications']) {
               refresh(w);
             }
           }
