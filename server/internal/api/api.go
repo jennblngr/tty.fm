@@ -120,7 +120,7 @@ func (s *Server) notify(what string, h http.HandlerFunc) http.HandlerFunc {
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v) // headers are sent: only the client hanging up can fail here
 }
 
 type apiError struct {

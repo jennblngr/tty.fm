@@ -76,7 +76,9 @@ func setup(t *testing.T) *client {
 	root := filepath.Join(dir, "music")
 	for i, title := range []string{"Alpha", "Beta"} {
 		p := filepath.Join(root, "Band", "Record", title+".flac")
-		os.MkdirAll(filepath.Dir(p), 0o755)
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
 		out, err := exec.Command("ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "sine=duration=3",
 			"-metadata", "title="+title, "-metadata", "artist=Band", "-metadata", "album=Record",
 			"-metadata", "track="+string(rune('1'+i)), p).CombinedOutput()
@@ -100,7 +102,9 @@ func setup(t *testing.T) *client {
 	if err := a.EnsureUser(context.Background(), "me", "secret"); err != nil {
 		t.Fatal(err)
 	}
-	os.WriteFile(filepath.Join(root, "Band", "Record", "Alpha.lrc"), []byte("[00:01.00]first\n[00:02.50]second"), 0o644)
+	if err := os.WriteFile(filepath.Join(root, "Band", "Record", "Alpha.lrc"), []byte("[00:01.00]first\n[00:02.50]second"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	s := &Server{DB: db, Auth: a, Scanner: sc, Covers: cov, Streamer: st, Log: log, ScanFn: func(bool) {},
 		Hub: hub.New(log), Lyrics: lyrics.New(root)}
 	ts := httptest.NewServer(s.Handler())
@@ -318,7 +322,9 @@ func wsDial(t *testing.T, c *client) (*websocket.Conn, func() map[string]any) {
 			t.Fatal(err)
 		}
 		var m map[string]any
-		json.Unmarshal(b, &m)
+		if err := json.Unmarshal(b, &m); err != nil {
+			t.Fatalf("ws message %s: %v", b, err)
+		}
 		return m
 	}
 }
@@ -345,17 +351,23 @@ func TestHub(t *testing.T) {
 	ctx := context.Background()
 
 	// B publishes its state; A receives it.
-	connB.Write(ctx, websocket.MessageText, []byte(`{"type":"state","state":{"playing":true,"track_id":1}}`))
+	if err := connB.Write(ctx, websocket.MessageText, []byte(`{"type":"state","state":{"playing":true,"track_id":1}}`)); err != nil {
+		t.Fatal(err)
+	}
 	if m := readA(); m["type"] != "state" || m["state"].(map[string]any)["playing"] != true {
 		t.Fatalf("state: %v", m)
 	}
 	// A sends a command to B.
-	connA.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf(`{"type":"command","target":%d,"action":"pause"}`, int64(idB))))
+	if err := connA.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf(`{"type":"command","target":%d,"action":"pause"}`, int64(idB)))); err != nil {
+		t.Fatal(err)
+	}
 	if m := readB(); m["type"] != "command" || m["action"] != "pause" {
 		t.Fatalf("command: %v", m)
 	}
 	// Command to an unknown device: error back to the sender.
-	connA.Write(ctx, websocket.MessageText, []byte(`{"type":"command","target":999,"action":"pause"}`))
+	if err := connA.Write(ctx, websocket.MessageText, []byte(`{"type":"command","target":999,"action":"pause"}`)); err != nil {
+		t.Fatal(err)
+	}
 	if m := readA(); m["type"] != "error" {
 		t.Fatalf("offline target: %v", m)
 	}
