@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -64,9 +65,9 @@ func scanPlaylist(row interface{ Scan(...any) error }) (Playlist, error) {
 	p.CoverIDs = []int64{}
 	if covers.Valid {
 		for _, s := range strings.Split(covers.String, ",") {
-			var id int64
-			fmt.Sscan(s, &id)
-			p.CoverIDs = append(p.CoverIDs, id)
+			if id, err := strconv.ParseInt(s, 10, 64); err == nil {
+				p.CoverIDs = append(p.CoverIDs, id)
+			}
 		}
 	}
 	return p, err

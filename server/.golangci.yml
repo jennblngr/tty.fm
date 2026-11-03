@@ -1,0 +1,26 @@
+version: "2"
+
+run:
+  # FTS5 is compiled into SQLite only with this build tag (see Makefile).
+  build-tags: [sqlite_fts5]
+
+linters:
+  settings:
+    errcheck:
+      # Errors deliberately dropped: cleanup on a path that already returns
+      # (or has nothing left to do with) the real error.
+      exclude-functions:
+        - (io.Closer).Close
+        - (*database/sql.Rows).Close
+        - (*database/sql.DB).Close
+        - (*database/sql.Tx).Rollback
+        - (*os.File).Close
+        - (*ttyfm/internal/store.DB).Close
+        - (*github.com/fsnotify/fsnotify.Watcher).Close
+        - (*github.com/coder/websocket.Conn).Close
+        - (*github.com/coder/websocket.Conn).CloseNow
+        - os.Remove
+        - os.RemoveAll
+        - os.Chtimes
+        # Logs the failure and keeps it for GET /scan/status.
+        - (*ttyfm/internal/scanner.Scanner).Scan

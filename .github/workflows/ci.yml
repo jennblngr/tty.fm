@@ -35,6 +35,11 @@ jobs:
           fi
       - name: Vet
         run: make vet
+      - name: Lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.15.0
+          working-directory: server
       - name: Unit tests
         run: go test -tags sqlite_fts5 -race ./...
       - name: Build

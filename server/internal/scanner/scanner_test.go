@@ -78,7 +78,9 @@ func newEnv(t *testing.T) *env {
 	needFFmpeg(t)
 	dir := t.TempDir()
 	root := filepath.Join(dir, "music")
-	os.MkdirAll(root, 0o755)
+	if err := os.MkdirAll(root, 0o755); err != nil {
+		t.Fatal(err)
+	}
 	db, err := store.Open(filepath.Join(dir, "db.sqlite"))
 	if err != nil {
 		t.Fatal(err)
@@ -119,9 +121,15 @@ func TestScan(t *testing.T) {
 	genTrack(t, e.root, "Various/Comp/01.mp3", map[string]string{
 		"title": "Guest Song", "artist": "Guest", "album_artist": "Various Artists", "album": "Comp", "track": "1"}, red)
 	// Hidden and non-audio files are ignored.
-	os.WriteFile(filepath.Join(e.root, "notes.txt"), []byte("x"), 0o644)
-	os.MkdirAll(filepath.Join(e.root, "@eaDir"), 0o755)
-	os.WriteFile(filepath.Join(e.root, "@eaDir", "x.mp3"), []byte("x"), 0o644)
+	if err := os.WriteFile(filepath.Join(e.root, "notes.txt"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(e.root, "@eaDir"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(e.root, "@eaDir", "x.mp3"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 
 	st := e.scan(t, false)
 	if st.Seen != 3 || st.Added != 3 || st.Errors != 0 {
@@ -199,12 +207,20 @@ func TestScanMoveAndMissing(t *testing.T) {
 		}
 	}
 	pl, _ := e.db.CreatePlaylist(ctx, "P", nil)
-	e.db.AddTracks(ctx, pl, []int64{songID}, nil)
-	e.db.SetFavorite(ctx, "tracks", songID, true)
+	if err := e.db.AddTracks(ctx, pl, []int64{songID}, nil); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.db.SetFavorite(ctx, "tracks", songID, true); err != nil {
+		t.Fatal(err)
+	}
 
 	// Rename/move: same id, playlist and favourite kept.
-	os.MkdirAll(filepath.Join(e.root, "B"), 0o755)
-	os.Rename(filepath.Join(e.root, "A/song.flac"), filepath.Join(e.root, "B/renamed.flac"))
+	if err := os.MkdirAll(filepath.Join(e.root, "B"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Rename(filepath.Join(e.root, "A/song.flac"), filepath.Join(e.root, "B/renamed.flac")); err != nil {
+		t.Fatal(err)
+	}
 	if st := e.scan(t, false); st.Moved != 1 || st.Added != 0 || st.Missing != 0 {
 		t.Fatalf("move scan: %+v", st)
 	}
@@ -234,7 +250,9 @@ func TestScanMoveAndMissing(t *testing.T) {
 
 	// Unmounted volume: refuse to mark everything missing.
 	os.RemoveAll(e.root)
-	os.MkdirAll(e.root, 0o755)
+	if err := os.MkdirAll(e.root, 0o755); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := e.sc.Scan(ctx, false); err == nil {
 		t.Fatal("empty root: expected an error")
 	}

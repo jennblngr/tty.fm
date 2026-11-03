@@ -22,7 +22,8 @@ func (s *Scanner) Watch(ctx context.Context, debounce time.Duration) error {
 	defer w.Close()
 
 	addTree := func(root string) {
-		filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+		// The callback skips unreadable entries and never fails the walk.
+		_ = filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
 			if err != nil || !d.IsDir() {
 				return nil
 			}

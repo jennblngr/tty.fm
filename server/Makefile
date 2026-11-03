@@ -4,7 +4,7 @@ TAGS    := sqlite_fts5
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 LDFLAGS := -s -w -X ttyfm/internal/app.Version=$(VERSION)
 
-.PHONY: build run test vet
+.PHONY: build run test vet lint
 
 build:
 	go build -tags $(TAGS) -ldflags "$(LDFLAGS)" -o bin/ttyfm ./cmd/ttyfm
@@ -20,3 +20,6 @@ test:
 
 vet:
 	go vet -tags $(TAGS) ./...
+
+lint:
+	golangci-lint run ./...
