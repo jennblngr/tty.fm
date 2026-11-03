@@ -31,13 +31,21 @@ func TestParsePlain(t *testing.T) {
 
 func TestFindSidecar(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "A"), 0o755)
-	os.WriteFile(filepath.Join(root, "A", "01 Song.flac"), []byte("not audio"), 0o644)
+	if err := os.MkdirAll(filepath.Join(root, "A"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "A", "01 Song.flac"), []byte("not audio"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := New(root).Find("A/01 Song.flac"); err != ErrNone {
 		t.Fatalf("no lyrics: err=%v", err)
 	}
-	os.WriteFile(filepath.Join(root, "A", "01 Song.txt"), []byte("la la"), 0o644)
-	os.WriteFile(filepath.Join(root, "A", "01 Song.lrc"), []byte("[00:01.00]la"), 0o644)
+	if err := os.WriteFile(filepath.Join(root, "A", "01 Song.txt"), []byte("la la"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "A", "01 Song.lrc"), []byte("[00:01.00]la"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	l, err := New(root).Find("A/01 Song.flac")
 	if err != nil || l.Source != "lrc" || !l.Synced || l.Lines[0].Ms != 1000 {
 		t.Fatalf("lrc preferred: %+v %v", l, err)
