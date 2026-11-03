@@ -79,6 +79,13 @@ func (s *Server) Handler() http.Handler {
 	priv.HandleFunc("PUT "+prefix+"/favorites/{kind}/{id}", s.notify("favorites", s.setFavorite(true)))
 	priv.HandleFunc("DELETE "+prefix+"/favorites/{kind}/{id}", s.notify("favorites", s.setFavorite(false)))
 
+	priv.HandleFunc("GET "+prefix+"/notifications", s.notifications)
+	priv.HandleFunc("GET "+prefix+"/notifications/unread", s.unreadNotifications)
+	priv.HandleFunc("POST "+prefix+"/notifications/read", s.notify("notifications", s.readAllNotifications))
+	priv.HandleFunc("PATCH "+prefix+"/notifications/{id}", s.notify("notifications", s.updateNotification))
+	priv.HandleFunc("GET "+prefix+"/notifications/settings", s.notificationSettings)
+	priv.HandleFunc("PATCH "+prefix+"/notifications/settings", s.notify("notifications", s.updateNotificationSettings))
+
 	priv.HandleFunc("POST "+prefix+"/admin/scan", s.startScan)
 	priv.HandleFunc("GET "+prefix+"/admin/scan", s.scanStatus)
 
