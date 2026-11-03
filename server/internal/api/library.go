@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"ttyfm/internal/auth"
 	"ttyfm/internal/covers"
@@ -91,9 +92,15 @@ func (s *Server) home(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
+	moments, err := s.DB.Moments(ctx, time.Now())
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"recent_additions": added,
 		"recently_played":  played,
+		"moments":          moments,
 	})
 }
 

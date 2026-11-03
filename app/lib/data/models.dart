@@ -330,10 +330,11 @@ class RecentAddition {
 }
 
 class HomeData {
-  const HomeData({this.recentlyAdded = const [], this.recentlyPlayed = const []});
+  const HomeData({this.recentlyAdded = const [], this.recentlyPlayed = const [], this.moments = const Moments()});
 
   final List<RecentAddition> recentlyAdded;
   final List<RecentItem> recentlyPlayed;
+  final Moments moments;
 
   factory HomeData.fromJson(Map<String, dynamic> j) => HomeData(
     recentlyAdded: j['recent_additions'] is List
@@ -350,7 +351,35 @@ class HomeData {
             for (final a in j['recently_played_albums'] as List? ?? const [])
               RecentItem.album(Album.fromJson(a as Map<String, dynamic>)),
           ],
+    moments: j['moments'] is Map ? Moments.fromJson(j['moments'] as Map<String, dynamic>) : const Moments(),
   );
+}
+
+/// Facts from the listening history for the message of the day.
+class Moments {
+  const Moments({this.streakDays = 0, this.streakRecord = 0, this.anniversary, this.eveningGenre});
+
+  final int streakDays; // consecutive days with a play, up to today or yesterday
+  final int streakRecord; // longest streak before the current one
+  final ({int artistId, String artist, int years})? anniversary; // top 10 artist first heard on this day
+  final String? eveningGenre; // most played after 18h over 30 days
+
+  factory Moments.fromJson(Map<String, dynamic> j) {
+    final s = j['streak'] as Map<String, dynamic>? ?? const {};
+    final a = j['anniversary'] as Map<String, dynamic>?;
+    return Moments(
+      streakDays: s['days'] as int? ?? 0,
+      streakRecord: s['record'] as int? ?? 0,
+      anniversary: a == null
+          ? null
+          : (
+              artistId: a['artist_id'] as int? ?? 0,
+              artist: a['artist'] as String? ?? '',
+              years: a['years'] as int? ?? 1,
+            ),
+      eveningGenre: j['evening_genre'] as String?,
+    );
+  }
 }
 
 /// One listening session of a track, reported to the server.
