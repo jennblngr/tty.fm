@@ -370,3 +370,58 @@ func TestHub(t *testing.T) {
 		t.Fatalf("offline: %v", m)
 	}
 }
+
+func TestNotificationsAPI(t *testing.T) {
+	c := setup(t)
+	login(c)
+
+	// The scan of setup just added Band — Record: one notification.
+	var unread map[string]int
+	c.json("GET", "/notifications/unread", nil, 200, &unread)
+	if unread["unread"] != 1 {
+		t.Fatalf("unread: %+v", unread)
+	}
+	var list struct {
+		Items []struct {
+			ID   int64           `json:"id"`
+			Kind string          `json:"kind"`
+			Read bool            `json:"read"`
+			Data store.AddedData `json:"data"`
+		} `json:"items"`
+		Unread int `json:"unread"`
+	}
+	c.json("GET", "/notifications", nil, 200, &list)
+	if len(list.Items) != 1 || list.Unread != 1 || list.Items[0].Kind != "added" ||
+		list.Items[0].Data.Tracks != 2 || list.Items[0].Data.AlbumID == 0 || list.Items[0].Data.Artists[0] != "Band" {
+		t.Fatalf("list: %+v", list)
+	}
+	id := strconv.FormatInt(list.Items[0].ID, 10)
+	c.json("PATCH", "/notifications/"+id, map[string]bool{"read": true}, 204, nil)
+	c.json("PATCH", "/notifications/"+id, map[string]any{}, 400, nil)
+	c.json("PATCH", "/notifications/999", map[string]bool{"read": true}, 404, nil)
+	c.json("GET", "/notifications/unread", nil, 200, &unread)
+	if unread["unread"] != 0 {
+		t.Fatalf("unread after read: %+v", unread)
+	}
+	c.json("PATCH", "/notifications/"+id, map[string]bool{"read": false}, 204, nil)
+	c.json("POST", "/notifications/read", nil, 204, nil)
+	c.json("GET", "/notifications/unread", nil, 200, &unread)
+	if unread["unread"] != 0 {
+		t.Fatalf("unread after read all: %+v", unread)
+	}
+
+	var set map[string]bool
+	c.json("GET", "/notifications/settings", nil, 200, &set)
+	if !set["added"] {
+		t.Fatalf("settings: %+v", set)
+	}
+	c.json("PATCH", "/notifications/settings", map[string]bool{"added": false}, 200, &set)
+	if set["added"] {
+		t.Fatalf("settings after update: %+v", set)
+	}
+	c.json("PATCH", "/notifications/settings", map[string]bool{"bogus": true}, 400, nil)
+	c.json("GET", "/notifications", nil, 200, &list)
+	if len(list.Items) != 0 {
+		t.Fatalf("turned off: %+v", list)
+	}
+}
