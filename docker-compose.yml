@@ -32,3 +32,32 @@ services:
     volumes:
       - ${MUSIC_DIR:?set MUSIC_DIR in .env}:/music:ro
       - ${DATA_DIR:?set DATA_DIR in .env}:/data
+
+  # Audio analysis (phase 3): reads the music folder (read-only), takes its
+  # queue from the server and reports bpm, key, loudness... through the API.
+  # Background work at low CPU priority; stop the service to pause it.
+  recommender:
+    build:
+      context: ./recommender
+      args:
+        VERSION: ${VERSION:-dev}
+    platform: linux/amd64
+    image: ${APP_NAME:-ttyfm}-recommender:latest
+    container_name: ${APP_NAME:-ttyfm}-recommender
+    restart: unless-stopped
+    user: "${PUID:-0}:${PGID:-0}"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      TTYFM_SERVER_URL: http://server:4533
+      TTYFM_ADMIN_USER: ${ADMIN_USER:-admin}
+      TTYFM_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      TTYFM_ANALYSIS_WORKERS: ${ANALYSIS_WORKERS:-1}
+      TTYFM_LOG_LEVEL: ${LOG_LEVEL:-info}
+      TZ: ${TZ:-Europe/Paris}
+    volumes:
+      - ${MUSIC_DIR:?set MUSIC_DIR in .env}:/music:ro
+      - ${DATA_DIR:?set DATA_DIR in .env}/recommender:/state

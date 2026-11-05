@@ -1,0 +1,16 @@
+[project]
+name = "ttyfm-recommender"
+version = "0.1.0"
+description = "tty.fm recommender service: audio analysis worker (phase 3)"
+requires-python = ">=3.12"
+dependencies = [
+  "essentia==2.1b6.dev1389",
+  "numpy>=1.26",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
