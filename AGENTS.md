@@ -12,5 +12,5 @@ Repères pour les agents qui travaillent sur ce dépôt.
 
 ## Façon de travailler
 
-- Une branche par changement, partie de `origin/main` et nommée selon `doc/conventions.md` (`feature/`, `bugfix/`, `refactoring/`, `chore/`) ; commits en anglais au format Conventional Commits ; les PR sont fusionnées en squash.
+- Une branche par changement, partie de `origin/main` et nommée selon `doc/conventions.md` (`feature/`, `bugfix/`, `refactoring/`, `chore/`, `docs/`, `ci/`, `test/`) ; commits en anglais au format Conventional Commits ; fusion par merge commit classique, jamais en squash : les commits de la branche arrivent tels quels sur `main`.
 - La CI (`.github/workflows/ci.yml`) vérifie le format, le lint, les tests et le build du serveur et de l'app sur chaque PR.

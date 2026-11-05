@@ -4,7 +4,7 @@ Règles pour les branches, les commits et les pull requests. Elles valent pour t
 
 ## Branches
 
-Tout changement passe par une branche partie de `origin/main`. On ne pousse jamais directement sur `main`. Chaque branche est fusionnée par une pull request, en squash.
+Tout changement passe par une branche partie de `origin/main`. On ne pousse jamais directement sur `main`. Chaque branche est fusionnée par une pull request, **sans squash** : ses commits arrivent tels quels sur `main` (voir « Pull requests »).
 
 Une branche porte un seul changement. Son nom est un préfixe, une barre oblique, puis une courte description en anglais, en minuscules et avec des tirets :
 
@@ -13,7 +13,10 @@ Une branche porte un seul changement. Son nom est un préfixe, une barre oblique
 | `feature/` | une fonctionnalité ou un ajout visible | `feature/audio-analysis` |
 | `bugfix/` | la correction d'un bug | `bugfix/shuffle-playback-gap` |
 | `refactoring/` | une restructuration du code, sans changement de comportement | `refactoring/track-select-query` |
-| `chore/` | l'entretien : dépendances, CI, outillage, documentation | `chore/bump-flutter` |
+| `chore/` | l'entretien : dépendances, outillage, nettoyage | `chore/bump-flutter` |
+| `docs/` | la documentation seule (README, `doc/`, `design/HANDOFF.md`) | `docs/conventions` |
+| `ci/` | la CI et le build (workflows, Dockerfile, Makefile) | `ci/recommender-checks` |
+| `test/` | des tests ajoutés ou corrigés, sans toucher au code testé | `test/analysis-api` |
 
 Si le changement correspond à une issue, on peut ajouter son numéro : `bugfix/27-previous-restarts-track`.
 
@@ -34,7 +37,7 @@ Les messages de commit suivent [Conventional Commits](https://www.conventionalco
 - **description** : à l'impératif, en minuscules, sans point final, 72 caractères au plus pour toute la première ligne.
 - **changement incompatible** (API, schéma de base, format de cache…) : `!` après le type ou la portée, et un pied `BREAKING CHANGE: …` qui dit ce qui casse.
 
-Le type du commit va avec le préfixe de la branche : `feature/` → `feat`, `bugfix/` → `fix`, `refactoring/` → `refactor`, `chore/` → `chore`, `docs`, `ci`, `build` ou `test`.
+Le type du commit va avec le préfixe de la branche : `feature/` → `feat`, `bugfix/` → `fix`, `refactoring/` → `refactor`, `chore/` → `chore`, `docs/` → `docs`, `ci/` → `ci` ou `build`, `test/` → `test`. Une branche peut contenir d'autres types quand ils accompagnent le changement, par exemple un commit `test` ou `docs` dans une branche `feature/`.
 
 Exemples :
 
@@ -42,7 +45,7 @@ Exemples :
 feat(recommender): analyse tempo, key and loudness of each track
 fix(app): keep playing while toggling shuffle
 refactor(server): share the track query between lists and search
-chore(ci): run the recommender tests on every pull request
+ci: run the recommender tests on every pull request
 feat(server)!: return bpm and camelot in track lists
 ```
 
@@ -56,4 +59,7 @@ feat(server)!: return bpm and camelot in track lists
 
 ## Pull requests
 
-Avec la fusion en squash, le **titre de la pull request** devient le message du commit sur `main` : il suit donc les mêmes règles que les commits. La CI doit passer avant la fusion (voir `AGENTS.md`).
+- **Fusion par merge commit classique, jamais en squash** (ni en rebase). Les commits de la branche sont conservés sur `main` : chacun doit donc respecter les règles ci-dessus et former une étape cohérente (il compile, ses tests passent).
+- Avant d'ouvrir la pull request, on nettoie l'historique de sa branche : on regroupe les commits « wip », « fix typo » ou « review » dans le commit qu'ils corrigent (`git rebase -i origin/main`, avec `fixup!`). On ne réécrit que ses propres branches, jamais `main` ni la branche de quelqu'un d'autre.
+- Le titre de la pull request suit le même format que les commits.
+- La CI doit passer avant la fusion (voir `AGENTS.md`).
