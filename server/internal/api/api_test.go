@@ -437,3 +437,52 @@ func TestNotificationsAPI(t *testing.T) {
 		t.Fatalf("turned off: %+v", list)
 	}
 }
+
+func TestAnalysisAPI(t *testing.T) {
+	c := setup(t)
+	login(c)
+	var queue struct {
+		Items []store.AnalysisJob `json:"items"`
+	}
+	c.json("GET", "/analysis/queue?limit=10", nil, 200, &queue)
+	if len(queue.Items) != 2 || !strings.HasPrefix(queue.Items[0].Path, "Band/Record/") {
+		t.Fatalf("queue: %+v", queue)
+	}
+	a, b := queue.Items[0], queue.Items[1]
+	c.json("GET", fmt.Sprintf("/tracks/%d/analysis", a.ID), nil, 404, nil)
+	c.json("PUT", fmt.Sprintf("/tracks/%d/analysis", a.ID), map[string]any{"analyzer": "x", "key": "Q", "scale": "major"}, 400, nil)
+	for _, j := range []store.AnalysisJob{a, b} {
+		c.json("PUT", fmt.Sprintf("/tracks/%d/analysis", j.ID), map[string]any{
+			"file_mtime": j.FileMtime, "analyzer": "test/1", "bpm": 120, "key": "A", "scale": "minor",
+			"loudness_lufs": -9.5, "energy": 0.8, "danceability": 0.6}, 204, nil)
+	}
+	var res struct {
+		Analysis   store.Analysis `json:"analysis"`
+		Compatible []store.Track  `json:"compatible"`
+	}
+	c.json("GET", fmt.Sprintf("/tracks/%d/analysis", a.ID), nil, 200, &res)
+	if *res.Analysis.Camelot != "8A" || len(res.Compatible) != 1 || res.Compatible[0].ID != b.ID {
+		t.Fatalf("analysis: %+v", res)
+	}
+	var tr store.Track
+	c.json("GET", fmt.Sprintf("/tracks/%d", a.ID), nil, 200, &tr)
+	if tr.BPM == nil || *tr.BPM != 120 {
+		t.Fatalf("track bpm: %+v", tr)
+	}
+	var st store.AnalysisStatus
+	c.json("GET", "/analysis", nil, 200, &st)
+	if st != (store.AnalysisStatus{Total: 2, Analyzed: 2}) {
+		t.Fatalf("status: %+v", st)
+	}
+	c.json("DELETE", fmt.Sprintf("/tracks/%d/analysis", a.ID), nil, 204, nil)
+	c.json("DELETE", "/tracks/999/analysis", nil, 404, nil)
+	c.json("GET", "/analysis/queue", nil, 200, &queue)
+	if len(queue.Items) != 1 || queue.Items[0].ID != a.ID {
+		t.Fatalf("queue after reset: %+v", queue)
+	}
+	c.json("DELETE", "/analysis", nil, 204, nil)
+	c.json("GET", "/analysis", nil, 200, &st)
+	if st.Pending != 2 {
+		t.Fatalf("status after reset: %+v", st)
+	}
+}

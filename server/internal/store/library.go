@@ -54,6 +54,9 @@ type Track struct {
 	RGAlbumGain *float64 `json:"rg_album_gain,omitempty"`
 	RGAlbumPeak *float64 `json:"rg_album_peak,omitempty"`
 	CreatedAt   int64    `json:"created_at"`
+	// From the audio analysis (phase 3), once the track is analysed.
+	BPM     *float64 `json:"bpm,omitempty"`
+	Camelot *string  `json:"camelot,omitempty"`
 }
 
 // Page is a keyset-paginated list. Next is empty on the last page.
@@ -351,11 +354,12 @@ const trackSelect = `
 	SELECT t.id, t.title, t.artist_id, ar.name, t.album_id, al.title, aar.name,
 	       t.track_no, t.disc_no, t.year, t.genre, t.duration_ms, t.format, t.codec,
 	       t.bitrate, t.sample_rate, t.bit_depth, COALESCE(t.cover_id, al.cover_id),
-	       t.rg_track_gain, t.rg_track_peak, t.rg_album_gain, t.rg_album_peak, t.created_at /*extra*/
+	       t.rg_track_gain, t.rg_track_peak, t.rg_album_gain, t.rg_album_peak, t.created_at, ta.bpm, ta.camelot /*extra*/
 	FROM tracks t
 	JOIN artists ar  ON ar.id = t.artist_id
 	JOIN albums  al  ON al.id = t.album_id
 	JOIN artists aar ON aar.id = al.album_artist_id
+	LEFT JOIN track_analysis ta ON ta.track_id = t.id
 	WHERE t.missing_since IS NULL`
 
 func scanTrack(row interface{ Scan(...any) error }, extra ...any) (Track, error) {
@@ -365,7 +369,8 @@ func scanTrack(row interface{ Scan(...any) error }, extra ...any) (Track, error)
 	dest := append([]any{&t.ID, &t.Title, &t.ArtistID, &t.Artist, &t.AlbumID, &t.Album, &t.AlbumArtist,
 		&trackNo, &discNo, &year, &genre, &t.DurationMs, &t.Format, &codec,
 		&bitrate, &sampleRate, &bitDepth, &cover,
-		&t.RGTrackGain, &t.RGTrackPeak, &t.RGAlbumGain, &t.RGAlbumPeak, &t.CreatedAt}, extra...)
+		&t.RGTrackGain, &t.RGTrackPeak, &t.RGAlbumGain, &t.RGAlbumPeak, &t.CreatedAt,
+		&t.BPM, &t.Camelot}, extra...)
 	if err := row.Scan(dest...); err != nil {
 		return t, err
 	}

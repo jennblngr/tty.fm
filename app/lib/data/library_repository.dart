@@ -114,6 +114,29 @@ class LibraryRepository {
     }
   }
 
+  /// Audio analysis of a track, or null while it is not analysed. Cached
+  /// for offline use.
+  Future<AnalysisResult?> analysis(int trackId) async {
+    final key = 'analysis:$trackId';
+    try {
+      final j = await _api.get('/tracks/$trackId/analysis');
+      await _cache.write(key, j);
+      return AnalysisResult.fromJson(j as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        await _cache.write(key, null);
+        return null;
+      }
+      final cached = await _cache.read(key);
+      if (cached is Map<String, dynamic>) return AnalysisResult.fromJson(cached);
+      if (await _cache.readRaw(key) == 'null') return null;
+      rethrow;
+    }
+  }
+
+  /// Queues the track for analysis again ("relancer l'analyse").
+  Future<void> resetAnalysis(int trackId) => _api.delete('/tracks/$trackId/analysis');
+
   // --- playlists -----------------------------------------------------------
 
   Stream<PlaylistTree> playlistTree() => _cached(

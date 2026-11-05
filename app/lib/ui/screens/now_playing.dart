@@ -10,6 +10,7 @@ import '../../offline/downloads.dart';
 import '../../playback/audio_engine.dart';
 import '../../state/library.dart';
 import '../../state/playback.dart';
+import '../../state/search.dart';
 import '../dialogs.dart';
 import '../format.dart';
 import '../nav.dart';
@@ -379,19 +380,33 @@ class _LyricsPanel extends StatelessWidget {
   }
 }
 
-/// What we know of the file today. Tempo, key, energy… come with the audio
-/// analysis (phase 3).
-class _FileFacts extends StatelessWidget {
+/// "\$ analyse --piste": tags, file and audio analysis, then a track that
+/// chains well after this one. Before the analysis: "\$ stat --piste".
+class _FileFacts extends ConsumerWidget {
   const _FileFacts(this.track);
   final Track track;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = Tty.of(context);
+    final result = ref.watch(analysisProvider(track.id)).value;
+    final a = result?.analysis;
+    final analysed = a != null && a.error == null;
+    final next = result?.compatible.firstOrNull;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TtySection('stat --piste', glyph: '∿', color: c.peach),
+        TtySection(
+          analysed ? 'analyse --piste' : 'stat --piste',
+          glyph: '∿',
+          color: c.peach,
+          comment: switch (a) {
+            null => 'analyse audio en attente',
+            TrackAnalysis(error: != null) => 'analyse impossible pour ce fichier',
+            TrackAnalysis(stale: true) => 'calculé à partir du fichier audio · fichier modifié, à refaire',
+            _ => 'calculé à partir du fichier audio',
+          },
+        ),
         const SizedBox(height: 6),
         TrackFacts(track),
         Padding(
@@ -406,6 +421,25 @@ class _FileFacts extends StatelessWidget {
             ],
           ),
         ),
+        if (next != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Comment.rich([
+              const TextSpan(text: 'enchaînement compatible : '),
+              WidgetSpan(
+                alignment: PlaceholderAlignment.baseline,
+                baseline: TextBaseline.alphabetic,
+                child: InkWell(
+                  onTap: () {
+                    ref.read(playbackControllerProvider).playNext([next]);
+                    toast(context, 'Lira ensuite');
+                  },
+                  child: Text(next.title.toLowerCase(), style: TextStyle(color: c.text)),
+                ),
+              ),
+              TextSpan(text: ' (${[if (next.bpm != null) '${next.bpm!.round()} bpm', ?next.camelot].join(', ')})'),
+            ]),
+          ),
       ],
     );
   }
@@ -611,7 +645,10 @@ class QueueView extends ConsumerWidget {
               title: item.track.title.toLowerCase(),
               titleColor: current ? c.green : null,
               bold: current,
-              subtitle: item.track.artist.toLowerCase(),
+              subtitle: [
+                item.track.artist.toLowerCase(),
+                if (item.track.bpm != null) '${item.track.bpm!.round()} bpm',
+              ].join(' · '),
               onTap: () => pc.jumpTo(i),
               trailing: ReorderableDragStartListener(
                 index: i,

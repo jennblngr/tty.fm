@@ -77,6 +77,8 @@ class Track {
     this.sampleRate,
     this.bitDepth,
     this.coverId,
+    this.bpm,
+    this.camelot,
   });
 
   final int id;
@@ -96,6 +98,10 @@ class Track {
   final int? sampleRate;
   final int? bitDepth;
   final int? coverId;
+
+  /// From the audio analysis (phase 3), once the track is analysed.
+  final double? bpm;
+  final String? camelot;
 
   Duration get duration => Duration(milliseconds: durationMs);
 
@@ -117,6 +123,8 @@ class Track {
     sampleRate: j['sample_rate'] as int?,
     bitDepth: j['bit_depth'] as int?,
     coverId: j['cover_id'] as int?,
+    bpm: (j['bpm'] as num?)?.toDouble(),
+    camelot: j['camelot'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
@@ -137,6 +145,8 @@ class Track {
     'sample_rate': sampleRate,
     'bit_depth': bitDepth,
     'cover_id': coverId,
+    'bpm': ?bpm,
+    'camelot': ?camelot,
   };
 }
 
@@ -557,5 +567,97 @@ class ListeningStats {
         (Track.fromJson((t as Map)['track'] as Map<String, dynamic>), t['count'] as int),
     ],
     discovery: j['discovery'] == null ? null : NamedTotal.fromJson(j['discovery'] as Map<String, dynamic>),
+  );
+}
+
+/// Audio analysis of a track (phase 3), computed by the recommender service
+/// from the file. Values it could not compute are null; genre shares, mood
+/// and acousticness need its ML models.
+class TrackAnalysis {
+  const TrackAnalysis({
+    this.error,
+    this.bpm,
+    this.key,
+    this.scale,
+    this.camelot,
+    this.loudnessLufs,
+    this.energy,
+    this.danceability,
+    this.acousticness,
+    this.mood,
+    this.genres = const [],
+    this.stale = false,
+  });
+
+  final String? error;
+  final double? bpm;
+  final String? key; // C, C#... B
+  final String? scale; // major, minor
+  final String? camelot; // 8A
+  final double? loudnessLufs;
+  final double? energy; // 0..1
+  final double? danceability; // 0..1
+  final double? acousticness; // 0..1
+  final String? mood;
+  final List<(String, double)> genres; // name, share 0..1
+  final bool stale; // the file changed since: queued again
+
+  static double? _d(Object? v) => (v as num?)?.toDouble();
+
+  factory TrackAnalysis.fromJson(Map<String, dynamic> j) => TrackAnalysis(
+    error: j['error'] as String?,
+    bpm: _d(j['bpm']),
+    key: j['key'] as String?,
+    scale: j['scale'] as String?,
+    camelot: j['camelot'] as String?,
+    loudnessLufs: _d(j['loudness_lufs']),
+    energy: _d(j['energy']),
+    danceability: _d(j['danceability']),
+    acousticness: _d(j['acousticness']),
+    mood: j['mood'] as String?,
+    genres: [
+      for (final g in j['genres'] as List? ?? const [])
+        ((g as Map)['name'] as String? ?? '', (g['share'] as num?)?.toDouble() ?? 0),
+    ],
+    stale: j['stale'] as bool? ?? false,
+  );
+
+  /// "la mineur".
+  String? get keyName {
+    final tonic = _frenchTonics[key];
+    if (tonic == null) return null;
+    return switch (scale) {
+      'major' => '$tonic majeur',
+      'minor' => '$tonic mineur',
+      _ => tonic,
+    };
+  }
+
+  static const _frenchTonics = {
+    'C': 'do',
+    'C#': 'do♯',
+    'D': 'ré',
+    'D#': 'mi♭',
+    'E': 'mi',
+    'F': 'fa',
+    'F#': 'fa♯',
+    'G': 'sol',
+    'G#': 'la♭',
+    'A': 'la',
+    'A#': 'si♭',
+    'B': 'si',
+  };
+}
+
+/// GET /tracks/{id}/analysis: the analysis and the tracks that chain well
+/// after it (compatible key, tempo within 6 %).
+class AnalysisResult {
+  const AnalysisResult(this.analysis, this.compatible);
+  final TrackAnalysis analysis;
+  final List<Track> compatible;
+
+  factory AnalysisResult.fromJson(Map<String, dynamic> j) => AnalysisResult(
+    TrackAnalysis.fromJson(j['analysis'] as Map<String, dynamic>),
+    [for (final t in j['compatible'] as List? ?? const []) Track.fromJson(t as Map<String, dynamic>)],
   );
 }

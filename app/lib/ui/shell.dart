@@ -7,6 +7,7 @@ import '../data/models.dart';
 import '../state/library.dart';
 import '../state/notifications.dart';
 import '../state/playback.dart';
+import '../state/search.dart';
 import 'dialogs.dart';
 import 'icons.dart';
 import 'nav.dart';
@@ -532,33 +533,65 @@ class TrackArt extends StatelessWidget {
   }
 }
 
-/// "key  value" facts about a track that we do know today (genre, year,
-/// file). Tempo, key and energy come with the audio analysis (phase 3).
-class TrackFacts extends StatelessWidget {
+/// "key  value" facts about a track: tags and file, plus the audio
+/// analysis (tempo, key, energy…) once the recommender has analysed it.
+class TrackFacts extends ConsumerWidget {
   const TrackFacts(this.t, {super.key});
   final Track t;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = Tty.of(context);
-    final rows = <(String, String, Color?)>[
-      if (t.genre != null) ('genre', t.genre!.toLowerCase(), c.mauve),
-      if (t.year != null) ('année', '${t.year}', null),
+    final a = ref.watch(analysisProvider(t.id)).value?.analysis;
+    final ok = a != null && a.error == null;
+    Widget text(String v, [Color? color]) => Text(v, style: TextStyle(color: color));
+    Widget withNote(String v, Color? color, String note) => Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: v,
+            style: TextStyle(color: color),
+          ),
+          TextSpan(
+            text: '  $note',
+            style: TextStyle(color: c.muted),
+          ),
+        ],
+      ),
+    );
+    String pct(double v) => '${(v * 100).round()}%';
+    final genres = ok ? a.genres : const <(String, double)>[];
+    final rows = <(String, Widget)>[
+      if (genres.isNotEmpty) ...[
+        ('genre', withNote(genres[0].$1.toLowerCase(), c.mauve, pct(genres[0].$2))),
+        if (genres.length > 1) ('sous-genre', withNote(genres[1].$1.toLowerCase(), c.pink, pct(genres[1].$2))),
+      ] else if (t.genre != null)
+        ('genre', text(t.genre!.toLowerCase(), c.mauve)),
+      if (t.year != null) ('année', text('${t.year}')),
+      if (ok && a.bpm != null)
+        ('tempo', withNote('${a.bpm!.round()} bpm', c.peach, '♩ = ${(60 / a.bpm!).toStringAsFixed(2)} s')),
+      if (ok && a.keyName != null) ('tonalité', withNote(a.keyName!, null, '(${a.camelot})')),
+      if (ok && a.energy != null) ('énergie', TtyMeter(a.energy!, suffix: pct(a.energy!))),
+      if (ok && a.danceability != null) ('dansant', TtyMeter(a.danceability!, suffix: pct(a.danceability!))),
+      if (ok && a.acousticness != null) ('acoustique', TtyMeter(a.acousticness!, suffix: pct(a.acousticness!))),
+      if (ok && a.mood != null) ('ambiance', text(a.mood!, c.blue)),
+      if (ok && a.loudnessLufs != null) ('volume', text('${a.loudnessLufs!.toStringAsFixed(1)} LUFS')),
       (
         'fichier',
-        [
-          t.format,
-          if (t.bitDepth != null && t.sampleRate != null)
-            '${t.bitDepth} bits / ${(t.sampleRate! / 1000).toStringAsFixed(1)} kHz'
-          else if (t.bitrate != null)
-            '${t.bitrate} kb/s',
-        ].join(' · '),
-        null,
+        text(
+          [
+            t.format,
+            if (t.bitDepth != null && t.sampleRate != null)
+              '${t.bitDepth} bits / ${(t.sampleRate! / 1000).toStringAsFixed(1)} kHz'
+            else if (t.bitrate != null)
+              '${t.bitrate} kb/s',
+          ].join(' · '),
+        ),
       ),
     ];
     return Column(
       children: [
-        for (final (k, v, color) in rows)
+        for (final (k, v) in rows)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 1),
             child: Row(
@@ -568,9 +601,7 @@ class TrackFacts extends StatelessWidget {
                   width: 90,
                   child: Text(k, style: TextStyle(color: c.muted)),
                 ),
-                Expanded(
-                  child: Text(v, style: TextStyle(color: color)),
-                ),
+                Expanded(child: v),
               ],
             ),
           ),

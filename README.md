@@ -7,7 +7,7 @@ Lecteur de musique auto-hébergé : un serveur Go + SQLite tourne sur le NAS, le
 ```
 server/       API REST + streaming (Go, SQLite WAL + FTS5, ffmpeg)
 app/          client Flutter
-recommender/  service de recommandations (phase 3, vide)
+recommender/  service de recommandations (phase 3, Python + Essentia) : analyse audio pour l'instant
 ```
 
 ## Installation sur le NAS (UGREEN DXP2800, UGOS Pro)
@@ -25,8 +25,10 @@ Prérequis : Docker activé dans UGOS Pro, SSH activé (Panneau de configuration
    ```bash
    colima start --vm-type vz --vz-rosetta --cpu 4 --memory 4   # une fois par session
    docker build --platform linux/amd64 --build-arg VERSION=$(git describe --always) -t ttyfm:latest server/
-   docker save ttyfm:latest | gzip | ssh user@nas 'gunzip | docker load'
+   docker build --platform linux/amd64 --build-arg VERSION=$(git describe --always) -t ttyfm-recommender:latest recommender/
+   docker save ttyfm:latest ttyfm-recommender:latest | gzip | ssh user@nas 'gunzip | docker load'
    ```
+   La seconde image est le service d'analyse audio ([recommender/README.md](recommender/README.md)). Il tourne à côté du serveur et peut être arrêté à part (`docker compose stop recommender`).
    (`scp` vers `/volume1` échoue sur UGOS : le SFTP ne voit pas les volumes, d'où le passage par `ssh`.)
 
 3. **Configurer** dans `/volume1/docker/ttyfm` :
@@ -75,6 +77,8 @@ Dans `docker-compose.yml`, les variables `TTYFM_*` sont alimentées par `.env`.
 | `TTYFM_FFMPEG` | `ffmpeg` | binaire ffmpeg |
 | `TTYFM_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 
+Le service `recommender` a ses propres variables (`ANALYSIS_WORKERS` dans `.env`, etc.) : voir [recommender/README.md](recommender/README.md).
+
 ### Comportement du scan
 
 - **Incrémental** : seuls les fichiers nouveaux ou modifiés (taille ou date de modification) sont relus.
@@ -102,6 +106,10 @@ Toutes les routes sauf `health` et `auth/login` exigent `Authorization: Bearer <
 | GET | `/api/v1/albums?sort=name\|added\|year&cursor=&limit=` | |
 | GET | `/api/v1/albums/{id}` | album + morceaux |
 | GET | `/api/v1/tracks?sort=name\|added&cursor=&limit=`, `/tracks/{id}` | |
+| GET | `/api/v1/tracks/{id}/analysis` | `{analysis, compatible}` : bpm, tonalité (+ Camelot), LUFS, énergie, dansant… et les titres qui s'enchaînent bien (ton voisin, tempo à ±6 %) ; 404 si pas encore analysé. Les titres analysés portent aussi `bpm` et `camelot` dans toutes les listes |
+| PUT/DELETE | `/api/v1/tracks/{id}/analysis` | PUT : résultat envoyé par `recommender` ; DELETE : relancer l'analyse du titre |
+| GET/DELETE | `/api/v1/analysis` | GET : `{total, analyzed, failed, pending}` ; DELETE : tout réanalyser |
+| GET | `/api/v1/analysis/queue?limit=` | titres à analyser (`id`, `path` relatif, `file_mtime`) |
 | GET | `/api/v1/tracks/{id}/lyrics` | `{synced, source, lines: [{ms, text}]}` ; 404 sans paroles |
 | GET | `/api/v1/search?q=&genre=&year_min=&year_max=&format=&limit=` | préfixes, accents ignorés ; filtres seuls possibles |
 | GET | `/api/v1/search/facets` | genres, formats, années disponibles |

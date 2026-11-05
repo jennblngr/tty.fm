@@ -1,5 +1,6 @@
-# Checks every pull request (and main after a merge): the Go server and the
-# Flutter app are each formatted, linted, tested and compiled.
+# Checks every pull request (and main after a merge): the Go server, the
+# Flutter app and the Python recommender are each formatted, linted and
+# tested; the server and the app are also compiled.
 name: ci
 
 on:
@@ -71,3 +72,24 @@ jobs:
       # when no key.properties is present.
       - name: Build (Android, debug)
         run: flutter build apk --debug
+
+  recommender:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: recommender
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: recommender/requirements.txt
+      - run: pip install -r requirements.txt ruff==0.17.3
+      - name: Format
+        run: ruff format --check .
+      - name: Lint
+        run: ruff check .
+      # Includes an end-to-end analysis of a synthetic file with Essentia.
+      - name: Unit tests
+        run: python -m unittest discover -s tests -t . -v
