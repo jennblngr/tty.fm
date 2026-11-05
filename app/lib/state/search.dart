@@ -11,6 +11,11 @@ final lyricsProvider = FutureProvider.autoDispose.family<Lyrics?, int>(
   (ref, id) => ref.watch(libraryProvider).lyrics(id),
 );
 
+/// Audio analysis of a track (null: not analysed yet).
+final analysisProvider = FutureProvider.autoDispose.family<AnalysisResult?, int>(
+  (ref, id) => ref.watch(libraryProvider).analysis(id),
+);
+
 /// Listening stats for a period in days (0: all time). Refreshed when new
 /// plays are recorded (home refresh) or on demand.
 final statsProvider = StreamProvider.autoDispose.family<ListeningStats, int>((ref, days) {

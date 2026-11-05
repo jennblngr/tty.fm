@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models.dart';
 import '../../state/library.dart';
 import '../../state/playback.dart';
+import '../../state/search.dart';
+import '../../data/library_repository.dart';
 import '../dialogs.dart';
 import '../format.dart';
 import '../nav.dart';
@@ -74,6 +76,10 @@ class TrackTile extends ConsumerWidget {
               ),
             ),
             ?trailing,
+            if (track.bpm != null) ...[
+              const SizedBox(width: 8),
+              Text('${track.bpm!.round()}', style: TextStyle(color: c.peach, fontSize: 12)),
+            ],
             const SizedBox(width: 8),
             Text(formatDuration(track.duration), style: TextStyle(color: c.muted, fontSize: 12)),
             TrackMenuButton(track, extra: extraMenu),
@@ -121,6 +127,15 @@ class TrackMenuButton extends ConsumerWidget {
         const PopupMenuDivider(),
         item(Icons.album_outlined, 'Aller à l\'album', () => openAlbum(context, track.albumId)),
         item(Icons.person_outline, 'Aller à l\'artiste', () => openArtist(context, track.artistId)),
+        const PopupMenuDivider(),
+        item(
+          Icons.graphic_eq,
+          'Relancer l\'analyse',
+          () => guard(context, () async {
+            await ref.read(libraryProvider).resetAnalysis(track.id);
+            ref.invalidate(analysisProvider(track.id));
+          }, success: 'Analyse relancée'),
+        ),
         ...extra,
       ],
     );
