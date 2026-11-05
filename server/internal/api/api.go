@@ -55,6 +55,9 @@ func (s *Server) Handler() http.Handler {
 	priv.HandleFunc("GET "+prefix+"/tracks", s.tracks)
 	priv.HandleFunc("GET "+prefix+"/tracks/{id}", s.track)
 	priv.HandleFunc("GET "+prefix+"/tracks/{id}/lyrics", s.lyrics)
+	priv.HandleFunc("GET "+prefix+"/tracks/{id}/analysis", s.trackAnalysis)
+	priv.HandleFunc("PUT "+prefix+"/tracks/{id}/analysis", s.saveAnalysis)
+	priv.HandleFunc("DELETE "+prefix+"/tracks/{id}/analysis", s.resetAnalysis)
 	priv.HandleFunc("GET "+prefix+"/search", s.search)
 	priv.HandleFunc("GET "+prefix+"/search/facets", s.searchFacets)
 	priv.HandleFunc("GET "+prefix+"/covers/{id}", s.cover)
@@ -88,6 +91,9 @@ func (s *Server) Handler() http.Handler {
 
 	priv.HandleFunc("POST "+prefix+"/admin/scan", s.startScan)
 	priv.HandleFunc("GET "+prefix+"/admin/scan", s.scanStatus)
+	priv.HandleFunc("GET "+prefix+"/analysis", s.analysisStatus)
+	priv.HandleFunc("GET "+prefix+"/analysis/queue", s.analysisQueue)
+	priv.HandleFunc("DELETE "+prefix+"/analysis", s.resetAllAnalysis)
 
 	pub.Handle(prefix+"/", s.Auth.Middleware(priv))
 	return s.logRequests(pub)
