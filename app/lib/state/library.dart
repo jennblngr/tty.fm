@@ -60,6 +60,27 @@ class FavoritesNotifier extends AsyncNotifier<Map<String, Set<int>>> {
 
 final favoritesProvider = AsyncNotifierProvider<FavoritesNotifier, Map<String, Set<int>>>(FavoritesNotifier.new);
 
+/// Ids of the tracks hidden by the user: greyed out in the lists and never
+/// queued. Toggled optimistically.
+class HiddenTracksNotifier extends StreamNotifier<Set<int>> {
+  @override
+  Stream<Set<int>> build() => _repo(ref).hiddenIds();
+
+  Future<void> set(int id, bool on) async {
+    final cur = state.value ?? const <int>{};
+    if (cur.contains(id) == on) return;
+    state = AsyncData(on ? {...cur, id} : ({...cur}..remove(id)));
+    try {
+      await ref.read(libraryProvider).setHidden(id, on);
+    } catch (_) {
+      state = AsyncData(cur); // revert
+      rethrow;
+    }
+  }
+}
+
+final hiddenTracksProvider = StreamNotifierProvider<HiddenTracksNotifier, Set<int>>(HiddenTracksNotifier.new);
+
 /// Playlist mutations. Each one refreshes the affected providers so every
 /// screen showing the tree or the playlist updates.
 class PlaylistActions {

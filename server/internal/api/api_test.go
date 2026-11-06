@@ -225,6 +225,16 @@ func TestLibraryAndStream(t *testing.T) {
 		t.Fatalf("favorites: %+v", favs)
 	}
 	c.json("DELETE", "/favorites/tracks/"+id, nil, 204, nil)
+
+	// Hidden tracks.
+	c.json("PUT", "/hidden/"+id, nil, 204, nil)
+	c.json("PUT", "/hidden/999999", nil, 404, nil)
+	var hidden map[string][]int64
+	c.json("GET", "/hidden", nil, 200, &hidden)
+	if len(hidden["tracks"]) != 1 {
+		t.Fatalf("hidden: %+v", hidden)
+	}
+	c.json("DELETE", "/hidden/"+id, nil, 204, nil)
 }
 
 func TestPlaylistsAPI(t *testing.T) {

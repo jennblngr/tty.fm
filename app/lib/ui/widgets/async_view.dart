@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
+import '../theme.dart';
 
 /// Renders an AsyncValue: data as soon as any is available (cached data
 /// stays on screen while refreshing or if the refresh fails), a spinner on
@@ -44,6 +45,55 @@ void toast(BuildContext context, String msg) {
   ScaffoldMessenger.maybeOf(context)
     ?..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(msg), duration: const Duration(seconds: 2)));
+}
+
+/// Toast for a reversible action: 5 s with "[annuler]", no confirmation
+/// (Menus-Contextuels, fiche 01 « retour · archiver »): surface background,
+/// 8 px corners, 12 × 16 px padding, 420 px at most, "[annuler]" in bold
+/// green on the right.
+void toastUndo(BuildContext context, String msg, VoidCallback undo) {
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  if (messenger == null) return;
+  final c = Tty.of(context);
+  final width = MediaQuery.sizeOf(context).width - 32;
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
+        width: width < 420 ? width : 420,
+        backgroundColor: c.surface,
+        elevation: 0,
+        padding: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        content: Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(msg, style: TextStyle(color: c.text, fontSize: 13, height: 1.5)),
+              ),
+              InkWell(
+                onTap: () {
+                  messenger.hideCurrentSnackBar();
+                  undo();
+                },
+                child: Padding(
+                  // 12 px above and below, 16 px on the right: the toast's
+                  // padding, made part of the tap target.
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  child: Text(
+                    '[annuler]',
+                    style: TextStyle(color: c.green, fontWeight: FontWeight.w700, fontSize: 13, height: 1.5),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
 }
 
 /// Runs an action and reports failures as a toast.

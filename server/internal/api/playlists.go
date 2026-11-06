@@ -290,6 +290,30 @@ func (s *Server) setFavorite(on bool) http.HandlerFunc {
 	}
 }
 
+// hidden returns the ids of the tracks never to queue.
+func (s *Server) hidden(w http.ResponseWriter, r *http.Request) {
+	ids, err := s.DB.HiddenTrackIDs(r.Context())
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string][]int64{"tracks": ids})
+}
+
+func (s *Server) setHidden(on bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := pathID(r, "id")
+		if err == nil {
+			err = s.DB.SetHidden(r.Context(), id, on)
+		}
+		if err != nil {
+			s.fail(w, r, err)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
 func (s *Server) startScan(w http.ResponseWriter, r *http.Request) {
 	if s.Scanner.Status().Running {
 		writeJSON(w, http.StatusConflict, apiError{"scan already running"})

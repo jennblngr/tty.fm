@@ -81,7 +81,11 @@ class FakeEngine implements AudioEngine {
   @override
   Future<void> move(int from, int to) async => urls.insert(to, urls.removeAt(from));
   @override
-  Future<void> remove(int index) async => urls.removeAt(index);
+  Future<void> remove(int index) async {
+    urls.removeAt(index);
+    if (index < current) current--; // like mpv: the playing entry keeps playing
+  }
+
   @override
   Future<void> jump(int index) async {
     current = index;
@@ -174,6 +178,89 @@ void main() {
     await c.playNext([t(7), t(8)]);
     expect(ids(), [1, 7, 8, 2, 3, 9]);
     expect(engine.urls, ['u1', 'u7', 'u8', 'u2', 'u3', 'u9']);
+  });
+
+  group('hidden tracks', () {
+    setUp(() => c.isHidden = (t) => t.id == 2 || t.id == 4);
+
+    test('are left out of the queue', () async {
+      await c.playTracks([t(1), t(2), t(3), t(4), t(5)], index: 2);
+      expect(ids(), [1, 3, 5]);
+      expect(engine.urls, ['u1', 'u3', 'u5']);
+      expect(c.state.current!.id, 3);
+    });
+
+    test('a hidden pick starts at the next track that is not', () async {
+      await c.playTracks([t(1), t(2), t(3)], index: 1);
+      expect(c.state.current!.id, 3);
+      await c.playTracks([t(1), t(3), t(4)], index: 2);
+      expect(c.state.current!.id, 1);
+      await c.playTracks([t(2), t(4)]);
+      expect(c.state.current!.id, 1); // nothing playable: unchanged
+    });
+
+    test('are not added by playNext or addToQueue', () async {
+      await c.playTracks([t(1)]);
+      await c.addToQueue([t(2), t(3)]);
+      await c.playNext([t(4)]);
+      expect(ids(), [1, 3]);
+    });
+
+    test('dropHidden takes them out of the queue', () async {
+      c.isHidden = (_) => false;
+      await c.playTracks([t(1), t(2), t(3), t(4), t(5)]);
+      c.isHidden = (t) => t.id == 2 || t.id == 4;
+      await c.dropHidden();
+      expect(ids(), [1, 3, 5]);
+      expect(engine.urls, ['u1', 'u3', 'u5']);
+      expect(c.state.current!.id, 1);
+    });
+
+    test('hiding the current track skips to the next one', () async {
+      c.isHidden = (_) => false;
+      await c.playTracks([t(1), t(2), t(3), t(4)], index: 1);
+      engine.tick(const Duration(seconds: 5));
+      c.isHidden = (t) => t.id == 2 || t.id == 4;
+      await c.dropHidden();
+      expect(ids(), [1, 3]);
+      expect(engine.urls, ['u1', 'u3']);
+      expect(c.state.current!.id, 3);
+      expect(engine.current, 1);
+      expect(c.state.playing, isTrue);
+      expect(plays.single.trackId, 2);
+      expect(plays.single.skipped, isTrue);
+    });
+
+    test('hiding the last track goes back to the top, paused', () async {
+      c.isHidden = (_) => false;
+      await c.playTracks([t(1), t(3), t(2)], index: 2);
+      c.isHidden = (t) => t.id == 2;
+      await c.dropHidden();
+      expect(ids(), [1, 3]);
+      expect(c.state.current!.id, 1);
+      expect(engine.current, 0);
+      expect(c.state.playing, isFalse);
+    });
+
+    test('hiding the last track with repeat all plays on from the top', () async {
+      c.isHidden = (_) => false;
+      await c.playTracks([t(1), t(3), t(2)], index: 2);
+      await c.setRepeat(RepeatMode.all);
+      c.isHidden = (t) => t.id == 2;
+      await c.dropHidden();
+      expect(ids(), [1, 3]);
+      expect(c.state.current!.id, 1);
+      expect(c.state.playing, isTrue);
+    });
+
+    test('hiding the only track stops playback', () async {
+      c.isHidden = (_) => false;
+      await c.playTracks([t(2)]);
+      c.isHidden = (t) => t.id == 2;
+      await c.dropHidden();
+      expect(c.state.queue, isEmpty);
+      expect(c.state.playing, isFalse);
+    });
   });
 
   test('move and remove keep the current track', () async {

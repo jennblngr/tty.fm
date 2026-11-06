@@ -13,6 +13,7 @@ import '../playback/audio_engine.dart';
 import '../playback/media_kit_engine.dart';
 import '../playback/play_reporter.dart';
 import '../playback/playback_controller.dart';
+import 'library.dart';
 
 /// Engine factory, overridable in tests.
 final audioEngineProvider = Provider<AudioEngine>((ref) {
@@ -48,6 +49,9 @@ final playbackControllerProvider = Provider<PlaybackController>((ref) {
     sourceFor: (t) => buildSource(ref, t),
     onPlay: reporter.add,
   );
+  c.isHidden = (t) => ref.read(hiddenTracksProvider).value?.contains(t.id) ?? false;
+  // A track hidden while queued leaves the queue.
+  ref.listen(hiddenTracksProvider, (_, _) => c.dropHidden());
 
   // Network or quality changed (left home, Wi-Fi → 4G): rebuild URLs.
   ref.listen(routeProvider, (prev, next) {

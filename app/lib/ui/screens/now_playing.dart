@@ -20,6 +20,7 @@ import '../widgets/async_view.dart';
 import '../widgets/cover.dart';
 import '../widgets/lyrics_view.dart';
 import '../widgets/mini_player.dart';
+import '../widgets/player_menu.dart';
 import '../widgets/tty.dart';
 import 'devices.dart';
 
@@ -44,7 +45,9 @@ class NowPlayingScreen extends ConsumerWidget {
       );
     }
     final header = Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      // [···] sits on the line of "$ lecteur" (02, D2).
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
       children: [
         if (!wide) TtyLink('fermer', onTap: () => Navigator.pop(context)),
         if (!wide) const SizedBox(width: 12),
@@ -68,54 +71,58 @@ class NowPlayingScreen extends ConsumerWidget {
             ],
           ),
         ),
-        if (wide) TtyLink('réduire', onTap: () => Navigator.pop(context)),
+        PlayerMenuButton(track),
+        if (wide) ...[const SizedBox(width: 16), TtyLink('réduire', onTap: () => Navigator.pop(context))],
       ],
     );
 
     if (wide) {
-      return Scaffold(
-        body: Column(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(32, 24, 32, 32),
-                      children: [
-                        header,
-                        const SizedBox(height: 24),
-                        TtyGrid(
-                          minWidth: 340,
-                          spacing: 32,
-                          children: [
-                            _TrackBlock(track, wide: true),
-                            Column(
-                              children: [
-                                _LyricsPanel(track, height: 340),
-                                const SizedBox(height: 24),
-                                _FileFacts(track),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
+      return PlayerMenuShortcuts(
+        track: track,
+        child: Scaffold(
+          body: Column(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(32, 24, 32, 32),
+                        children: [
+                          header,
+                          const SizedBox(height: 24),
+                          TtyGrid(
+                            minWidth: 340,
+                            spacing: 32,
+                            children: [
+                              _TrackBlock(track, wide: true),
+                              Column(
+                                children: [
+                                  _LyricsPanel(track, height: 340),
+                                  const SizedBox(height: 24),
+                                  _FileFacts(track),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  VerticalDivider(width: 1, color: c.border),
-                  Container(
-                    width: 320,
-                    color: c.mantle,
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                      children: const [_QueueSection(compact: false), SizedBox(height: 24), _SoundSection()],
+                    VerticalDivider(width: 1, color: c.border),
+                    Container(
+                      width: 320,
+                      color: c.mantle,
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                        children: const [_QueueSection(compact: false), SizedBox(height: 24), _SoundSection()],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const PlayerBar(),
-          ],
+              const PlayerBar(),
+            ],
+          ),
         ),
       );
     }
