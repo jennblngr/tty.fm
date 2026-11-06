@@ -189,6 +189,12 @@ class LibraryRepository {
   Future<void> setFavorite(String kind, int id, bool on) =>
       on ? _api.put('/favorites/$kind/$id') : _api.delete('/favorites/$kind/$id');
 
+  /// Ids of the hidden tracks, cached so they stay skipped offline.
+  Stream<Set<int>> hiddenIds() =>
+      _cached('hidden', () => _api.get('/hidden'), (j) => ((j as Map)['tracks'] as List).cast<int>().toSet());
+
+  Future<void> setHidden(int id, bool on) => on ? _api.put('/hidden/$id') : _api.delete('/hidden/$id');
+
   Future<void> reportPlays(List<PlayRecord> plays) => _api.post('/plays', {
     'plays': [for (final p in plays) p.toJson()],
   });

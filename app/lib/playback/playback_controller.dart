@@ -84,6 +84,11 @@ class PlaybackController {
   /// Builds the stream URL for a track (quality depends on the network).
   SourceBuilder sourceFor;
   final PlayCallback? onPlay;
+
+  /// Tracks the user hid: never queued, wherever the list comes from
+  /// (album, playlist, remote command…).
+  bool Function(Track) isHidden = _never;
+  static bool _never(Track _) => false;
   final DateTime Function() _now;
   final _subs = <StreamSubscription<dynamic>>[];
   final _states = StreamController<PlaybackState>.broadcast();
@@ -146,7 +151,16 @@ class PlaybackController {
     String? contextKind,
     int? contextId,
   }) async {
-    if (tracks.isEmpty) return;
+    // Leave the hidden tracks out. If the chosen one is hidden, start at the
+    // next one that is not.
+    final keep = [
+      for (var i = 0; i < tracks.length; i++)
+        if (!isHidden(tracks[i])) i,
+    ];
+    if (keep.isEmpty) return;
+    final at = keep.indexWhere((i) => i >= index);
+    index = at < 0 ? 0 : at;
+    tracks = [for (final i in keep) tracks[i]];
     _finishSession(byUser: true);
     _contextKind = contextKind;
     _contextId = contextId;
@@ -176,6 +190,8 @@ class PlaybackController {
 
   /// Inserts [tracks] right after the current one.
   Future<void> playNext(List<Track> tracks) async {
+    tracks = tracks.where((t) => !isHidden(t)).toList();
+    if (tracks.isEmpty) return;
     if (_queue.isEmpty) return playTracks(tracks);
     final items = _items(tracks);
     final at = _index + 1;
@@ -191,6 +207,8 @@ class PlaybackController {
 
   /// Appends [tracks] to the end of the queue.
   Future<void> addToQueue(List<Track> tracks) async {
+    tracks = tracks.where((t) => !isHidden(t)).toList();
+    if (tracks.isEmpty) return;
     if (_queue.isEmpty) return playTracks(tracks);
     final items = _items(tracks);
     _queue.addAll(items);
@@ -215,6 +233,29 @@ class PlaybackController {
     }
     _emit();
     await _engine.remove(i);
+  }
+
+  /// Takes the tracks hidden since they were queued out of the queue. If
+  /// the current one is hidden, playback moves on to the next track first;
+  /// after the last one it goes back to the top, paused, as at the end of
+  /// the queue (or plays on with repeat all).
+  Future<void> dropHidden() async {
+    for (var i = _queue.length - 1; i >= 0; i--) {
+      if (i != _index && i < _queue.length && isHidden(_queue[i].track)) await removeAt(i);
+    }
+    if (_index < 0 || _index >= _queue.length || !isHidden(_queue[_index].track)) return;
+    if (_queue.length == 1) return clear(); // nothing else to play
+    final hidden = _index;
+    if (hidden < _queue.length - 1) {
+      await jumpTo(hidden + 1);
+    } else if (_repeat == RepeatMode.all) {
+      await jumpTo(0);
+    } else {
+      await pause();
+      _changeIndex(0, byUser: true);
+      await _engine.jump(0);
+    }
+    await removeAt(hidden);
   }
 
   /// Moves a queue entry; the current track keeps playing.

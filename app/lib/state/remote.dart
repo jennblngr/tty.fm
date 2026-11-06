@@ -217,6 +217,8 @@ final liveSyncProvider = Provider<void>((ref) {
         ref.invalidate(playlistTracksProvider);
       case 'favorites':
         ref.invalidate(favoritesProvider);
+      case 'hidden':
+        ref.invalidate(hiddenTracksProvider);
     }
     ref.read(downloadsProvider.notifier).resync(); // downloaded playlists follow
   }
@@ -276,7 +278,7 @@ final liveSyncProvider = Provider<void>((ref) {
         case 'hello':
           if (hadConnection) {
             // Reconnected: we may have missed changes.
-            for (final w in const ['library', 'playlists', 'favorites', 'notifications']) {
+            for (final w in const ['library', 'playlists', 'favorites', 'hidden', 'notifications']) {
               refresh(w);
             }
           }
