@@ -1,0 +1,17 @@
+
+# <type>(<scope>): <description>       72 characters at most, in English
+#
+# <body: what changes and why, not how>
+#
+# <footer: Closes #27, Refs: <sha>, BREAKING CHANGE: ...>
+#
+# type:  feat fix refactor chore docs test ci build perf style
+# scope (required): server app recommender design doc repo,
+#        several as server,app
+# description: imperative, lowercase, no period at the end
+# breaking change: ! after the scope, plus a BREAKING CHANGE: footer
+# revert: "revert(#<PR number>): <header of the reverted commit>",
+#         body says why,
+#         footer Refs: <sha of the reverted commit>
+#
+# See doc/conventions.md.
