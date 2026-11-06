@@ -1,5 +1,6 @@
 # Local env / data
 .env
+.deploy.env
 /data/
 *.db
 *.db-wal
