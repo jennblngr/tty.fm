@@ -1,12 +1,39 @@
 # Conventions
 
-Règles pour les branches, les commits et les pull requests. Elles valent pour tout le monde, agents compris.
+Règles pour les branches, les commits et les pull requests. Elles valent pour tout le monde, agents compris, et la CI les vérifie (§ 6).
 
-## Branches
+1. [Guide rapide](#1-guide-rapide)
+2. [Branches](#2-branches)
+3. [Commits](#3-commits)
+4. [Pull requests](#4-pull-requests)
+5. [Annuler un changement](#5-annuler-un-changement)
+6. [Vérifications](#6-vérifications)
 
-Tout changement passe par une branche partie de `origin/main`. On ne pousse jamais directement sur `main`. Chaque branche est fusionnée par une pull request, **sans squash** : ses commits arrivent tels quels sur `main` (voir « Pull requests »).
+## 1. Guide rapide
 
-Une branche porte un seul changement. Son nom est un préfixe, une barre oblique, puis une courte description en anglais, en minuscules et avec des tirets :
+Une fois par clone, pour activer le modèle de message et les hooks git (§ 6) :
+
+```bash
+tools/setup-git.sh
+```
+
+Puis, pour chaque changement :
+
+1. Partir de `origin/main` sur une branche à soi, nommée `<préfixe>/<description>` : `git switch -c bugfix/shuffle-playback-gap origin/main` (§ 2).
+2. Committer par étapes cohérentes, avec des messages `<type>(<portée>): <description>` en anglais : `fix(app): keep playing while toggling shuffle` (§ 3).
+3. Nettoyer l'historique de la branche : regrouper les `fixup!` (`git rebase -i --autosquash origin/main`).
+4. Ouvrir une pull request dont le titre suit le même format, attendre que la CI soit verte, fusionner par merge commit (§ 4).
+
+## 2. Branches
+
+### Règles
+
+- Tout changement passe par une branche partie de `origin/main`. On ne pousse jamais directement sur `main`.
+- Une branche porte un seul changement et se fusionne par une pull request, sans squash (§ 4).
+
+### Nommage
+
+Un préfixe, une barre oblique, puis une courte description en anglais, en minuscules et avec des tirets :
 
 | préfixe | pour | exemple |
 |---|---|---|
@@ -20,9 +47,11 @@ Une branche porte un seul changement. Son nom est un préfixe, une barre oblique
 
 Si le changement correspond à une issue, on peut ajouter son numéro : `bugfix/27-previous-restarts-track`.
 
-## Commits
+## 3. Commits
 
-Les messages de commit suivent [Conventional Commits](https://www.conventionalcommits.org/fr/v1.0.0/) :
+### Format
+
+Les messages de commit suivent [Conventional Commits 1.0.0](https://www.conventionalcommits.org/fr/v1.0.0/), avec une différence : **la portée est obligatoire** (la spécification la laisse facultative). Elle dit tout de suite quelle partie du dépôt le commit touche.
 
 ```
 <type>(<portée>): <description>
@@ -32,29 +61,85 @@ Les messages de commit suivent [Conventional Commits](https://www.conventionalco
 <pied, facultatif>
 ```
 
-- **type** : `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `ci`, `build`, `perf`, `style`, et `revert` pour annuler un changement (voir « Annuler un changement »).
-- **portée** (facultative) : la partie du dépôt touchée, `server`, `app`, `recommender`, `design` ou `doc`.
+- **type** :
+
+  | type | pour | préfixe de branche habituel |
+  |---|---|---|
+  | `feat` | une fonctionnalité | `feature/` |
+  | `fix` | la correction d'un bug | `bugfix/` |
+  | `refactor` | une restructuration sans changement de comportement | `refactoring/` |
+  | `perf` | un gain de performance | `feature/`, `refactoring/` |
+  | `style` | la mise en forme du code (format, espaces), sans changement de sens | `chore/` |
+  | `chore` | l'entretien : dépendances, outillage, nettoyage | `chore/` |
+  | `docs` | la documentation | `docs/` |
+  | `test` | des tests | `test/` |
+  | `ci` | la CI | `ci/` |
+  | `build` | le build, les images Docker, le packaging | `ci/` |
+  | `revert` | l'annulation d'un changement (§ 5) | `bugfix/` |
+
+  Une branche peut contenir d'autres types quand ils accompagnent le changement, par exemple un commit `test` ou `docs` dans une branche `feature/`.
+
+- **portée** (obligatoire) : la partie du dépôt touchée.
+
+  | portée | pour |
+  |---|---|
+  | `server` | `server/` : le serveur Go |
+  | `app` | `app/` : le client Flutter |
+  | `recommender` | `recommender/` : le service d'analyse et de recommandation |
+  | `design` | `design/` : maquettes et `HANDOFF.md` |
+  | `doc` | `doc/` |
+  | `repo` | le reste, commun à tout le dépôt : `README.md`, `AGENTS.md`, `tools/`, `.github/` hors d'un service précis, `docker-compose.yml`… |
+
+  Un commit qui touche plusieurs parties les liste sans espace : `feat(server,app): …`. Pour un revert, la portée est le numéro de la pull request annulée : `revert(#36): …` (§ 5).
+
 - **description** : à l'impératif, en minuscules, sans point final, 72 caractères au plus pour toute la première ligne.
-- **changement incompatible** (API, schéma de base, format de cache…) : `!` après le type ou la portée, et un pied `BREAKING CHANGE: …` qui dit ce qui casse.
+- **changement incompatible** (API, schéma de base, format de cache…) : `!` après la portée, et un pied `BREAKING CHANGE: …` qui dit ce qui casse.
 
-Le type du commit va avec le préfixe de la branche : `feature/` → `feat`, `bugfix/` → `fix`, `refactoring/` → `refactor`, `chore/` → `chore`, `docs/` → `docs`, `ci/` → `ci` ou `build`, `test/` → `test`. Une branche peut contenir d'autres types quand ils accompagnent le changement, par exemple un commit `test` ou `docs` dans une branche `feature/`.
-
-Exemples :
+### Exemples
 
 ```
 feat(recommender): analyse tempo, key and loudness of each track
 fix(app): keep playing while toggling shuffle
 refactor(server): share the track query between lists and search
-ci: run the recommender tests on every pull request
+ci(recommender): run the tests on every pull request
+docs(repo): point agents to the convention checks
+feat(server,app): show the bpm in track lists
 feat(server)!: return bpm and camelot in track lists
 ```
 
-## Annuler un changement (revert)
+### Langue et contenu
+
+- Les messages sont **en anglais**.
+- Ils sont **courts** et disent **ce qu'on ajoute ou corrige, et pourquoi**, pas comment. Le comment, c'est le diff.
+  - Oui : `fix(app): restart the track on "previous" instead of resuming an old position`
+  - Non : `fix(app): reset _lastPosition in PlaybackController before calling seek(0)`
+- Une ligne vide sépare l'en-tête du corps. Le pied donne les références : `Closes #27`, `Refs: <sha>`, `BREAKING CHANGE: …`.
+
+## 4. Pull requests
+
+### Titre et description
+
+- Le titre suit le même format que les commits, portée comprise, et il est en anglais.
+- La description tient en quelques lignes, en anglais : le besoin, ce qui change pour l'utilisateur, ce qui n'est pas testé ou reste à faire, et l'issue concernée (`Closes #27`).
+- Le commit de merge reprend le titre comme en-tête et la description comme corps (réglage du dépôt) : l'un et l'autre finissent sur `main`.
+
+### Historique de la branche
+
+- Avant d'ouvrir la pull request, on nettoie l'historique : les commits « wip », « fix typo » ou « review » rejoignent le commit qu'ils corrigent (`git commit --fixup=<sha>`, puis `git rebase -i --autosquash origin/main`).
+- Chaque commit forme une étape cohérente : il respecte le format, il compile et ses tests passent.
+- On ne réécrit que ses propres branches, jamais `main` ni la branche de quelqu'un d'autre.
+
+### Fusion
+
+- **Merge commit classique, jamais en squash ni en rebase** : les commits de la branche arrivent tels quels sur `main`.
+- La CI doit être verte avant la fusion : `ci` et `conventions` (§ 6).
+
+## 5. Annuler un changement
 
 Un revert est un changement comme un autre : il passe par une branche et une pull request.
 
 - **Branche** : le préfixe `bugfix/` (ou celui du changement annulé), puis `revert-` et la description du changement : `bugfix/revert-shuffle-playback-gap`.
-- **Commit** : le type `revert`, avec pour portée le numéro de la pull request qui a introduit le changement annulé, puis l'en-tête exact du commit annulé : `revert(#36): <en-tête annulé>`. Le corps dit **pourquoi** on annule, et un pied `Refs:` donne le sha du commit annulé. La limite de 72 caractères vaut pour l'en-tête annulé, pas pour la ligne entière. Pour retrouver la PR d'un commit : `gh pr list --state merged --search <sha>`.
+- **Commit** : le type `revert`, avec pour portée le numéro de la pull request qui a introduit le changement annulé, puis l'en-tête exact du commit annulé. Le corps dit **pourquoi** on annule, et un pied `Refs:` donne le sha du commit annulé. La limite de 72 caractères vaut pour l'en-tête annulé, pas pour la ligne entière.
 
   ```
   revert(#36): fix(app): keep playing while toggling shuffle
@@ -64,36 +149,40 @@ Un revert est un changement comme un autre : il passe par une branche et une pul
   Refs: 1a2b3c4
   ```
 
-- Pour annuler toute une pull request, on annule son commit de merge (ajouter `-m 1` à `git revert`). L'en-tête du commit de merge est le titre de la PR : c'est lui qu'on reprend après `revert(#<n°>): `.
+  Pour retrouver la PR d'un commit : `gh pr list --state merged --search <sha>`.
+- **Toute une pull request** : on annule son commit de merge (ajouter `-m 1` à `git revert`). L'en-tête du commit de merge est le titre de la PR : c'est lui qu'on reprend après `revert(#<n°>): `.
 
 On n'utilise pas tels quels le bouton « Revert » de GitHub ni `git revert` sans option : ils produisent une branche `revert-<n>-<branche>` et un message `Revert "<titre>"` qui ne suivent pas ces règles (la CI les refuse). En local, on lance `git revert --no-commit <sha>`, puis `git commit` avec un message conforme. Avec le bouton de GitHub, on recrée la branche sous un nom conforme et on corrige le titre de la PR et le message du commit avant de fusionner.
 
-## Langue et contenu
+## 6. Vérifications
 
-- Les commits, les titres et les descriptions de pull request sont **en anglais**.
-- Ils sont **courts** et disent **ce qu'on ajoute ou corrige, et pourquoi**, pas comment. Le comment, c'est le diff.
-  - Oui : `fix(app): restart the track on "previous" instead of resuming an old position`
-  - Non : `fix(app): reset _lastPosition in PlaybackController before calling seek(0)`
-- La description d'une pull request tient en quelques lignes : le besoin, ce qui change pour l'utilisateur, ce qui n'est pas testé ou reste à faire, et l'issue concernée (`Closes #27`).
+Les rulesets et la protection de branche de GitHub, qui imposeraient ces règles côté serveur, demandent GitHub Pro sur un dépôt privé. Les règles sont donc vérifiées par la CI, et en local par des hooks git. Les deux passent par le même script, `tools/conventions/check.sh`, qu'on peut aussi lancer à la main :
 
-## Pull requests
+```bash
+tools/conventions/check.sh title "fix(app): keep playing while toggling shuffle"
+```
 
-- **Fusion par merge commit classique, jamais en squash** (ni en rebase). Les commits de la branche sont conservés sur `main` : chacun doit donc respecter les règles ci-dessus et former une étape cohérente (il compile, ses tests passent).
-- Avant d'ouvrir la pull request, on nettoie l'historique de sa branche : on regroupe les commits « wip », « fix typo » ou « review » dans le commit qu'ils corrigent (`git rebase -i origin/main`, avec `fixup!`). On ne réécrit que ses propres branches, jamais `main` ni la branche de quelqu'un d'autre.
-- Le titre de la pull request suit le même format que les commits. Le commit de merge reprend le titre de la PR comme en-tête et sa description comme corps (réglage du dépôt) : l'un et l'autre finissent donc sur `main`.
-- La CI doit passer avant la fusion (voir `AGENTS.md`).
+```bash
+tools/conventions/check.sh commits origin/main HEAD
+```
 
-## Vérifications
+### CI
 
-Les rulesets et la protection de branche de GitHub, qui imposeraient ces règles côté serveur, demandent GitHub Pro sur un dépôt privé. Les règles sont donc vérifiées par la CI, et en local par des hooks git. Les deux passent par le même script, `tools/conventions/check.sh`.
+Le job `conventions` (`.github/workflows/conventions.yml`) tourne sur chaque pull request, et de nouveau quand on modifie son titre. Il vérifie le nom de la branche, le titre de la PR et chaque commit de la branche.
 
-- **CI** (`.github/workflows/conventions.yml`, job `conventions`) : sur chaque pull request, et de nouveau quand on modifie son titre, il vérifie le nom de la branche, le titre de la PR et chaque commit de la branche. Les commits de merge (ceux qui ramènent `main` dans la branche) ne sont pas vérifiés : c'est le titre de la PR qui donne l'en-tête du commit de merge sur `main`. Les commits `fixup!` / `squash!` sont refusés. Sans protection de branche, GitHub ne peut pas bloquer la fusion quand ce job échoue : on ne fusionne pas tant qu'il n'est pas vert.
-- **En local**, une fois par clone :
+- Les commits de merge (ceux qui ramènent `main` dans la branche) ne sont pas vérifiés : c'est le titre de la PR qui donne l'en-tête du commit de merge sur `main`.
+- Les commits `fixup!` / `squash!` sont refusés : ils doivent être regroupés avant la fusion.
+- Sans protection de branche, GitHub ne peut pas bloquer la fusion quand ce job échoue : on ne fusionne pas tant qu'il n'est pas vert.
 
-  ```bash
-  tools/setup-git.sh
-  ```
+### En local
 
-  Ce script active le modèle de message `.gitmessage`, qui rappelle le format dans l'éditeur à chaque `git commit`. Il active aussi les hooks de `tools/git-hooks` : `commit-msg` vérifie le message (les `fixup!` y sont acceptés) et `pre-push` refuse un push sur `main` ou sur une branche mal nommée. `--no-verify` les contourne au besoin ; la CI vérifie quand même.
+`tools/setup-git.sh`, une fois par clone, active :
 
-Les paramètres du dépôt (Settings → General → Pull Requests) vont dans le même sens : seule la fusion par merge commit est permise, son message reprend le titre et la description de la PR, et la branche est supprimée après la fusion.
+- le modèle de message `.gitmessage`, qui rappelle le format dans l'éditeur à chaque `git commit` ;
+- les hooks de `tools/git-hooks` : `commit-msg` vérifie le message (les `fixup!` y sont acceptés) et `pre-push` refuse un push sur `main` ou sur une branche mal nommée.
+
+`--no-verify` contourne les hooks au besoin ; la CI vérifie quand même.
+
+### Réglages du dépôt
+
+Dans Settings → General → Pull Requests : seule la fusion par merge commit est permise, son message reprend le titre et la description de la PR, et la branche est supprimée après la fusion.
