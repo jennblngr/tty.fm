@@ -124,6 +124,8 @@ Toutes les routes sauf `health` et `auth/login` exigent `Authorization: Bearer <
 | POST | `/api/v1/plays` | `{plays: [{track_id, started_at (ms), listened_ms, skipped, context_kind?, context_id?}]}` |
 | GET | `/api/v1/favorites[?full=1]` | identifiants, ou listes complètes |
 | PUT/DELETE | `/api/v1/favorites/{tracks\|albums\|artists}/{id}` | |
+| GET | `/api/v1/hidden` | identifiants des titres masqués (`{"tracks": [...]}`) |
+| PUT/DELETE | `/api/v1/hidden/{id}` | masquer un titre (grisé, jamais mis en file) ou le réafficher |
 | POST/GET | `/api/v1/admin/scan[?full=1]` | lancer / état |
 | GET | `/api/v1/ws` | WebSocket du hub en direct (voir ci-dessous) |
 
@@ -131,7 +133,7 @@ Toutes les routes sauf `health` et `auth/login` exigent `Authorization: Bearer <
 
 Chaque app garde une WebSocket ouverte (jeton en `Authorization` ou `?token=`). Messages JSON avec un champ `type` :
 
-- **Serveur → app** : `hello` (son `device_id` et les autres appareils en ligne, avec leur état), `presence` (un appareil arrive ou part), `state` (état de lecture d'un autre appareil), `command` (commande reçue d'un autre appareil), `changed` (`library`, `playlists` ou `favorites` : rafraîchir), `error`.
+- **Serveur → app** : `hello` (son `device_id` et les autres appareils en ligne, avec leur état), `presence` (un appareil arrive ou part), `state` (état de lecture d'un autre appareil), `command` (commande reçue d'un autre appareil), `changed` (`library`, `playlists`, `favorites` ou `hidden` : rafraîchir), `error`.
 - **App → serveur** : `state` (son propre état de lecture, opaque pour le serveur), `command` (`target`, `action`, `args`).
 - **Actions** : `play`, `pause`, `toggle`, `next`, `previous`, `seek {ms}`, `volume {value}`, `jump {index}`, `remove {index}`, `move {from, to}`, `shuffle {on}`, `repeat {mode}`, `load {file d'attente…}`, `transfer {to}` (l'appareil source envoie sa file à `to` puis se met en pause).
 
