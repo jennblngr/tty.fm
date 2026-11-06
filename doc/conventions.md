@@ -82,3 +82,18 @@ On n'utilise pas tels quels le bouton « Revert » de GitHub ni `git revert` san
 - Avant d'ouvrir la pull request, on nettoie l'historique de sa branche : on regroupe les commits « wip », « fix typo » ou « review » dans le commit qu'ils corrigent (`git rebase -i origin/main`, avec `fixup!`). On ne réécrit que ses propres branches, jamais `main` ni la branche de quelqu'un d'autre.
 - Le titre de la pull request suit le même format que les commits. Le commit de merge reprend le titre de la PR comme en-tête et sa description comme corps (réglage du dépôt) : l'un et l'autre finissent donc sur `main`.
 - La CI doit passer avant la fusion (voir `AGENTS.md`).
+
+## Vérifications
+
+Les rulesets et la protection de branche de GitHub, qui imposeraient ces règles côté serveur, demandent GitHub Pro sur un dépôt privé. Les règles sont donc vérifiées par la CI, et en local par des hooks git. Les deux passent par le même script, `tools/conventions/check.sh`.
+
+- **CI** (`.github/workflows/conventions.yml`, job `conventions`) : sur chaque pull request, et de nouveau quand on modifie son titre, il vérifie le nom de la branche, le titre de la PR et chaque commit de la branche. Les commits de merge (ceux qui ramènent `main` dans la branche) ne sont pas vérifiés : c'est le titre de la PR qui donne l'en-tête du commit de merge sur `main`. Les commits `fixup!` / `squash!` sont refusés. Sans protection de branche, GitHub ne peut pas bloquer la fusion quand ce job échoue : on ne fusionne pas tant qu'il n'est pas vert.
+- **En local**, une fois par clone :
+
+  ```bash
+  tools/setup-git.sh
+  ```
+
+  Ce script active le modèle de message `.gitmessage`, qui rappelle le format dans l'éditeur à chaque `git commit`. Il active aussi les hooks de `tools/git-hooks` : `commit-msg` vérifie le message (les `fixup!` y sont acceptés) et `pre-push` refuse un push sur `main` ou sur une branche mal nommée. `--no-verify` les contourne au besoin ; la CI vérifie quand même.
+
+Les paramètres du dépôt (Settings → General → Pull Requests) vont dans le même sens : seule la fusion par merge commit est permise, son message reprend le titre et la description de la PR, et la branche est supprimée après la fusion.
