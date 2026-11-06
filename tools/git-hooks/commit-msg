@@ -1,0 +1,6 @@
+#!/bin/sh
+# Checks the commit message against doc/conventions.md. fixup!/squash!
+# commits are allowed here; the CI refuses them. Skip with --no-verify.
+check="$(git rev-parse --show-toplevel)/tools/conventions/check.sh"
+[ -x "$check" ] || exit 0 # a branch from before the checks existed
+exec "$check" message "$1" --allow-fixup

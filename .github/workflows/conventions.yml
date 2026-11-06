@@ -1,0 +1,45 @@
+# Checks that a pull request follows doc/conventions.md: the branch name, the
+# PR title (it becomes the header of the merge commit) and every commit of the
+# branch except merges. Rulesets would enforce this on GitHub's side, but they
+# need GitHub Pro on a private repository. Kept apart from ci.yml so that
+# editing the PR title reruns this job only.
+name: conventions
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: conventions-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  conventions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Test the checks
+        run: tools/conventions/test.sh
+      # Values from the event go through env, never straight into the script.
+      - name: Branch name
+        if: always()
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: tools/conventions/check.sh branch "$BRANCH"
+      - name: Pull request title
+        if: always()
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: tools/conventions/check.sh title "$TITLE"
+      - name: Commit messages
+        if: always()
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: tools/conventions/check.sh commits "$BASE" "$HEAD"
