@@ -51,7 +51,15 @@ Prérequis : Docker activé dans UGOS Pro, SSH activé (Panneau de configuration
 
 **Accès distant** : Tailscale sur le NAS (paquet UGOS ou conteneur `tailscale/tailscale` en `network_mode: host`) et sur les clients. Dans l'application, utiliser l'adresse Tailscale du NAS (`100.x.y.z:4533` ou `nas.<tailnet>.ts.net:4533`) comme adresse du serveur, et l'adresse locale comme adresse locale. Ne pas ouvrir le port 4533 sur Internet.
 
-**Mise à jour** : refaire l'étape 2, puis `ssh user@nas 'cd /volume1/docker/ttyfm && docker compose up -d'`.
+**Mise à jour** : `tools/deploy-nas.sh` fait tout depuis le Mac. Il construit l'image, l'envoie, sauvegarde la base (serveur arrêté quelques secondes, dans `/volume1/docker/ttyfm/backups`, 5 copies gardées), relance le service et attend que `/health` annonce la nouvelle version. Une fois : copier `.deploy.env.example` en `.deploy.env` et y mettre `TTYFM_NAS=user@nas`.
+
+```bash
+tools/deploy-nas.sh                  # le serveur (par défaut)
+tools/deploy-nas.sh recommender      # le service d'analyse
+tools/deploy-nas.sh all --compose    # les deux, et le docker-compose.yml du dépôt
+```
+
+Les migrations de la base s'appliquent au démarrage du serveur. À la main : refaire l'étape 2, puis `ssh user@nas 'cd /volume1/docker/ttyfm && docker compose up -d'`.
 
 **Tester localement avec Docker** : créer un `.env` de test (chemins sous `$HOME`, que Colima partage avec la VM), puis lancer `docker compose --env-file <fichier> up -d`. Sur Mac, fsnotify ne voit pas les fichiers ajoutés depuis macOS (limite du partage virtiofs) : le scan périodique ou `POST /api/v1/admin/scan` prend le relais. Sur le NAS, la surveillance fonctionne normalement.
 
