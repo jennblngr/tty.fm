@@ -11,8 +11,9 @@
 # Exits with 1 and lists every problem found. Written for bash 3.2 (macOS).
 set -u
 
-PREFIXES='feature|bugfix|refactoring|chore|docs|ci|test'
 TYPES='feat|fix|refactor|chore|docs|test|ci|build|perf|style'
+# A branch is named after the type of its change: feat/..., fix/..., revert/...
+PREFIXES="$TYPES|revert"
 SCOPES='server|app|recommender|design|doc|repo'
 MAX_HEADER=72
 

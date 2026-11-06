@@ -19,7 +19,7 @@ tools/setup-git.sh
 
 Puis, pour chaque changement :
 
-1. Partir de `origin/main` sur une branche à soi, nommée `<préfixe>/<description>` : `git switch -c bugfix/shuffle-playback-gap origin/main` (§ 2).
+1. Partir de `origin/main` sur une branche à soi, nommée `<préfixe>/<description>` : `git switch -c fix/shuffle-playback-gap origin/main` (§ 2).
 2. Committer par étapes cohérentes, avec des messages `<type>(<portée>): <description>` en anglais : `fix(app): keep playing while toggling shuffle` (§ 3).
 3. Nettoyer l'historique de la branche : regrouper les `fixup!` (`git rebase -i --autosquash origin/main`).
 4. Ouvrir une pull request dont le titre suit le même format, attendre que la CI soit verte, fusionner par merge commit (§ 4).
@@ -33,19 +33,19 @@ Puis, pour chaque changement :
 
 ### Nommage
 
-Un préfixe, une barre oblique, puis une courte description en anglais, en minuscules et avec des tirets :
+Un préfixe, une barre oblique, puis une courte description en anglais, en minuscules et avec des tirets. **Le préfixe est le type du changement**, le même que celui des commits (§ 3) : `feat/`, `fix/`, `refactor/`, `perf/`, `style/`, `chore/`, `docs/`, `test/`, `ci/`, `build/` ou `revert/`.
 
-| préfixe | pour | exemple |
-|---|---|---|
-| `feature/` | une fonctionnalité ou un ajout visible | `feature/audio-analysis` |
-| `bugfix/` | la correction d'un bug | `bugfix/shuffle-playback-gap` |
-| `refactoring/` | une restructuration du code, sans changement de comportement | `refactoring/track-select-query` |
-| `chore/` | l'entretien : dépendances, outillage, nettoyage | `chore/bump-flutter` |
-| `docs/` | la documentation seule (README, `doc/`, `design/HANDOFF.md`) | `docs/conventions` |
-| `ci/` | la CI et le build (workflows, Dockerfile, Makefile) | `ci/recommender-checks` |
-| `test/` | des tests ajoutés ou corrigés, sans toucher au code testé | `test/analysis-api` |
+```
+feat/audio-analysis
+fix/shuffle-playback-gap
+refactor/track-select-query
+chore/bump-flutter
+docs/conventions
+ci/recommender-checks
+revert/shuffle-playback-gap
+```
 
-Si le changement correspond à une issue, on peut ajouter son numéro : `bugfix/27-previous-restarts-track`.
+Si le changement correspond à une issue, on peut ajouter son numéro : `fix/27-previous-restarts-track`.
 
 ## 3. Commits
 
@@ -63,21 +63,21 @@ Les messages de commit suivent [Conventional Commits 1.0.0](https://www.conventi
 
 - **type** :
 
-  | type | pour | préfixe de branche habituel |
-  |---|---|---|
-  | `feat` | une fonctionnalité | `feature/` |
-  | `fix` | la correction d'un bug | `bugfix/` |
-  | `refactor` | une restructuration sans changement de comportement | `refactoring/` |
-  | `perf` | un gain de performance | `feature/`, `refactoring/` |
-  | `style` | la mise en forme du code (format, espaces), sans changement de sens | `chore/` |
-  | `chore` | l'entretien : dépendances, outillage, nettoyage | `chore/` |
-  | `docs` | la documentation | `docs/` |
-  | `test` | des tests | `test/` |
-  | `ci` | la CI | `ci/` |
-  | `build` | le build, les images Docker, le packaging | `ci/` |
-  | `revert` | l'annulation d'un changement (§ 5) | `bugfix/` |
+  | type | pour |
+  |---|---|
+  | `feat` | une fonctionnalité ou un ajout visible |
+  | `fix` | la correction d'un bug |
+  | `refactor` | une restructuration du code, sans changement de comportement |
+  | `perf` | un gain de performance |
+  | `style` | la mise en forme du code (format, espaces), sans changement de sens |
+  | `chore` | l'entretien : dépendances, outillage, nettoyage |
+  | `docs` | la documentation seule (README, `doc/`, `design/HANDOFF.md`) |
+  | `test` | des tests ajoutés ou corrigés, sans toucher au code testé |
+  | `ci` | la CI (workflows) |
+  | `build` | le build et le packaging (Dockerfile, Makefile, images) |
+  | `revert` | l'annulation d'un changement (§ 5) |
 
-  Une branche peut contenir d'autres types quand ils accompagnent le changement, par exemple un commit `test` ou `docs` dans une branche `feature/`.
+  Le type des commits va avec le préfixe de la branche. Une branche peut aussi contenir d'autres types quand ils accompagnent le changement, par exemple un commit `test` ou `docs` dans une branche `feat/`.
 
 - **portée** (obligatoire) : la partie du dépôt touchée.
 
@@ -138,7 +138,7 @@ feat(server)!: return bpm and camelot in track lists
 
 Un revert est un changement comme un autre : il passe par une branche et une pull request.
 
-- **Branche** : le préfixe `bugfix/` (ou celui du changement annulé), puis `revert-` et la description du changement : `bugfix/revert-shuffle-playback-gap`.
+- **Branche** : le préfixe `revert/`, puis la description du changement annulé : `revert/shuffle-playback-gap`.
 - **Commit** : le type `revert`, avec pour portée le numéro de la pull request qui a introduit le changement annulé, puis l'en-tête exact du commit annulé. Le corps dit **pourquoi** on annule, et un pied `Refs:` donne le sha du commit annulé. La limite de 72 caractères vaut pour l'en-tête annulé, pas pour la ligne entière.
 
   ```

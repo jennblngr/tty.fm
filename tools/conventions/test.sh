@@ -25,12 +25,16 @@ message() {
   expect "$1" "$2" message "$tmp/msg" ${4:+"$4"}
 }
 
-expect ok "feature branch" branch feature/audio-analysis
-expect ok "branch with an issue number" branch bugfix/27-previous-restarts-track
+expect ok "feat branch" branch feat/audio-analysis
+expect ok "branch with an issue number" branch fix/27-previous-restarts-track
+expect ok "revert branch" branch revert/shuffle-playback-gap
+expect ok "perf branch" branch perf/track-list-query
+expect ko "old feature/ prefix" branch feature/audio-analysis
+expect ko "old bugfix/ prefix" branch bugfix/shuffle-playback-gap
+expect ko "old refactoring/ prefix" branch refactoring/track-select-query
 expect ko "unknown prefix" branch claude/notifications-f1903d
-expect ko "feat/ instead of feature/" branch feat/audio
-expect ko "uppercase in a branch" branch feature/Audio
-expect ko "underscore in a branch" branch feature/audio_analysis
+expect ko "uppercase in a branch" branch feat/Audio
+expect ko "underscore in a branch" branch feat/audio_analysis
 expect ko "trailing dash" branch docs/conventions-
 expect ko "main" branch main
 
@@ -89,7 +93,7 @@ message ok "breaking change with footer" "feat(server)!: return bpm in track lis
 
 BREAKING CHANGE: track lists have a new bpm field."
 message ko "breaking change without footer" "feat(server)!: return bpm in track lists"
-message ok "merge commit" "Merge remote-tracking branch 'origin/main' into feature/x"
+message ok "merge commit" "Merge remote-tracking branch 'origin/main' into feat/x"
 message ok "fixup allowed locally" "fixup! fix(app): keep playing" --allow-fixup
 message ko "fixup refused otherwise" "fixup! fix(app): keep playing"
 message ok "empty message left to git" "# only a comment"
