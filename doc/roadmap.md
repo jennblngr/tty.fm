@@ -15,7 +15,7 @@ Les phases 1 et 2 n'ont jamais été décrites dans le dépôt : leur contenu es
 
 Ce qui attend la phase 3 dans l'app (commentaires « phase 3 » dans `home.dart`, `now_playing.dart`, `shell.dart`, `stats.dart`) :
 
-- **Analyse audio** : fait dans le lecteur (bloc `$ analyse --piste`, enchaînement compatible), les listes de titres (bpm en pêche), la file d'attente desktop et le menu `···` des titres (« relancer l'analyse »). Restent : genres en %, ambiance et acoustique (#19), les filtres `bpm:` / `ton:` de la recherche (#18) et de la biblio (#24), le tempo des stats (#20), « relancer l'analyse » dans le menu `[···]` du lecteur (#15), « réinitialiser l'analyse audio » et l'état de l'analyse dans les réglages (#25 ; l'API existe : `GET/DELETE /analysis`).
+- **Analyse audio** : fait dans le lecteur (bloc `$ analyse --piste`, enchaînement compatible), les listes de titres (bpm en pêche), la file d'attente desktop, le menu `···` des titres et le menu `[···]` du lecteur (« relancer l'analyse »). Restent : genres en %, ambiance et acoustique (#19), les filtres `bpm:` / `ton:` de la recherche (#18) et de la biblio (#24), le tempo des stats (#20), « réinitialiser l'analyse audio » et l'état de l'analyse dans les réglages (#25 ; l'API existe : `GET/DELETE /analysis`).
 - **Recommandations** : mix du jour, radar, radios d'artistes (#14), lecture auto en fin de file (#23), « lancer la radio » dans le menu `[···]` (#15).
 - **Suivi des sorties** : nouvelles sorties à l'accueil (#14), artistes suivis dans la biblio (§3).
 - **Message du jour** : les variantes qui dépendent de ces données (#13).
@@ -65,7 +65,7 @@ Par écran. « → #n » renvoie à l'issue qui couvre l'écart ; les lignes **s
 ### Lecteur (02, 02b, D2)
 
 - En-tête centré, `[agrandir]` / `[réduire]` dans la barre du bas, lecture auto → #23.
-- Menu `[···]` selon le design → #15.
+- Menu `[···]` : fait (02b, D2), avec aller à l'album / à l'artiste (⌥A / ⌥R), lire sur…, relancer l'analyse et archiver. Manquent lancer la radio, égaliseur, infos du fichier, modifier les tags et retirer de la bibliothèque → #15.
 - Bloc `$ analyse --piste` : fait, sauf genres en %, ambiance et acoustique (modèles ML) et le lien `[détails]` → #19. Chips de genre → #19.
 - Fermer en glissant vers le bas → #6.
 - **Sans issue** : le panneau `⚙ son` du lecteur propose un minuteur de veille et le choix de la qualité (`now_playing.dart`). Le design les exclut (HANDOFF §5 : « pas de minuteur de veille », « pas de réglage de qualité dans le lecteur »). Retirer, ou garder et mettre à jour le design.
@@ -79,6 +79,7 @@ Par écran. « → #n » renvoie à l'issue qui couvre l'écart ; les lignes **s
   - section « artistes suivis » avec le point « nouvelle sortie » (dépend du suivi des sorties) ;
   - jauge « stockage hors-ligne `1.1 / 4 Go` » en bas de page ;
   - écran `bibliothèque › [archivés]`, pas encore dessiné (HANDOFF §8) → #15.
+  - « archiver » existe (menus `···` des titres et `[···]` du lecteur, toast « annuler » 5 s), mais pas au sens de la spec : le titre reste visible, grisé et barré, dans son album, ses playlists et la recherche, et n'est simplement plus jamais mis en file (table `hidden_tracks`, `GET/PUT/DELETE /hidden`). La spec le retire de la biblio, des recos et de la recherche. À accorder avec #15.
 
 ### Recherche (04, 04b, D4, D4b)
 
