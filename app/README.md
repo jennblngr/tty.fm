@@ -79,6 +79,16 @@ Les APK de la Release sont signés avec une clé dédiée, pas avec la clé de d
 3. Dans les options de l'app, filtre des APK (*Filter APKs by regular expression*) : `arm64-v8a`.
 4. Installer. Obtainium vérifie ensuite les nouvelles Releases tout seul.
 
+### Android : APK de test à la demande (« tty.fm (preview) »)
+
+Pour essayer une branche sur le téléphone sans publier de version, le workflow `.github/workflows/preview.yml` construit un APK quand on le lance à la main : GitHub → Actions → **preview** → *Run workflow*, puis choisir la branche (`main` par défaut). Compter environ 6 minutes.
+
+- L'APK est joint au run comme artefact (`ttyfm-<version>-preview.<n° du run>-arm64-v8a`), gardé 14 jours : le télécharger en bas de la page du run (connecté à GitHub), dézipper, installer.
+- L'app s'appelle **tty.fm (preview)** (`fm.tty.app.preview`) : elle s'installe à côté de l'app normale et de l'app de debug du Mac (`fm.tty.app.dev`), avec sa propre session et son propre cache.
+- C'est un build `profile` (rapide, comme une release, mais avec les outils de mesure), arm64 seulement. Il est signé avec la clé de release et son numéro de build est celui du run : chaque nouvel APK s'installe par-dessus le précédent sans désinstaller.
+
+Le workflow doit être sur `main` pour apparaître dans l'onglet Actions ; il peut ensuite construire n'importe quelle branche. Un build `profile` fait sur le Mac (`flutter build apk --profile`) est signé avec la clé de `android/key.properties` si elle existe, sinon avec la clé de debug.
+
 ### macOS : mise à jour avec `tools/update-mac.sh`
 
 ```bash

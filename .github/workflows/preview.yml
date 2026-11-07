@@ -1,0 +1,76 @@
+# Builds a test APK on demand (Actions → preview → Run workflow, from main or
+# any branch) and attaches it to the run as an artifact. The app is
+# "tty.fm (preview)" (fm.tty.app.preview): Flutter profile mode, arm64 only,
+# signed with the release key so that each build installs over the previous
+# one, alongside the release app. See app/README.md.
+name: preview
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview
+  cancel-in-progress: false
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - id: v
+        name: Derive the preview version
+        run: |
+          base=$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' pubspec.yaml)
+          name="$base-preview.$GITHUB_RUN_NUMBER"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "Building $name from $GITHUB_REF_NAME at ${GITHUB_SHA::7}"
+      - name: Install signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::Secret KEYSTORE_BASE64 is missing (see app/README.md)"; exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.jks
+          cat > android/key.properties <<PROPS
+          storeFile=release.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          PROPS
+      - run: flutter pub get
+      # The run number only grows, so each build updates the previous one.
+      - run: >
+          flutter build apk --profile --target-platform android-arm64
+          --build-name=${{ steps.v.outputs.name }}
+          --build-number=${{ github.run_number }}
+      - name: Rename the APK
+        run: |
+          mkdir -p ../dist
+          cp build/app/outputs/flutter-apk/app-profile.apk \
+            "../dist/ttyfm-${{ steps.v.outputs.name }}-arm64-v8a.apk"
+          ls -l ../dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ttyfm-${{ steps.v.outputs.name }}-arm64-v8a
+          path: dist/*.apk
+          if-no-files-found: error
+          retention-days: 14
