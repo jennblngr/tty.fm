@@ -100,6 +100,23 @@ class SettingsScreen extends ConsumerWidget {
                 }
               },
             ),
+            const _Header('Bibliothèque'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _Choices<bool>(
+                    label: 'masquer les titres archivés',
+                    values: const [false, true],
+                    name: (v) => v ? 'on' : 'off',
+                    selected: s.hideArchived,
+                    onPick: (v) => notifier.update(s.copyWith(hideArchived: v)),
+                  ),
+                  Text('// dans les albums ; un album tout archivé quitte la biblio', style: secondary),
+                ],
+              ),
+            ),
             const _Header('Notifications'),
             const _Notifications(),
             const _Header('Apparence'),

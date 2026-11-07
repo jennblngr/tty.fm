@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/session.dart';
+import '../core/settings.dart';
 import '../data/library_repository.dart';
 import '../data/models.dart';
 
@@ -80,6 +81,48 @@ class HiddenTracksNotifier extends StreamNotifier<Set<int>> {
 }
 
 final hiddenTracksProvider = StreamNotifierProvider<HiddenTracksNotifier, Set<int>>(HiddenTracksNotifier.new);
+
+/// Whether the archived tracks are left out of the albums (setting).
+final hideArchivedProvider = Provider<bool>((ref) => ref.watch(settingsProvider.select((s) => s.hideArchived)));
+
+/// [tracks] without the archived ones when the setting asks for it.
+List<Track> visibleTracks(WidgetRef ref, List<Track> tracks) {
+  if (!ref.watch(hideArchivedProvider)) return tracks;
+  final hidden = ref.watch(hiddenTracksProvider).value ?? const <int>{};
+  return hidden.isEmpty
+      ? tracks
+      : [
+          for (final t in tracks)
+            if (!hidden.contains(t.id)) t,
+        ];
+}
+
+/// Ids of the albums whose tracks are all archived, left out of the library
+/// when the setting hides archived tracks (empty when it is off).
+final archivedAlbumsProvider = Provider<Set<int>>((ref) {
+  if (!ref.watch(hideArchivedProvider)) return const {};
+  final hidden = ref.watch(hiddenTracksProvider).value ?? const <int>{};
+  if (hidden.isEmpty) return const {};
+  return fullyArchivedAlbums(ref.watch(tracksProvider).value ?? const [], hidden);
+});
+
+/// The albums of [tracks] that have tracks and only [hidden] ones.
+Set<int> fullyArchivedAlbums(List<Track> tracks, Set<int> hidden) {
+  final open = <int>{};
+  final archived = <int>{};
+  for (final t in tracks) {
+    (hidden.contains(t.id) ? archived : open).add(t.albumId);
+  }
+  return archived.difference(open);
+}
+
+/// [albums] without the fully archived ones.
+List<Album> withoutArchived(List<Album> albums, Set<int> archived) => archived.isEmpty
+    ? albums
+    : [
+        for (final a in albums)
+          if (!archived.contains(a.id)) a,
+      ];
 
 /// Playlist mutations. Each one refreshes the affected providers so every
 /// screen showing the tree or the playlist updates.

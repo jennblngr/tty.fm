@@ -53,6 +53,7 @@ class Settings {
     this.fixedTheme = ThemeName.catppuccinMocha,
     this.downloadQuality = StreamQuality.original,
     this.downloadWifiOnly = false,
+    this.hideArchived = false,
   });
 
   /// Address used everywhere (typically the Tailscale name).
@@ -75,6 +76,10 @@ class Settings {
   final StreamQuality downloadQuality;
   final bool downloadWifiOnly;
 
+  /// Leaves the archived tracks out of the albums, and the albums whose
+  /// tracks are all archived out of the library.
+  final bool hideArchived;
+
   bool get configured => remoteUrl.isNotEmpty;
 
   Settings copyWith({
@@ -89,6 +94,7 @@ class Settings {
     ThemeName? fixedTheme,
     StreamQuality? downloadQuality,
     bool? downloadWifiOnly,
+    bool? hideArchived,
   }) => Settings(
     remoteUrl: remoteUrl ?? this.remoteUrl,
     lanUrl: lanUrl ?? this.lanUrl,
@@ -101,6 +107,7 @@ class Settings {
     fixedTheme: fixedTheme ?? this.fixedTheme,
     downloadQuality: downloadQuality ?? this.downloadQuality,
     downloadWifiOnly: downloadWifiOnly ?? this.downloadWifiOnly,
+    hideArchived: hideArchived ?? this.hideArchived,
   );
 }
 
@@ -138,6 +145,7 @@ class SettingsNotifier extends Notifier<Settings> {
         _mobile ? StreamQuality.opusHigh : StreamQuality.original,
       ),
       downloadWifiOnly: _p.getBool('downloadWifiOnly') ?? _mobile,
+      hideArchived: _p.getBool('hideArchived') ?? false,
     );
   }
 
@@ -155,6 +163,7 @@ class SettingsNotifier extends Notifier<Settings> {
       _p.setString('fixedTheme', s.fixedTheme.name),
       _p.setString('downloadQuality', s.downloadQuality.name),
       _p.setBool('downloadWifiOnly', s.downloadWifiOnly),
+      _p.setBool('hideArchived', s.hideArchived),
     ]);
   }
 }

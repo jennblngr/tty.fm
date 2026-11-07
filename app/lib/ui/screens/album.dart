@@ -44,7 +44,8 @@ class AlbumScreen extends ConsumerWidget {
         data,
         onRetry: () => ref.invalidate(albumProvider(id)),
         builder: (d) {
-          final (album, tracks) = d;
+          final (album, all) = d;
+          final tracks = visibleTracks(ref, all);
           final multiDisc = tracks.map((t) => t.discNo ?? 1).toSet().length > 1;
           final tty = Tty.of(context);
           return ListView(
@@ -139,6 +140,8 @@ class AlbumScreen extends ConsumerWidget {
                   onTap: () => c.playTracks(tracks, index: i, contextKind: 'album', contextId: id),
                 ),
               ],
+              if (tracks.isEmpty && all.isNotEmpty)
+                const Padding(padding: EdgeInsets.all(16), child: Comment('tous les titres sont archivés')),
               const SizedBox(height: 24),
             ],
           );
