@@ -57,6 +57,15 @@ android {
             applicationIdSuffix = ".dev"
             manifestPlaceholders["appLabel"] = "tty.fm dev"
         }
+        // Test builds from the preview workflow: they install alongside both
+        // the release app and the local debug app, and are signed with the
+        // release key so that each build installs over the previous one.
+        maybeCreate("profile").apply {
+            applicationIdSuffix = ".preview"
+            manifestPlaceholders["appLabel"] = "tty.fm (preview)"
+            signingConfig = signingConfigs.findByName("release")
+                ?: signingConfigs.getByName("debug")
+        }
         release {
             signingConfig = signingConfigs.findByName("release")
                 ?: signingConfigs.getByName("debug")
