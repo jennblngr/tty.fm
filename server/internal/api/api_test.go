@@ -630,4 +630,20 @@ func TestRadioAPI(t *testing.T) {
 	if m, ok := home["new_releases"].([]any); !ok || len(m) != 1 {
 		t.Fatalf("home new releases: %v", home["new_releases"])
 	}
+
+	// Followed artists: none listened yet; follow one by hand.
+	var fol struct {
+		Items []store.FollowedArtist `json:"items"`
+	}
+	c.json("GET", "/follows", nil, 200, &fol)
+	if fol.Items == nil || len(fol.Items) != 0 {
+		t.Fatalf("follows: %+v", fol)
+	}
+	c.json("PUT", fmt.Sprintf("/artists/%d/follow", rq.Items[0].ArtistID), map[string]any{"followed": true}, 204, nil)
+	c.json("GET", "/follows", nil, 200, &fol)
+	if len(fol.Items) != 1 || fol.Items[0].Auto || fol.Items[0].NewRelease == nil {
+		t.Fatalf("follows after following: %+v", fol)
+	}
+	c.json("PUT", fmt.Sprintf("/artists/%d/follow", rq.Items[0].ArtistID), map[string]any{}, 400, nil)
+	c.json("PUT", "/artists/999/follow", map[string]any{"followed": true}, 404, nil)
 }

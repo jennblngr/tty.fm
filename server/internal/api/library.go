@@ -162,6 +162,41 @@ func (s *Server) saveArtistReleases(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// follows lists the followed artists ("● artistes suivis").
+func (s *Server) follows(w http.ResponseWriter, r *http.Request) {
+	items, err := s.DB.FollowedArtists(r.Context(), time.Now())
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
+// setFollow follows an artist or stops following it ({"followed": bool}).
+func (s *Server) setFollow(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r, "id")
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	var req struct {
+		Followed *bool `json:"followed"`
+	}
+	if err := decode(r, &req); err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if req.Followed == nil {
+		s.fail(w, r, errBadRequest)
+		return
+	}
+	if err := s.DB.SetFollowed(r.Context(), id, *req.Followed); err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // mixes lists the mixes of the day (without their tracks).
 func (s *Server) mixes(w http.ResponseWriter, r *http.Request) {
 	mixes, err := s.DB.DailyMixes(r.Context(), false)
