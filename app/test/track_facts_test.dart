@@ -63,6 +63,14 @@ void main() {
     expect(find.text('acoustique'), findsNothing);
   });
 
+  testWidgets('genres from the analysis, without their share', (tester) async {
+    await _pump(tester, const AnalysisResult(TrackAnalysis(genres: [('Électro', 0.68), ('Synthwave', 0.24)]), []));
+    await tester.pump();
+    expect(find.text('électro'), findsOneWidget);
+    expect(find.text('synthwave'), findsOneWidget);
+    expect(find.textContaining('68%', findRichText: true), findsNothing);
+  });
+
   testWidgets('a failed analysis shows nothing of it', (tester) async {
     await _pump(tester, const AnalysisResult(TrackAnalysis(error: 'decode', bpm: 100), []));
     await tester.pump();

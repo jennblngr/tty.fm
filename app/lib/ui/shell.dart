@@ -570,8 +570,10 @@ class TrackFacts extends ConsumerWidget {
     final genres = ok ? a.genres : const <(String, double)>[];
     final rows = <(String, Widget)>[
       if (genres.isNotEmpty) ...[
-        ('genre', withNote(genres[0].$1.toLowerCase(), c.mauve, pct(genres[0].$2))),
-        if (genres.length > 1) ('sous-genre', withNote(genres[1].$1.toLowerCase(), c.pink, pct(genres[1].$2))),
+        // No share: it is a part of the summed activations of 400 styles,
+        // which reads as a confidence it is not.
+        ('genre', text(genres[0].$1.toLowerCase(), c.mauve)),
+        if (genres.length > 1) ('sous-genre', text(genres[1].$1.toLowerCase(), c.pink)),
       ] else if (t.genre != null)
         ('genre', text(t.genre!.toLowerCase(), c.mauve)),
       if (t.year != null) ('année', text('${t.year}')),
