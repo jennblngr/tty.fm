@@ -38,7 +38,7 @@ func TestAnalysis(t *testing.T) {
 		TrackFile{Path: "a/3.flac", Title: "Three", Artist: "X", Album: "A", Mtime: 1},
 		TrackFile{Path: "a/4.flac", Title: "Four", Artist: "X", Album: "A", Mtime: 1},
 	)
-	if q, _ := db.AnalysisQueue(ctx, 10); len(q) != 4 {
+	if q, _ := db.AnalysisQueue(ctx, 10, ""); len(q) != 4 {
 		t.Fatalf("queue: %+v", q)
 	}
 	if _, err := db.TrackAnalysis(ctx, ids[0]); !errors.Is(err, ErrNotFound) {
@@ -75,8 +75,15 @@ func TestAnalysis(t *testing.T) {
 	if st, _ := db.AnalysisStatus(ctx); st != (AnalysisStatus{Total: 4, Analyzed: 3, Failed: 1}) {
 		t.Fatalf("status: %+v", st)
 	}
-	if q, _ := db.AnalysisQueue(ctx, 10); len(q) != 0 {
+	if q, _ := db.AnalysisQueue(ctx, 10, ""); len(q) != 0 {
 		t.Fatalf("queue after analysis (failures are not retried): %+v", q)
+	}
+	// A new analyzer version takes every track back, failures included.
+	if q, _ := db.AnalysisQueue(ctx, 10, "test/2"); len(q) != 4 {
+		t.Fatalf("queue for a new analyzer: %+v", q)
+	}
+	if q, _ := db.AnalysisQueue(ctx, 10, "test/1"); len(q) != 0 {
+		t.Fatalf("queue for the same analyzer: %+v", q)
 	}
 
 	// Bad reports are refused.
@@ -104,18 +111,22 @@ func TestAnalysis(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if q, _ := db.AnalysisQueue(ctx, 10); len(q) != 1 || q[0].ID != ids[0] || q[0].FileMtime != 2 {
+	if q, _ := db.AnalysisQueue(ctx, 10, ""); len(q) != 1 || q[0].ID != ids[0] || q[0].FileMtime != 2 {
 		t.Fatalf("queue after change: %+v", q)
 	}
 	if a, _ := db.TrackAnalysis(ctx, ids[0]); !a.Stale {
 		t.Fatal("not stale")
+	}
+	// Changed files come before outdated analyses.
+	if q, _ := db.AnalysisQueue(ctx, 10, "test/2"); len(q) != 4 || q[0].ID != ids[0] {
+		t.Fatalf("queue order for a new analyzer: %+v", q)
 	}
 
 	// Reset: one track, then everything.
 	if err := db.ResetAnalysis(ctx, ids[1]); err != nil {
 		t.Fatal(err)
 	}
-	if q, _ := db.AnalysisQueue(ctx, 10); len(q) != 2 {
+	if q, _ := db.AnalysisQueue(ctx, 10, ""); len(q) != 2 {
 		t.Fatalf("queue after reset: %+v", q)
 	}
 	if err := db.ResetAnalysis(ctx, 0); err != nil {
