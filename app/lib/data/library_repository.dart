@@ -137,13 +137,11 @@ class LibraryRepository {
   /// Queues the track for analysis again ("relancer l'analyse").
   Future<void> resetAnalysis(int trackId) => _api.delete('/tracks/$trackId/analysis');
 
-  /// The followed artists ("● artistes suivis"), cached for offline use.
+  /// The followed artists ("● artistes suivis", the liked ones), cached for
+  /// offline use.
   Stream<List<FollowedArtist>> follows() => _cached('follows', () => _api.get('/follows'), (j) {
     return [for (final a in (j as Map)['items'] as List) FollowedArtist.fromJson(a as Map<String, dynamic>)];
   });
-
-  /// Follows an artist by hand, or stops following it.
-  Future<void> setFollowed(int artistId, bool on) => _api.put('/artists/$artistId/follow', {'followed': on});
 
   /// The tracks of a mix of the day, in play order.
   Future<List<Track>> mixTracks(int position) async {

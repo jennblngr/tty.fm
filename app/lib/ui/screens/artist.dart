@@ -17,7 +17,6 @@ class ArtistScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final data = ref.watch(artistProvider(id));
     final fav = ref.watch(favoritesProvider.select((f) => f.value?['artists']?.contains(id) ?? false));
-    final followed = ref.watch(followsProvider.select((f) => f.value?.any((a) => a.id == id)));
     final archived = ref.watch(archivedAlbumsProvider);
     final albums = withoutArchived(data.value?.$2 ?? const <Album>[], archived);
 
@@ -37,22 +36,9 @@ class ArtistScreen extends ConsumerWidget {
             IconButton(tooltip: 'Lire', icon: const Icon(Icons.play_arrow), onPressed: () => play(shuffle: false)),
             IconButton(tooltip: 'Aléatoire', icon: const Icon(Icons.shuffle), onPressed: () => play(shuffle: true)),
           ],
-          // "[suivre]" / "[suivi ✓]": its releases show in the biblio and on
-          // the home screen. Unknown while the list loads.
-          if (followed != null)
-            Center(
-              child: TtyLink(
-                followed ? 'suivi ✓' : 'suivre',
-                active: followed,
-                tooltip: followed ? 'Ne plus suivre' : 'Suivre ses sorties',
-                onTap: () => guard(context, () async {
-                  await ref.read(libraryProvider).setFollowed(id, !followed);
-                  ref.invalidate(followsProvider);
-                }, success: followed ? 'Tu ne suis plus cet artiste' : 'Artiste suivi'),
-              ),
-            ),
+          // Liking an artist also follows its releases (biblio, accueil).
           IconButton(
-            tooltip: fav ? 'Retirer des favoris' : 'Ajouter aux favoris',
+            tooltip: fav ? 'Retirer des favoris (ne plus suivre)' : 'Ajouter aux favoris et suivre ses sorties',
             icon: HeartIcon(fav, size: 22),
             onPressed: () => guard(context, () => ref.read(favoritesProvider.notifier).toggle('artists', id)),
           ),

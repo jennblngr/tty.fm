@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_info.dart';
 import '../../offline/downloads.dart';
-import '../../data/models.dart';
 import '../../state/library.dart';
 import '../../state/playback.dart';
 import '../dialogs.dart';
@@ -218,7 +217,7 @@ class _Playlists extends ConsumerWidget {
   }
 }
 
-/// "● artistes suivis [23] ▾" (03, D3): the followed artists as chips, a
+/// "● artistes suivis [23] ▾" (03, D3): the liked artists as chips, a
 /// red "•" by those with a new release; folded, the first ones and "+N".
 class FollowedArtists extends ConsumerStatefulWidget {
   const FollowedArtists({super.key});
@@ -236,8 +235,19 @@ class _FollowedArtistsState extends ConsumerState<FollowedArtists> {
   @override
   Widget build(BuildContext context) {
     final c = Tty.of(context);
-    final follows = ref.watch(followsProvider).value ?? const <FollowedArtist>[];
-    if (follows.isEmpty) return const SizedBox.shrink();
+    final loaded = ref.watch(followsProvider).value;
+    if (loaded == null) return const SizedBox.shrink(); // loading, or an older server
+    final follows = loaded;
+    if (follows.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TtySection('artistes suivis', glyph: '●', color: c.teal, ruled: true),
+          const SizedBox(height: 8),
+          const Comment('♥ un artiste pour suivre ses sorties'),
+        ],
+      );
+    }
     final shown = _open ? follows : follows.take(folded).toList();
     final hidden = follows.length - shown.length;
     Widget chip(String label, Color color, VoidCallback onTap, {bool dot = false}) => Material(

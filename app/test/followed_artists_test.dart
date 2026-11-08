@@ -10,7 +10,6 @@ final _follows = [
   FollowedArtist.fromJson({
     'id': 4,
     'name': 'Charlotte Cardin',
-    'auto': true,
     'new_release': {'artist_id': 4, 'title': 'Memories', 'kind': 'single', 'released': '2026-10-09'},
   }),
   for (final (i, n) in ['Sia', 'Adele', 'Tove Lo', 'Kassette'].indexed) FollowedArtist(id: i + 10, name: n),
@@ -19,7 +18,6 @@ final _follows = [
 void main() {
   test('followed artists parse, with their new release', () {
     expect(_follows.first.newRelease!.title, 'Memories');
-    expect(_follows.first.auto, isTrue);
     expect(FollowedArtist.fromJson({'id': 1}).newRelease, isNull);
   });
 
@@ -45,5 +43,19 @@ void main() {
     await tester.pump();
     expect(find.textContaining('kassette', findRichText: true), findsOneWidget);
     expect(find.text('[5] ▴'), findsOneWidget);
+  });
+
+  testWidgets('artistes suivis: how to follow when none is liked', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [followsProvider.overrideWith((ref) => Stream.value(const <FollowedArtist>[]))],
+        child: MaterialApp(
+          theme: ttyTheme(Tty.mocha),
+          home: const Scaffold(body: FollowedArtists()),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.textContaining('♥ un artiste pour suivre ses sorties', findRichText: true), findsOneWidget);
   });
 }
