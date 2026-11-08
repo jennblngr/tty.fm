@@ -94,3 +94,10 @@ class Client:
 
     def report(self, track_id: int, report: dict) -> None:
         self.call("PUT", f"/tracks/{track_id}/analysis", report)
+
+    def release_queue(self, limit: int = 10) -> list[dict]:
+        """Album artists to look up on MusicBrainz."""
+        return self.call("GET", f"/releases/queue?limit={limit}")["items"]
+
+    def save_releases(self, artist_id: int, report: dict) -> None:
+        self.call("PUT", f"/artists/{artist_id}/releases", report)

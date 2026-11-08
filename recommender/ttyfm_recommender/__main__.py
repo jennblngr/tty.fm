@@ -7,9 +7,11 @@ import functools
 import logging
 import os
 import sys
+import threading
 
-from . import models
+from . import __version__, models
 from .client import Client
+from .musicbrainz import MusicBrainz, ReleaseWorker
 from .worker import Worker, analyze_file, preload
 
 
@@ -52,6 +54,12 @@ def main() -> int:
         password,
         os.path.join(env("STATE_DIR", "/state"), "token"),
     )
+    # New releases: a slow MusicBrainz worker beside the analysis.
+    if (env("RELEASES", "on") or "on").lower() != "off":
+        version = env("VERSION", __version__)
+        mb = MusicBrainz(f"tty.fm/{version} ( https://github.com/jennblngr/tty.fm )")
+        threading.Thread(target=ReleaseWorker(client, mb).run_forever, name="releases", daemon=True).start()
+        logging.info("new releases: looking artists up on MusicBrainz")
     Worker(
         client,
         env("MUSIC_DIR", "/music"),
