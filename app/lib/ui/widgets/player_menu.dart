@@ -14,6 +14,7 @@ import '../shell.dart';
 import '../theme.dart';
 import 'async_view.dart';
 import 'cover.dart';
+import 'radio.dart';
 import 'tty.dart';
 
 /// "[···]" of the player header: actions on the current track that the
@@ -22,8 +23,8 @@ import 'tty.dart';
 /// fichier › bibliothèque. Phone: panel from the bottom; desktop: menu
 /// under the button, aligned right. Grey when closed, green while open.
 ///
-/// Not here yet: radio, égaliseur, infos du fichier, modifier les tags,
-/// archiver, retirer de la bibliothèque (#15).
+/// Not here yet: égaliseur, infos du fichier, modifier les tags, retirer
+/// de la bibliothèque (#15).
 class PlayerMenuButton extends ConsumerStatefulWidget {
   const PlayerMenuButton(this.track, {super.key});
   final Track track;
@@ -96,6 +97,7 @@ class _PlayerMenuButtonState extends ConsumerState<PlayerMenuButton> {
       [
         _Entry("aller à l'album", wide ? '⌥A' : '›', () => _leave(screen, (ctx) => openAlbum(ctx, track.albumId))),
         _Entry("aller à l'artiste", wide ? '⌥R' : '›', () => _leave(screen, (ctx) => openArtist(ctx, track.artistId))),
+        if (!hidden) _Entry('lancer la radio', wide ? null : '// genre + bpm', () => launchRadio(screen, ref, track)),
       ],
       [_Entry('lire sur…', phone ? 'ce tel. ›' : 'cet ordi ›', () => showDevicesSheet(screen))],
       [

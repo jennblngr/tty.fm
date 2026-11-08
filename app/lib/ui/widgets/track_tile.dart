@@ -11,6 +11,7 @@ import '../format.dart';
 import '../nav.dart';
 import 'async_view.dart';
 import 'cover.dart';
+import 'radio.dart';
 import 'tty.dart';
 import '../theme.dart';
 
@@ -139,6 +140,7 @@ class TrackMenuButton extends ConsumerWidget {
             c.addToQueue([track]);
             toast(context, 'Ajouté à la file');
           }),
+          item(Icons.radio_outlined, 'Lancer la radio', () => launchRadio(context, ref, track)),
         ],
         item(Icons.playlist_add, 'Ajouter à une playlist…', () => addToPlaylist(context, ref, [track])),
         item(

@@ -4,12 +4,21 @@ import 'dart:math';
 import '../data/models.dart';
 import 'audio_engine.dart';
 
+/// Where a queue entry comes from: the list the user started (album,
+/// playlist…), a track the user added ("ajouté par toi"), or the radio.
+enum QueueSource { context, user, radio }
+
 /// A queue entry. [uid] distinguishes the same track queued twice.
 class QueueItem {
-  const QueueItem(this.uid, this.track);
+  const QueueItem(this.uid, this.track, [this.source = QueueSource.context]);
   final int uid;
   final Track track;
+  final QueueSource source;
 }
+
+/// Fetches a batch of radio tracks (GET /radio): [recent] are the last
+/// played tracks, oldest first, [exclude] the tracks still queued.
+typedef RadioFetcher = Future<List<Track>> Function(RadioSeed seed, {List<int> recent, List<int> exclude});
 
 /// Immutable snapshot of the player. Position is published separately (it
 /// changes many times per second and most widgets do not need it).
@@ -26,6 +35,7 @@ class PlaybackState {
     this.error,
     this.contextKind,
     this.contextId,
+    this.radio,
   });
 
   final List<QueueItem> queue;
@@ -41,6 +51,13 @@ class PlaybackState {
   /// Where the queue came from ("album", "playlist", …) and its id.
   final String? contextKind;
   final int? contextId;
+
+  /// The radio that fills the end of the queue, if one is on.
+  final RadioSeed? radio;
+
+  /// True when tracks the user added are still to come: replacing the rest
+  /// of the queue with a radio asks first.
+  bool get hasUserUpcoming => queue.skip(index + 1).any((q) => q.source == QueueSource.user);
 
   Track? get current => index >= 0 && index < queue.length ? queue[index].track : null;
   bool get hasNext => index < queue.length - 1 || (repeat == RepeatMode.all && queue.isNotEmpty);
@@ -85,6 +102,14 @@ class PlaybackController {
   SourceBuilder sourceFor;
   final PlayCallback? onPlay;
 
+  /// Fetches radio batches; null disables the radio (tests, no server).
+  RadioFetcher? fetchRadio;
+
+  /// Whether the queue goes on with a radio from its last track when it
+  /// ends with repeat off ("lecture auto", a setting).
+  bool Function() autoplay = _never0;
+  static bool _never0() => false;
+
   /// Tracks the user hid: never queued, wherever the list comes from
   /// (album, playlist, remote command…).
   bool Function(Track) isHidden = _never;
@@ -109,6 +134,9 @@ class PlaybackController {
   var _nextUid = 1;
   String? _contextKind;
   int? _contextId;
+  RadioSeed? _radio;
+  var _radioLoading = false;
+  var _gen = 0; // bumped when the queue is replaced: late radio batches are dropped
   _Session? _session;
   PlaybackState _state = const PlaybackState();
 
@@ -132,11 +160,14 @@ class PlaybackController {
       error: _error,
       contextKind: _contextKind,
       contextId: _contextId,
+      radio: _radio,
     );
     if (!_states.isClosed) _states.add(_state);
   }
 
-  List<QueueItem> _items(List<Track> tracks) => [for (final t in tracks) QueueItem(_nextUid++, t)];
+  List<QueueItem> _items(List<Track> tracks, [QueueSource source = QueueSource.context]) => [
+    for (final t in tracks) QueueItem(_nextUid++, t, source),
+  ];
 
   List<EngineSource> _sources() => [for (final q in _queue) sourceFor(q.track)];
 
@@ -150,6 +181,7 @@ class PlaybackController {
     bool? shuffle,
     String? contextKind,
     int? contextId,
+    QueueSource source = QueueSource.context,
   }) async {
     // Leave the hidden tracks out. If the chosen one is hidden, start at the
     // next one that is not.
@@ -164,8 +196,10 @@ class PlaybackController {
     _finishSession(byUser: true);
     _contextKind = contextKind;
     _contextId = contextId;
+    _radio = null; // a new list: the radio of the old one stops
+    _gen++;
     if (shuffle != null) _shuffle = shuffle;
-    _original = _items(tracks);
+    _original = _items(tracks, source);
     index = index.clamp(0, tracks.length - 1);
     if (_shuffle) {
       final first = _original[index];
@@ -186,6 +220,7 @@ class PlaybackController {
     _startSession();
     _emit();
     await _open(index: _index);
+    _topUp();
   }
 
   /// Inserts [tracks] right after the current one.
@@ -193,7 +228,7 @@ class PlaybackController {
     tracks = tracks.where((t) => !isHidden(t)).toList();
     if (tracks.isEmpty) return;
     if (_queue.isEmpty) return playTracks(tracks);
-    final items = _items(tracks);
+    final items = _items(tracks, QueueSource.user);
     final at = _index + 1;
     final origAt = _original.indexOf(_queue[_index]) + 1;
     _queue.insertAll(at, items);
@@ -205,12 +240,28 @@ class PlaybackController {
     }
   }
 
-  /// Appends [tracks] to the end of the queue.
+  /// Appends [tracks] to the end of the queue. While a radio is on, they go
+  /// before its tracks, as the user's own additions.
   Future<void> addToQueue(List<Track> tracks) async {
     tracks = tracks.where((t) => !isHidden(t)).toList();
     if (tracks.isEmpty) return;
     if (_queue.isEmpty) return playTracks(tracks);
-    final items = _items(tracks);
+    final firstRadio = _queue.indexWhere((q) => q.source == QueueSource.radio, _index + 1);
+    if (firstRadio > 0) {
+      final items = _items(tracks, QueueSource.user);
+      _queue.insertAll(firstRadio, items);
+      _original.insertAll(_original.indexOf(_queue[firstRadio + items.length]), items);
+      _emit();
+      for (var i = 0; i < items.length; i++) {
+        await _engine.add(sourceFor(items[i].track));
+        await _engine.move(_queue.length - 1, firstRadio + i);
+      }
+      return;
+    }
+    await _append(_items(tracks, QueueSource.user));
+  }
+
+  Future<void> _append(List<QueueItem> items) async {
     _queue.addAll(items);
     _original.addAll(items);
     _emit();
@@ -218,6 +269,84 @@ class PlaybackController {
       await _engine.add(sourceFor(it.track));
     }
   }
+
+  /// Starts a radio from [seed] ("lancer la radio"). From the current
+  /// track, the rest of the queue is replaced by the radio; from another
+  /// track, it plays now with the radio after it; from an artist, the
+  /// radio's first batch plays.
+  Future<void> startRadio(RadioSeed seed, {Track? from}) async {
+    final fetch = fetchRadio;
+    if (fetch == null) return;
+    final cur = current;
+    if (from != null && cur != null && cur.id == from.id) {
+      _gen++;
+      for (var i = _queue.length - 1; i > _index; i--) {
+        _original.remove(_queue.removeAt(i));
+        await _engine.remove(i);
+      }
+      _radio = seed;
+      _emit();
+      await _topUp();
+      return;
+    }
+    if (from != null) {
+      await playTracks([from], contextKind: 'radio', contextId: seed.id);
+      if (current?.id != from.id) return; // hidden
+      _radio = seed;
+      _emit();
+      await _topUp();
+      return;
+    }
+    final batch = await fetch(seed);
+    final tracks = batch.where((t) => !isHidden(t)).toList();
+    if (tracks.isEmpty) return;
+    await playTracks(tracks, shuffle: false, contextKind: 'radio', contextId: seed.id, source: QueueSource.radio);
+    _radio = seed;
+    _emit();
+  }
+
+  Track? get current => _index >= 0 && _index < _queue.length ? _queue[_index].track : null;
+
+  /// When few tracks are left, asks the radio for more; at the last track
+  /// with no radio on, starts one from it if [autoplay] allows. Fetch
+  /// errors (offline, old server) just leave the queue as it is.
+  Future<void> _topUp() async {
+    final fetch = fetchRadio;
+    final cur = current;
+    if (fetch == null || cur == null || _radioLoading || _repeat == RepeatMode.one) return;
+    final upcoming = _queue.length - 1 - _index;
+    var seed = _radio;
+    if (seed == null) {
+      if (upcoming > 0 || _repeat != RepeatMode.off || !autoplay()) return;
+      seed = RadioSeed.track(cur);
+    } else if (upcoming >= _radioLowWater) {
+      return;
+    }
+    _radioLoading = true;
+    final gen = _gen;
+    try {
+      final recent = [for (var i = max(0, _index - 9); i <= _index; i++) _queue[i].track.id];
+      final queued = [for (final q in _queue) q.track.id];
+      final batch = await fetch(seed, recent: recent, exclude: queued.sublist(max(0, queued.length - 500)));
+      // The queue changed meanwhile (another list, cleared): drop the batch.
+      if (gen != _gen || _queue.isEmpty) return;
+      final known = {for (final q in _queue) q.track.id};
+      final tracks = batch.where((t) => !isHidden(t) && !known.contains(t.id)).toList();
+      _radio = seed;
+      if (tracks.isEmpty) return _emit();
+      final ended = _completed;
+      await _append(_items(tracks, QueueSource.radio));
+      if (ended) await jumpTo(_index + 1); // the queue ended while loading
+    } catch (_) {
+      // No radio this time; the next track change tries again.
+    } finally {
+      _radioLoading = false;
+      if (gen != _gen) _topUp(); // dropped a stale batch: the new queue may need one
+    }
+  }
+
+  /// A radio asks for its next batch when fewer tracks than this are left.
+  static const _radioLowWater = 3;
 
   Future<void> removeAt(int i) async {
     if (i < 0 || i >= _queue.length) return;
@@ -362,6 +491,8 @@ class PlaybackController {
     _queue = [];
     _original = [];
     _index = -1;
+    _radio = null;
+    _gen++;
     _position = Duration.zero;
     _emit();
     await _engine.stop();
@@ -402,6 +533,8 @@ class PlaybackController {
     'volume': _volume,
     'context_kind': _contextKind,
     'context_id': _contextId,
+    'sources': [for (final q in _queue) q.source.name],
+    'radio': _radio?.toJson(),
   };
 
   /// Takes over a queue snapshot ([toJson]) sent by another device: playback
@@ -416,7 +549,15 @@ class PlaybackController {
   Future<void> restore(Map<String, dynamic> j) async {
     final tracks = [for (final t in j['queue'] as List) Track.fromJson(t as Map<String, dynamic>)];
     if (tracks.isEmpty) return;
-    _queue = _items(tracks);
+    final sources = (j['sources'] as List?)?.cast<String>() ?? const [];
+    _queue = [
+      for (var i = 0; i < tracks.length; i++)
+        QueueItem(
+          _nextUid++,
+          tracks[i],
+          i < sources.length ? QueueSource.values.asNameMap()[sources[i]] ?? QueueSource.context : QueueSource.context,
+        ),
+    ];
     final order = (j['original'] as List?)?.cast<int>() ?? const [];
     _original = order.length == _queue.length ? [for (final i in order) _queue[i]] : [..._queue];
     _index = (j['index'] as int? ?? 0).clamp(0, _queue.length - 1);
@@ -426,6 +567,9 @@ class PlaybackController {
     _volume = (j['volume'] as num? ?? 1).toDouble();
     _contextKind = j['context_kind'] as String?;
     _contextId = j['context_id'] as int?;
+    final radio = j['radio'];
+    _radio = radio is Map<String, dynamic> ? RadioSeed.fromJson(radio) : null;
+    _gen++;
     _startSession();
     _session!.lastPos = _position;
     _emit();
@@ -451,6 +595,7 @@ class PlaybackController {
     _completed = false;
     _startSession();
     _emit();
+    _topUp();
   }
 
   void _onPosition(Duration pos) {
@@ -482,6 +627,7 @@ class PlaybackController {
       _completed = true;
       _playing = false;
       _emit();
+      _topUp();
     }
   }
 

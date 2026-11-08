@@ -6,6 +6,7 @@ import '../core/api_client.dart';
 import '../core/json_cache.dart';
 import '../core/network.dart';
 import '../core/session.dart';
+import '../core/settings.dart';
 import '../data/library_repository.dart';
 import '../data/models.dart';
 import '../offline/downloads.dart';
@@ -50,6 +51,9 @@ final playbackControllerProvider = Provider<PlaybackController>((ref) {
     onPlay: reporter.add,
   );
   c.isHidden = (t) => ref.read(hiddenTracksProvider).value?.contains(t.id) ?? false;
+  c.fetchRadio = (seed, {recent = const [], exclude = const []}) =>
+      ref.read(libraryProvider).radio(seed, recent: recent, exclude: exclude);
+  c.autoplay = () => ref.read(settingsProvider).autoplay;
   // A track hidden while queued leaves the queue.
   ref.listen(hiddenTracksProvider, (_, _) => c.dropHidden());
 

@@ -54,6 +54,7 @@ class Settings {
     this.downloadQuality = StreamQuality.original,
     this.downloadWifiOnly = false,
     this.hideArchived = false,
+    this.autoplay = true,
   });
 
   /// Address used everywhere (typically the Tailscale name).
@@ -80,6 +81,10 @@ class Settings {
   /// tracks are all archived out of the library.
   final bool hideArchived;
 
+  /// "Lecture auto": when the queue ends with repeat off, play on with a
+  /// radio from its last track.
+  final bool autoplay;
+
   bool get configured => remoteUrl.isNotEmpty;
 
   Settings copyWith({
@@ -95,6 +100,7 @@ class Settings {
     StreamQuality? downloadQuality,
     bool? downloadWifiOnly,
     bool? hideArchived,
+    bool? autoplay,
   }) => Settings(
     remoteUrl: remoteUrl ?? this.remoteUrl,
     lanUrl: lanUrl ?? this.lanUrl,
@@ -108,6 +114,7 @@ class Settings {
     downloadQuality: downloadQuality ?? this.downloadQuality,
     downloadWifiOnly: downloadWifiOnly ?? this.downloadWifiOnly,
     hideArchived: hideArchived ?? this.hideArchived,
+    autoplay: autoplay ?? this.autoplay,
   );
 }
 
@@ -146,6 +153,7 @@ class SettingsNotifier extends Notifier<Settings> {
       ),
       downloadWifiOnly: _p.getBool('downloadWifiOnly') ?? _mobile,
       hideArchived: _p.getBool('hideArchived') ?? false,
+      autoplay: _p.getBool('autoplay') ?? true,
     );
   }
 
@@ -164,6 +172,7 @@ class SettingsNotifier extends Notifier<Settings> {
       _p.setString('downloadQuality', s.downloadQuality.name),
       _p.setBool('downloadWifiOnly', s.downloadWifiOnly),
       _p.setBool('hideArchived', s.hideArchived),
+      _p.setBool('autoplay', s.autoplay),
     ]);
   }
 }

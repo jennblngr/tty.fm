@@ -74,6 +74,26 @@ class SettingsScreen extends ConsumerWidget {
               title: const Text('Rescanner la bibliothèque'),
               onTap: () => guard(context, () => ref.read(libraryProvider).startScan(), success: 'Scan lancé'),
             ),
+            const _Header('Lecture'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _Choices<bool>(
+                    label: 'lecture auto',
+                    values: const [false, true],
+                    name: (v) => v ? 'on' : 'off',
+                    selected: s.autoplay,
+                    onPick: (v) => notifier.update(s.copyWith(autoplay: v)),
+                  ),
+                  Text(
+                    '// à la fin de la file, si la répétition est off : enchaîne des titres similaires',
+                    style: secondary,
+                  ),
+                ],
+              ),
+            ),
             const _Header('Qualité de lecture'),
             qualityTile('Réseau local', s.qualityLocal, (q) => s.copyWith(qualityLocal: q)),
             qualityTile('À distance (Wi-Fi)', s.qualityRemoteWifi, (q) => s.copyWith(qualityRemoteWifi: q)),

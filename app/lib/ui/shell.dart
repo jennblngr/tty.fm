@@ -23,6 +23,7 @@ import 'theme.dart';
 import 'widgets/async_view.dart';
 import 'widgets/cover.dart';
 import 'widgets/mini_player.dart';
+import 'widgets/radio.dart';
 import 'widgets/tty.dart';
 
 class _Tab {
@@ -478,7 +479,7 @@ class _NowAside extends ConsumerWidget {
                         ),
                       ),
                     ),
-                  if (st.index >= st.queue.length - 1) const Comment('fin de la file'),
+                  if (st.index >= st.queue.length - 1) const QueueTail(orEnd: true),
                 ],
               ),
             ),
