@@ -137,6 +137,17 @@ class LibraryRepository {
   /// Queues the track for analysis again ("relancer l'analyse").
   Future<void> resetAnalysis(int trackId) => _api.delete('/tracks/$trackId/analysis');
 
+  /// How far the analysis of the library is, and whether it is on.
+  Future<AnalysisStatus> analysisStatus() async =>
+      AnalysisStatus.fromJson(await _api.get('/analysis') as Map<String, dynamic>);
+
+  /// "analyse audio [off] [on]" (server-wide).
+  Future<AnalysisStatus> setAnalysisEnabled(bool on) async =>
+      AnalysisStatus.fromJson(await _api.patch('/analysis', {'enabled': on}) as Map<String, dynamic>);
+
+  /// "réinitialiser l'analyse audio": every track is analysed again.
+  Future<void> resetAllAnalysis() => _api.delete('/analysis');
+
   /// A batch of radio tracks after [seed]. [recent]: the tracks played
   /// since the last batch, oldest first (they steer the radio); [exclude]:
   /// the tracks still queued. Not cached: a radio needs the server.

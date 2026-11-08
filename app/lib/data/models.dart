@@ -575,6 +575,7 @@ class ListeningStats {
     required this.topGenres,
     required this.topTracks,
     this.discovery,
+    this.tempo = const Tempo(),
   });
 
   final int days;
@@ -589,6 +590,7 @@ class ListeningStats {
   final List<NamedTotal> topGenres;
   final List<(Track, int)> topTracks;
   final NamedTotal? discovery;
+  final Tempo tempo;
 
   factory ListeningStats.fromJson(Map<String, dynamic> j) => ListeningStats(
     days: j['days'] as int? ?? 0,
@@ -606,6 +608,7 @@ class ListeningStats {
         (Track.fromJson((t as Map)['track'] as Map<String, dynamic>), t['count'] as int),
     ],
     discovery: j['discovery'] == null ? null : NamedTotal.fromJson(j['discovery'] as Map<String, dynamic>),
+    tempo: j['tempo'] is Map<String, dynamic> ? Tempo.fromJson(j['tempo'] as Map<String, dynamic>) : const Tempo(),
   );
 }
 
@@ -734,4 +737,65 @@ class RadioSeed {
   bool operator ==(Object other) => other is RadioSeed && other.kind == kind && other.id == id;
   @override
   int get hashCode => Object.hash(kind, id);
+}
+
+/// How fast the listening was (stats "∿ tempo"), over the analysed tracks
+/// only, weighted by listening time.
+class Tempo {
+  const Tempo({
+    this.analyzedMs = 0,
+    this.bandMs = const [0, 0, 0, 0, 0],
+    this.avgBpm,
+    this.prevAvgBpm,
+    this.morningBpm,
+    this.eveningBpm,
+    this.fastest,
+    this.slowest,
+  });
+
+  /// Labels of [bandMs], as the server cuts them.
+  static const bands = ['< 80', '80–100', '100–120', '120–140', '> 140'];
+
+  final int analyzedMs;
+  final List<int> bandMs;
+  final double? avgBpm;
+  final double? prevAvgBpm;
+  final double? morningBpm; // 5 h – 12 h
+  final double? eveningBpm; // 18 h – 24 h
+  final Track? fastest;
+  final Track? slowest;
+
+  static double? _d(Object? v) => (v as num?)?.toDouble();
+  static Track? _t(Object? v) => v is Map<String, dynamic> ? Track.fromJson(v) : null;
+
+  factory Tempo.fromJson(Map<String, dynamic> j) => Tempo(
+    analyzedMs: j['analyzed_ms'] as int? ?? 0,
+    bandMs: (j['band_ms'] as List? ?? const [0, 0, 0, 0, 0]).cast<int>(),
+    avgBpm: _d(j['avg_bpm']),
+    prevAvgBpm: _d(j['prev_avg_bpm']),
+    morningBpm: _d(j['morning_bpm']),
+    eveningBpm: _d(j['evening_bpm']),
+    fastest: _t(j['fastest']),
+    slowest: _t(j['slowest']),
+  );
+}
+
+/// State of the audio analysis of the library (GET /analysis).
+class AnalysisStatus {
+  const AnalysisStatus({this.enabled = true, this.total = 0, this.analyzed = 0, this.failed = 0, this.pending = 0});
+
+  /// "analyse audio": off, the recommender gets nothing to analyse.
+  final bool enabled;
+  final int total;
+  final int analyzed;
+  final int failed;
+  final int pending;
+
+  factory AnalysisStatus.fromJson(Map<String, dynamic> j) => AnalysisStatus(
+    enabled: j['enabled'] as bool? ?? true,
+    total: j['total'] as int? ?? 0,
+    analyzed: j['analyzed'] as int? ?? 0,
+    failed: j['failed'] as int? ?? 0,
+    pending: j['pending'] as int? ?? 0,
+  );
 }
