@@ -245,12 +245,16 @@ class _Albums extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final albums = ref.watch(albumsProvider(sort));
+    final archived = ref.watch(archivedAlbumsProvider);
     return AsyncView(
       albums,
       onRetry: () => ref.invalidate(albumsProvider(sort)),
       builder: (list) => RefreshIndicator(
         onRefresh: () => ref.refresh(albumsProvider(sort).future),
-        child: Padding(padding: _listPadding(context).copyWith(top: 0, bottom: 0), child: AlbumGrid(list)),
+        child: Padding(
+          padding: _listPadding(context).copyWith(top: 0, bottom: 0),
+          child: AlbumGrid(withoutArchived(list, archived)),
+        ),
       ),
     );
   }

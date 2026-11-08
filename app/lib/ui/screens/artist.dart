@@ -17,7 +17,8 @@ class ArtistScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final data = ref.watch(artistProvider(id));
     final fav = ref.watch(favoritesProvider.select((f) => f.value?['artists']?.contains(id) ?? false));
-    final albums = data.value?.$2 ?? const <Album>[];
+    final archived = ref.watch(archivedAlbumsProvider);
+    final albums = withoutArchived(data.value?.$2 ?? const <Album>[], archived);
 
     // Plays started here count for the artist in "écouté récemment".
     Future<void> play({required bool shuffle}) => guard(context, () async {
@@ -46,7 +47,7 @@ class ArtistScreen extends ConsumerWidget {
         data,
         onRetry: () => ref.invalidate(artistProvider(id)),
         builder: (d) {
-          final (_, albums) = d;
+          final albums = withoutArchived(d.$2, archived);
           if (albums.isEmpty) return const Center(child: Comment('apparaît uniquement sur des compilations'));
           return AlbumGrid(albums);
         },

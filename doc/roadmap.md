@@ -79,7 +79,7 @@ Par écran. « → #n » renvoie à l'issue qui couvre l'écart ; les lignes **s
   - section « artistes suivis » avec le point « nouvelle sortie » (dépend du suivi des sorties) ;
   - jauge « stockage hors-ligne `1.1 / 4 Go` » en bas de page ;
   - écran `bibliothèque › [archivés]`, pas encore dessiné (HANDOFF §8) → #15.
-  - « archiver » existe (menus `···` des titres et `[···]` du lecteur, toast « annuler » 5 s), mais pas au sens de la spec : le titre reste visible, grisé et barré, dans son album, ses playlists et la recherche, et n'est simplement plus jamais mis en file (table `hidden_tracks`, `GET/PUT/DELETE /hidden`). La spec le retire de la biblio, des recos et de la recherche. À accorder avec #15.
+  - « archiver » existe (menus `···` des titres et `[···]` du lecteur, toast « annuler » 5 s), mais pas au sens de la spec : le titre reste visible, grisé et barré, dans son album, ses playlists et la recherche, et n'est simplement plus jamais mis en file (table `hidden_tracks`, `GET/PUT/DELETE /hidden`). Le réglage « masquer les titres archivés » (`[off] [on]`, local à l'appareil) les retire des albums et retire de la biblio et des fiches artiste les albums entièrement archivés ; ils restent dans `titres`, les playlists, l'accueil et la recherche. La spec le retire de la biblio, des recos et de la recherche. À accorder avec #15.
 
 ### Recherche (04, 04b, D4, D4b)
 
