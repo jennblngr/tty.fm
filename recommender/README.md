@@ -1,22 +1,22 @@
 # recommender
 
-Service Python de la phase 3. Il fait pour l'instant une seule chose : l'**analyse audio** des morceaux. Viendront ensuite les titres similaires, la radio infinie, les mix tirés de l'historique (`plays`) et la découverte via MusicBrainz / ListenBrainz (les `mbid` sont déjà stockés par le serveur).
+Service Python de la phase 3. Il fait pour l'instant une seule chose : l'**analyse audio** des morceaux, y compris genre, ambiance et acoustique grâce aux modèles TensorFlow d'Essentia. Viendront ensuite les titres similaires, la radio infinie, les mix tirés de l'historique (`plays`) et la découverte via MusicBrainz / ListenBrainz (les `mbid` sont déjà stockés par le serveur).
 
 ## Fonctionnement
 
 Le service tourne dans son propre conteneur (`recommender` dans `docker-compose.yml`). Il lit le dossier musique en lecture seule et ne touche jamais à la base : tout passe par l'API du serveur.
 
 1. Il se connecte comme un appareil nommé `recommender`. Son jeton est gardé dans `DATA_DIR/recommender/token`, si bien qu'un redémarrage ne crée pas de nouvel appareil.
-2. Il demande la file d'attente (`GET /api/v1/analysis/queue`) : les titres jamais analysés, ou dont le fichier a changé depuis l'analyse, les plus récents d'abord.
+2. Il demande la file d'attente (`GET /api/v1/analysis/queue?analyzer=…`) : les titres jamais analysés, ou dont le fichier a changé depuis l'analyse, les plus récents d'abord ; puis ceux analysés par une autre version de l'analyseur (champ `analyzer`, par exemple `essentia-2.1b6.dev1389/1+discogs-effnet-1`). Une nouvelle version complète donc les anciennes analyses sans les effacer : elles restent affichées jusqu'à leur remplacement.
 3. Il analyse chaque fichier dans un processus séparé : un fichier corrompu qui fait planter Essentia, ou qui bloque plus de `TTYFM_ANALYSIS_TIMEOUT`, ne bloque pas le reste.
 4. Il renvoie le résultat (`PUT /api/v1/tracks/{id}/analysis`). En cas d'échec, l'erreur est enregistrée, et le titre n'est retenté que si son fichier change ou si on relance l'analyse.
 5. Une fois la file vide, il revérifie toutes les `TTYFM_ANALYSIS_POLL` secondes.
 
-Le processus tourne en priorité basse (`nice 10`). Une analyse prend 1 à 3 s par titre sur un CPU récent. Une bibliothèque de 5 000 titres demande donc quelques heures au premier lancement, puis seulement les ajouts.
+Le processus tourne en priorité basse (`nice 10`). Une analyse prend environ 10 s pour un titre de 4 min (mesuré sur un CPU x86 à 4 cœurs ; un NAS peut être plus lent) : 5 s pour les algorithmes classiques, 3 à 4 s pour les modèles ML et 1 s pour charger Essentia et TensorFlow (chaque fichier est analysé dans un processus neuf). Une bibliothèque de 5 000 titres demande donc une quinzaine d'heures au premier lancement (moins avec `TTYFM_ANALYSIS_WORKERS` à 2 ou plus), puis seulement les ajouts.
 
 ## Ce qui est calculé
 
-Le calcul utilise les algorithmes classiques d'[Essentia](https://essentia.upf.edu) (`ttyfm_recommender/analyze.py`) :
+Le calcul utilise [Essentia](https://essentia.upf.edu) (`ttyfm_recommender/analyze.py`) : ses algorithmes classiques, puis ses modèles TensorFlow appliqués aux embeddings Discogs EffNet (audio ramené à 16 kHz mono, moyenne sur le morceau) :
 
 | champ | algorithme | remarque |
 |---|---|---|
@@ -25,10 +25,17 @@ Le calcul utilise les algorithmes classiques d'[Essentia](https://essentia.upf.e
 | `loudness_lufs`, `loudness_range` | `LoudnessEBUR128` | intégrée, sur le signal stéréo d'origine |
 | `danceability` | `Danceability` (DFA) | ramené de 0,5–2,5 à 0–1 |
 | `energy` | heuristique (`features.py`) | ½ volume + 0,3 densité d'attaques + 0,2 brillance (centroïde spectral) |
+| `genres` | `genre_discogs400` (400 styles Discogs) | deux entrées : le genre dont les styles pèsent le plus (nom en français : `électro`, `hip-hop`…), puis son style le plus fort (`synthwave`), chacun en part de l'activation totale |
+| `mood` | `mood_happy`, `mood_sad`, `mood_relaxed`, `mood_aggressive`, `mood_party` | les classes à plus de 50 %, deux au plus, la plus sûre d'abord : `mélancolique · calme` ; absent si aucune |
+| `acousticness` | `mood_acoustic` | probabilité de la classe « acoustique » |
 
 Les fichiers de plus de 15 min sont analysés sur leurs 15 premières minutes.
 
-**Pas encore calculés** : genre et sous-genre en %, ambiance, acoustique. Ils demandent les modèles TensorFlow d'Essentia (`discogs-effnet`, classifieurs `mood_*`), soit environ 300 Mo de plus dans l'image. Le schéma et l'API ont déjà les champs (`genres`, `mood`, `acousticness`), et l'app les affiche dès qu'ils sont remplis.
+### Modèles
+
+Les modèles (environ 25 Mo) viennent de [essentia.upf.edu/models](https://essentia.upf.edu/models/). `ttyfm_recommender/models.py` en tient la liste avec leur sha256 ; `python -m ttyfm_recommender.models DIR` télécharge ceux qui manquent et vérifie chaque fichier. L'image Docker le fait à la construction, dans `/models` (il faut donc un accès à essentia.upf.edu pour construire l'image). TensorFlow ajoute environ 300 Mo à l'image (paquet `essentia-tensorflow` à la place d'`essentia`).
+
+Sans les modèles (`TTYFM_MODELS_DIR` vide ou incomplet), le service le signale au démarrage et ne calcule que les champs classiques, sous l'analyseur `…/1`. Une fois les modèles en place, l'analyseur devient `…/1+discogs-effnet-1` et toute la bibliothèque repasse dans la file pour gagner ces champs.
 
 ## Configuration
 
@@ -38,6 +45,7 @@ Les fichiers de plus de 15 min sont analysés sur leurs 15 premières minutes.
 | `TTYFM_ADMIN_USER` / `TTYFM_ADMIN_PASSWORD` | `admin` / *(requis)* | identifiants, les mêmes que le serveur |
 | `TTYFM_MUSIC_DIR` | `/music` | même dossier que le serveur (les chemins de la file sont relatifs) |
 | `TTYFM_STATE_DIR` | `/state` | jeton de l'appareil |
+| `TTYFM_MODELS_DIR` | `/models` | modèles TensorFlow (déjà dans l'image) |
 | `TTYFM_ANALYSIS_WORKERS` | `1` | analyses en parallèle |
 | `TTYFM_ANALYSIS_TIMEOUT` | `300` | secondes max par fichier |
 | `TTYFM_ANALYSIS_POLL` | `60` | secondes entre deux vérifications quand la file est vide |
@@ -62,8 +70,9 @@ Sous Linux :
 ```bash
 cd recommender
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt ruff
-.venv/bin/python -m unittest discover -s tests -t .   # dont une analyse réelle d'un fichier synthétique
+.venv/bin/python -m ttyfm_recommender.models ../data/models
+TTYFM_MODELS_DIR=../data/models .venv/bin/python -m unittest discover -s tests -t .   # dont une analyse réelle d'un fichier synthétique
 .venv/bin/ruff format . && .venv/bin/ruff check .
 TTYFM_SERVER_URL=http://localhost:4533 TTYFM_ADMIN_PASSWORD=admin TTYFM_MUSIC_DIR=~/Music \
-  TTYFM_STATE_DIR=../data/recommender .venv/bin/python -m ttyfm_recommender
+  TTYFM_STATE_DIR=../data/recommender TTYFM_MODELS_DIR=../data/models .venv/bin/python -m ttyfm_recommender
 ```

@@ -86,10 +86,20 @@ jobs:
           cache: pip
           cache-dependency-path: recommender/requirements.txt
       - run: pip install -r requirements.txt ruff==0.17.3
+      # Essentia's ML models (~25 MB), cached until their list changes.
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/essentia-models
+          key: essentia-models-${{ hashFiles('recommender/ttyfm_recommender/models.py') }}
+      - run: python -m ttyfm_recommender.models ${{ runner.temp }}/essentia-models
       - name: Format
         run: ruff format --check .
       - name: Lint
         run: ruff check .
-      # Includes an end-to-end analysis of a synthetic file with Essentia.
+      # Includes an end-to-end analysis of a synthetic file with Essentia,
+      # ML models included.
       - name: Unit tests
         run: python -m unittest discover -s tests -t . -v
+        env:
+          TTYFM_MODELS_DIR: ${{ runner.temp }}/essentia-models
+          TF_CPP_MIN_LOG_LEVEL: "2"

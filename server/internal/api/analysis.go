@@ -76,8 +76,10 @@ func (s *Server) resetAllAnalysis(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// analysisQueue lists the tracks to analyse. The recommender passes its
+// analyzer name so that tracks analysed by an older version come back.
 func (s *Server) analysisQueue(w http.ResponseWriter, r *http.Request) {
-	jobs, err := s.DB.AnalysisQueue(r.Context(), queryInt(r, "limit", 20))
+	jobs, err := s.DB.AnalysisQueue(r.Context(), queryInt(r, "limit", 20), r.URL.Query().Get("analyzer"))
 	if err != nil {
 		s.fail(w, r, err)
 		return

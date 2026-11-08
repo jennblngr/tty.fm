@@ -235,13 +235,17 @@ type AnalysisJob struct {
 
 // AnalysisQueue returns tracks never analysed, or whose file changed since,
 // most recently added first. Failed analyses are only retried once the file
-// changes (or after a reset).
-func (db *DB) AnalysisQueue(ctx context.Context, limit int) ([]AnalysisJob, error) {
+// changes (or after a reset). When analyzer is set, analyses made by another
+// analyzer (an older version of the recommender) come next: their results
+// stay visible until the new ones replace them.
+func (db *DB) AnalysisQueue(ctx context.Context, limit int, analyzer string) ([]AnalysisJob, error) {
 	rows, err := db.r.QueryContext(ctx, `
 		SELECT t.id, t.path, t.file_mtime, t.duration_ms
 		FROM tracks t LEFT JOIN track_analysis a ON a.track_id = t.id
-		WHERE t.missing_since IS NULL AND (a.track_id IS NULL OR a.file_mtime != t.file_mtime)
-		ORDER BY t.created_at DESC, t.id DESC LIMIT ?`, clampLimit(limit))
+		WHERE t.missing_since IS NULL
+		  AND (a.track_id IS NULL OR a.file_mtime != t.file_mtime OR (?1 != '' AND a.analyzer != ?1))
+		ORDER BY (a.track_id IS NOT NULL AND a.file_mtime = t.file_mtime), t.created_at DESC, t.id DESC
+		LIMIT ?2`, analyzer, clampLimit(limit))
 	if err != nil {
 		return nil, err
 	}

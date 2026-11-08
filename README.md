@@ -7,7 +7,7 @@ Lecteur de musique auto-hébergé : un serveur Go + SQLite tourne sur le NAS, le
 ```
 server/       API REST + streaming (Go, SQLite WAL + FTS5, ffmpeg)
 app/          client Flutter
-recommender/  service de recommandations (phase 3, Python + Essentia) : analyse audio pour l'instant
+recommender/  service de recommandations (phase 3, Python + Essentia) : analyse audio (dont genre et ambiance) pour l'instant
 ```
 
 ## Installation sur le NAS (UGREEN DXP2800, UGOS Pro)
@@ -117,7 +117,7 @@ Toutes les routes sauf `health` et `auth/login` exigent `Authorization: Bearer <
 | GET | `/api/v1/tracks/{id}/analysis` | `{analysis, compatible}` : bpm, tonalité (+ Camelot), LUFS, énergie, dansant… et les titres qui s'enchaînent bien (ton voisin, tempo à ±6 %) ; 404 si pas encore analysé. Les titres analysés portent aussi `bpm` et `camelot` dans toutes les listes |
 | PUT/DELETE | `/api/v1/tracks/{id}/analysis` | PUT : résultat envoyé par `recommender` ; DELETE : relancer l'analyse du titre |
 | GET/DELETE | `/api/v1/analysis` | GET : `{total, analyzed, failed, pending}` ; DELETE : tout réanalyser |
-| GET | `/api/v1/analysis/queue?limit=` | titres à analyser (`id`, `path` relatif, `file_mtime`) |
+| GET | `/api/v1/analysis/queue?limit=&analyzer=` | titres à analyser (`id`, `path` relatif, `file_mtime`) ; avec `analyzer`, aussi ceux analysés par une autre version |
 | GET | `/api/v1/tracks/{id}/lyrics` | `{synced, source, lines: [{ms, text}]}` ; 404 sans paroles |
 | GET | `/api/v1/search?q=&genre=&year_min=&year_max=&format=&limit=` | préfixes, accents ignorés ; filtres seuls possibles |
 | GET | `/api/v1/search/facets` | genres, formats, années disponibles |

@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import urllib.error
+import urllib.parse
 import urllib.request
 
 API = "/api/v1"
@@ -86,8 +87,10 @@ class Client:
             self.login()
             return self._request(method, path, body)
 
-    def queue(self, limit: int = 20) -> list[dict]:
-        return self.call("GET", f"/analysis/queue?limit={limit}")["items"]
+    def queue(self, limit: int = 20, analyzer: str | None = None) -> list[dict]:
+        """Tracks to analyse; with analyzer, also those analysed by another one."""
+        query = {"limit": limit, **({"analyzer": analyzer} if analyzer else {})}
+        return self.call("GET", f"/analysis/queue?{urllib.parse.urlencode(query)}")["items"]
 
     def report(self, track_id: int, report: dict) -> None:
         self.call("PUT", f"/tracks/{track_id}/analysis", report)

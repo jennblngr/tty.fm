@@ -54,3 +54,53 @@ def energy(lufs: float, onset_rate: float, centroid_hz: float) -> float:
         0.5 * scale(lufs, -30, -6) + 0.3 * scale(onset_rate, 0, 6) + 0.2 * scale(centroid_hz, 500, 3500),
         3,
     )
+
+
+# Discogs' top-level genres in French (styles keep their Discogs names).
+GENRE_NAMES = {
+    "Blues": "blues",
+    "Brass & Military": "fanfare",
+    "Children's": "enfants",
+    "Classical": "classique",
+    "Electronic": "électro",
+    "Folk, World, & Country": "folk / world",
+    "Funk / Soul": "funk / soul",
+    "Hip Hop": "hip-hop",
+    "Jazz": "jazz",
+    "Latin": "latino",
+    "Non-Music": "non musical",
+    "Pop": "pop",
+    "Reggae": "reggae",
+    "Rock": "rock",
+    "Stage & Screen": "musique de film",
+}
+
+
+def genre_shares(scores, labels: list[str]) -> list[dict]:
+    """Genre and sub-genre from the mean activations of the Discogs 400
+    styles (labels "Genre---Style"): the genre whose styles weigh most, then
+    its strongest style, each as a share of the total activation."""
+    total = float(sum(scores))
+    if not total > 0:
+        return []
+    by_genre: dict[str, float] = {}
+    best: dict[str, tuple[float, str]] = {}
+    for score, label in zip(scores, labels, strict=True):
+        genre, _, style = label.partition("---")
+        score = float(score)
+        by_genre[genre] = by_genre.get(genre, 0.0) + score
+        if score > best.get(genre, (-1.0, ""))[0]:
+            best[genre] = (score, style)
+    genre = max(by_genre, key=by_genre.get)
+    style_score, style = best[genre]
+    out = [{"name": GENRE_NAMES.get(genre, genre.lower()), "share": round(clamp01(by_genre[genre] / total), 3)}]
+    if style:
+        out.append({"name": style.lower(), "share": round(clamp01(style_score / total), 3)})
+    return out
+
+
+def mood_label(probabilities: dict[str, float], threshold: float = 0.5, most: int = 2) -> str | None:
+    """The moods the classifiers are confident about, strongest first,
+    joined like the design ("calme · mélancolique"); None if there is none."""
+    picked = sorted((p, name) for name, p in probabilities.items() if p >= threshold)
+    return " · ".join(name for _, name in reversed(picked[-most:])) or None

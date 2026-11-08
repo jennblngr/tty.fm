@@ -15,13 +15,14 @@ from .client import Client
 log = logging.getLogger("recommender")
 
 # Each file is analysed in a fresh child of a fork server: forking the worker
-# itself is unsafe once its threads run, and the fork server can import
-# Essentia once (see preload) instead of on every file.
+# itself is unsafe once its threads run. Essentia is imported in each child
+# (~1 s), not preloaded: its TensorFlow runtime hangs in a forked process
+# once essentia.standard has been imported by the parent.
 _ctx = mp.get_context("forkserver")
 
 
 def preload() -> None:
-    _ctx.set_forkserver_preload(["ttyfm_recommender.analyze", "essentia.standard"])
+    _ctx.set_forkserver_preload(["ttyfm_recommender.analyze"])
 
 
 def resolve(music_dir: str, rel: str) -> str:
@@ -33,10 +34,10 @@ def resolve(music_dir: str, rel: str) -> str:
     return path
 
 
-def _default_analyze(path: str) -> dict:
+def analyze_file(path: str, models_dir: str | None = None) -> dict:
     from .analyze import analyze
 
-    return analyze(path)
+    return analyze(path, models_dir)
 
 
 def _run(fn, path: str, conn) -> None:
@@ -53,7 +54,7 @@ def analyze_isolated(path: str, timeout: float, analyze_fn=None) -> dict:
     {"error": ...} if the file could not be analysed. analyze_fn must be a
     module-level function (it is pickled)."""
     parent, child = _ctx.Pipe(duplex=False)
-    proc = _ctx.Process(target=_run, args=(analyze_fn or _default_analyze, path, child), daemon=True)
+    proc = _ctx.Process(target=_run, args=(analyze_fn or analyze_file, path, child), daemon=True)
     proc.start()
     child.close()
     try:
@@ -114,7 +115,7 @@ class Worker:
 
     def run_once(self) -> int:
         """Analyses one batch of the queue; returns how many tracks it handled."""
-        jobs = self.client.queue(limit=max(20, self.workers * 4))
+        jobs = self.client.queue(limit=max(20, self.workers * 4), analyzer=self.analyzer)
         if not jobs:
             return 0
         with ThreadPoolExecutor(self.workers) as pool:

@@ -484,6 +484,14 @@ func TestAnalysisAPI(t *testing.T) {
 	if st != (store.AnalysisStatus{Total: 2, Analyzed: 2}) {
 		t.Fatalf("status: %+v", st)
 	}
+	c.json("GET", "/analysis/queue?analyzer=test%2F1", nil, 200, &queue)
+	if len(queue.Items) != 0 {
+		t.Fatalf("queue for the same analyzer: %+v", queue)
+	}
+	c.json("GET", "/analysis/queue?analyzer=test%2F2", nil, 200, &queue)
+	if len(queue.Items) != 2 {
+		t.Fatalf("queue for a new analyzer: %+v", queue)
+	}
 	c.json("DELETE", fmt.Sprintf("/tracks/%d/analysis", a.ID), nil, 204, nil)
 	c.json("DELETE", "/tracks/999/analysis", nil, 404, nil)
 	c.json("GET", "/analysis/queue", nil, 200, &queue)

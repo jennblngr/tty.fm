@@ -11,7 +11,7 @@ class FakeClient:
         self.jobs = jobs
         self.reports = {}
 
-    def queue(self, limit=20):
+    def queue(self, limit=20, analyzer=None):
         jobs, self.jobs = self.jobs[:limit], self.jobs[limit:]
         return jobs
 

@@ -1,6 +1,6 @@
 # Feuille de route
 
-État au 3 novembre 2026. Ce fichier rassemble trois choses : les phases du projet, les issues GitHub ouvertes et les écarts entre les maquettes (`design/mockups/`, résumées dans `design/HANDOFF.md`) et l'app. Les issues restent la source de vérité pour le détail : ce fichier sert de sommaire. À mettre à jour quand une issue est créée, fermée, ou qu'une phase avance.
+État au 8 novembre 2026. Ce fichier rassemble trois choses : les phases du projet, les issues GitHub ouvertes et les écarts entre les maquettes (`design/mockups/`, résumées dans `design/HANDOFF.md`) et l'app. Les issues restent la source de vérité pour le détail : ce fichier sert de sommaire. À mettre à jour quand une issue est créée, fermée, ou qu'une phase avance.
 
 ## 1. Phases
 
@@ -11,11 +11,11 @@ Les phases 1 et 2 n'ont jamais été décrites dans le dépôt : leur contenu es
 | 1 | Serveur Go + SQLite (scan, pochettes, recherche FTS5, auth, streaming, API REST v1), déploiement Docker sur le NAS, client Flutter macOS / Android (lecture, file d'attente, cache, réseau local / distant). | fait (31 oct.) |
 | 2 | Hub WebSocket (synchro entre appareils, événements `changed`), paroles, filtres de recherche, téléchargements hors-ligne, refonte « terminal » d'après les maquettes, stats d'écoute. | fait (1er nov.) |
 | 2 bis | Télécommande : les commandes reçues par WebSocket depuis un autre appareil passent par `PlaybackController` (`app/README.md`). | fait (`4ea4cb1`). Reste le bandeau « lecture sur… » du design : #17 |
-| 3 | Service `recommender/` (Python + Essentia) : analyse audio, titres similaires et radio infinie (embeddings, vecteurs dans `sqlite-vec`), mix quotidiens tirés de l'historique, découverte via MusicBrainz / ListenBrainz. Voir `recommender/README.md`. | en cours. Fait : analyse audio classique (bpm, tonalité + Camelot, LUFS, énergie, dansant), table `track_analysis`, API `/analysis`, affichage dans l'app. Reste : genres / ambiance / acoustique (modèles TensorFlow d'Essentia), similarité, mix, découverte |
+| 3 | Service `recommender/` (Python + Essentia) : analyse audio, titres similaires et radio infinie (embeddings, vecteurs dans `sqlite-vec`), mix quotidiens tirés de l'historique, découverte via MusicBrainz / ListenBrainz. Voir `recommender/README.md`. | en cours. Fait : analyse audio (bpm, tonalité + Camelot, LUFS, énergie, dansant ; genre et sous-genre en %, ambiance et acoustique avec les modèles TensorFlow d'Essentia), table `track_analysis`, API `/analysis`, affichage dans l'app. Reste : similarité (embeddings), radio, mix, découverte |
 
 Ce qui attend la phase 3 dans l'app (commentaires « phase 3 » dans `home.dart`, `now_playing.dart`, `shell.dart`, `stats.dart`) :
 
-- **Analyse audio** : fait dans le lecteur (bloc `$ analyse --piste`, enchaînement compatible), les listes de titres (bpm en pêche), la file d'attente desktop, le menu `···` des titres et le menu `[···]` du lecteur (« relancer l'analyse »). Restent : genres en %, ambiance et acoustique (#19), les filtres `bpm:` / `ton:` de la recherche (#18) et de la biblio (#24), le tempo des stats (#20), « réinitialiser l'analyse audio » et l'état de l'analyse dans les réglages (#25 ; l'API existe : `GET/DELETE /analysis`).
+- **Analyse audio** : fait dans le lecteur (bloc `$ analyse --piste`, enchaînement compatible), les listes de titres (bpm en pêche), la file d'attente desktop, le menu `···` des titres et le menu `[···]` du lecteur (« relancer l'analyse »). Genres en %, ambiance et acoustique : calculés par le recommender et affichés dans le lecteur ; restent le lien `[détails]` et les chips de genre (#19). Restent aussi les filtres `bpm:` / `ton:` de la recherche (#18) et de la biblio (#24), le tempo des stats (#20), « réinitialiser l'analyse audio » et l'état de l'analyse dans les réglages (#25 ; l'API existe : `GET/DELETE /analysis`).
 - **Recommandations** : mix du jour, radar, radios d'artistes (#14), lecture auto en fin de file (#23), « lancer la radio » dans le menu `[···]` (#15).
 - **Suivi des sorties** : nouvelles sorties à l'accueil (#14), artistes suivis dans la biblio (§3).
 - **Message du jour** : les variantes qui dépendent de ces données (#13).
@@ -44,7 +44,7 @@ Ce qui attend la phase 3 dans l'app (commentaires « phase 3 » dans `home.dart`
 | #16 | Menu de tri des listes, mémorisé par liste | non |
 | #17 | Multi-appareils : bandeau « lecture sur… [écouter ici] » | non |
 | #18 | Recherche : préfixes (`bpm:>120`, `paroles:`…), raccourcis, surlignage | en partie |
-| #19 | Analyse audio et bloc `$ analyse --piste` | oui. Livré : bpm, tonalité, énergie, dansant, LUFS, enchaînement compatible, bpm dans les listes ; restent genres / sous-genres en %, ambiance, acoustique (modèles ML) |
+| #19 | Analyse audio et bloc `$ analyse --piste` | oui. Livré : bpm, tonalité, énergie, dansant, LUFS, genres / sous-genres en %, ambiance, acoustique, enchaînement compatible, bpm dans les listes ; restent le lien `[détails]` et les chips de genre |
 | #20 | Stats : graphe d'activité, heures par mois, tempo, rétro | en partie |
 | #21 | Animations : onglets, défilement, panneau du bas, paroles | non |
 | #22 | Vignettes de playlist : 1 ou 4 pochettes, ou image perso | non |
@@ -66,7 +66,7 @@ Par écran. « → #n » renvoie à l'issue qui couvre l'écart ; les lignes **s
 
 - En-tête centré, `[agrandir]` / `[réduire]` dans la barre du bas, lecture auto → #23.
 - Menu `[···]` : fait (02b, D2), avec aller à l'album / à l'artiste (⌥A / ⌥R), lire sur…, relancer l'analyse et archiver. Manquent lancer la radio, égaliseur, infos du fichier, modifier les tags et retirer de la bibliothèque → #15.
-- Bloc `$ analyse --piste` : fait, sauf genres en %, ambiance et acoustique (modèles ML) et le lien `[détails]` → #19. Chips de genre → #19.
+- Bloc `$ analyse --piste` : fait, avec genres en %, ambiance et acoustique (modèles ML), sauf le lien `[détails]` → #19. Chips de genre → #19. L'ambiance vient de cinq classifieurs (joyeux, mélancolique, calme, agressif, festif) : « nocturne » de la maquette n'existe pas parmi les modèles d'Essentia.
 - Fermer en glissant vers le bas → #6.
 - **Sans issue** : le panneau `⚙ son` du lecteur propose un minuteur de veille et le choix de la qualité (`now_playing.dart`). Le design les exclut (HANDOFF §5 : « pas de minuteur de veille », « pas de réglage de qualité dans le lecteur »). Retirer, ou garder et mettre à jour le design.
 
