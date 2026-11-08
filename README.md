@@ -121,7 +121,7 @@ Toutes les routes sauf `health` et `auth/login` exigent `Authorization: Bearer <
 | GET/DELETE | `/api/v1/analysis` | GET : `{total, analyzed, failed, pending}` ; DELETE : tout réanalyser |
 | GET | `/api/v1/analysis/queue?limit=&analyzer=` | titres à analyser (`id`, `path` relatif, `file_mtime`) ; avec `analyzer`, aussi ceux analysés par une autre version |
 | GET | `/api/v1/tracks/{id}/lyrics` | `{synced, source, lines: [{ms, text}]}` ; 404 sans paroles |
-| GET | `/api/v1/search?q=&genre=&year_min=&year_max=&format=&limit=` | préfixes, accents ignorés ; filtres seuls possibles |
+| GET | `/api/v1/search?q=&genre=&year_min=&year_max=&format=&bpm_min=&bpm_max=&camelot=&limit=` | préfixes, accents ignorés ; filtres seuls possibles. `bpm_min` / `bpm_max` (bornes comprises) et `camelot` (`1A`…`12B`) ne gardent que les titres analysés ; 400 si la tonalité ou la plage est invalide |
 | GET | `/api/v1/search/facets` | genres, formats, années disponibles |
 | GET | `/api/v1/covers/{id}?size=64\|300\|800` | cache immuable |
 | GET | `/api/v1/stream/{id}` | original, requêtes Range |

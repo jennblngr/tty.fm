@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -217,6 +218,70 @@ func TestSearchFilters(t *testing.T) {
 	}
 	if len(fa.Genres) != 2 || fa.Genres[0].Count != 3 || len(fa.Formats) != 2 || *fa.YearMin != 1978 || *fa.YearMax != 2015 {
 		t.Fatalf("facets: %+v", fa)
+	}
+}
+
+func TestSearchBPMAndKey(t *testing.T) {
+	db := openTest(t)
+	ctx := context.Background()
+	ids := seed(t, db,
+		TrackFile{Path: "a/1.flac", Title: "Slow", Artist: "X", Album: "A", Mtime: 1},
+		TrackFile{Path: "a/2.flac", Title: "Mid", Artist: "X", Album: "A", Mtime: 1},
+		TrackFile{Path: "a/3.flac", Title: "Fast", Artist: "Y", Album: "B", Mtime: 1},
+		TrackFile{Path: "a/4.flac", Title: "Unanalysed", Artist: "Y", Album: "B", Mtime: 1},
+	)
+	for i, a := range []struct {
+		bpm        float64
+		key, scale string
+	}{{85, "A", "minor"}, {118, "A", "minor"}, {142, "C", "major"}} {
+		bpm := a.bpm
+		if err := db.SaveAnalysis(ctx, ids[i], AnalysisReport{FileMtime: 1, Analyzer: "test/1", BPM: &bpm, Key: a.key, Scale: a.scale}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	cases := []struct {
+		q      string
+		f      Filter
+		tracks []string
+	}{
+		{"", Filter{BPMMin: 120}, []string{"Fast"}},
+		{"", Filter{BPMMax: 90}, []string{"Slow"}},
+		{"", Filter{BPMMin: 90, BPMMax: 120}, []string{"Mid"}},
+		{"", Filter{Camelot: "8A"}, []string{"Mid", "Slow"}}, // A minor
+		{"", Filter{Camelot: "8A", BPMMin: 100}, []string{"Mid"}},
+		{"fa", Filter{BPMMin: 100}, []string{"Fast"}},
+		{"", Filter{Camelot: "8B"}, []string{"Fast"}}, // C major
+		{"", Filter{Camelot: "9B"}, []string{}},
+	}
+	for _, c := range cases {
+		if err := c.f.Validate(); err != nil {
+			t.Fatalf("%+v: %v", c.f, err)
+		}
+		r, err := db.Search(ctx, c.q, c.f, 50)
+		if err != nil {
+			t.Fatalf("%q %+v: %v", c.q, c.f, err)
+		}
+		got := []string{}
+		for _, tr := range r.Tracks {
+			got = append(got, tr.Title)
+		}
+		if strings.Join(got, ",") != strings.Join(c.tracks, ",") {
+			t.Errorf("%q %+v: %v, want %v", c.q, c.f, got, c.tracks)
+		}
+	}
+	// The album lists only count analysed tracks that match.
+	r, _ := db.Search(ctx, "", Filter{BPMMin: 140}, 50)
+	if len(r.Albums) != 1 || r.Albums[0].Title != "B" {
+		t.Errorf("albums: %+v", r.Albums)
+	}
+	f := Filter{Camelot: " 8a "}
+	if err := f.Validate(); err != nil || f.Camelot != "8A" {
+		t.Errorf("normalised key: %q, %v", f.Camelot, err)
+	}
+	for _, bad := range []Filter{{Camelot: "13A"}, {Camelot: "la mineur"}, {BPMMin: 130, BPMMax: 120}, {BPMMin: -1}} {
+		if err := bad.Validate(); !errors.Is(err, ErrInvalid) {
+			t.Errorf("%+v: %v", bad, err)
+		}
 	}
 }
 

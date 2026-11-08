@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strings"
 	"unicode"
 )
@@ -26,16 +27,35 @@ func ftsQuery(input string) string {
 	return strings.Join(parts, " ")
 }
 
-// Filter narrows a search. Zero values mean "any".
+// Filter narrows a search. Zero values mean "any". The bpm and key
+// filters only keep analysed tracks.
 type Filter struct {
 	Genre   string
 	YearMin int
 	YearMax int
 	Format  string
+	BPMMin  float64
+	BPMMax  float64
+	Camelot string // 1A..12B
 }
 
 func (f Filter) active() bool {
-	return f.Genre != "" || f.YearMin != 0 || f.YearMax != 0 || f.Format != ""
+	return f.Genre != "" || f.YearMin != 0 || f.YearMax != 0 || f.Format != "" ||
+		f.BPMMin != 0 || f.BPMMax != 0 || f.Camelot != ""
+}
+
+// Validate normalises the key ("8a" → "8A") and refuses impossible values.
+func (f *Filter) Validate() error {
+	if f.Camelot != "" {
+		f.Camelot = strings.ToUpper(strings.TrimSpace(f.Camelot))
+		if camelotNeighbours(f.Camelot) == nil {
+			return fmt.Errorf("%w: key must be a Camelot code, 1A to 12B", ErrInvalid)
+		}
+	}
+	if f.BPMMin < 0 || f.BPMMax < 0 || f.BPMMax != 0 && f.BPMMin > f.BPMMax {
+		return fmt.Errorf("%w: bpm range", ErrInvalid)
+	}
+	return nil
 }
 
 // trackConds returns SQL conditions on the tracks alias a (e.g. "t").
@@ -57,6 +77,22 @@ func (f Filter) trackConds(a string) (string, []any) {
 	if f.Format != "" {
 		sb.WriteString(" AND " + a + ".format = ?")
 		args = append(args, strings.ToLower(f.Format))
+	}
+	if f.BPMMin != 0 || f.BPMMax != 0 || f.Camelot != "" {
+		sb.WriteString(" AND " + a + ".id IN (SELECT track_id FROM track_analysis WHERE error IS NULL")
+		if f.BPMMin != 0 {
+			sb.WriteString(" AND bpm >= ?")
+			args = append(args, f.BPMMin)
+		}
+		if f.BPMMax != 0 {
+			sb.WriteString(" AND bpm <= ?")
+			args = append(args, f.BPMMax)
+		}
+		if f.Camelot != "" {
+			sb.WriteString(" AND camelot = ?")
+			args = append(args, f.Camelot)
+		}
+		sb.WriteString(")")
 	}
 	return sb.String(), args
 }

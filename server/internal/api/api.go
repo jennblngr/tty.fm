@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -165,6 +166,19 @@ func pathID(r *http.Request, name string) (int64, error) {
 		return 0, errBadRequest
 	}
 	return id, nil
+}
+
+// queryFloat parses an optional number (0 when absent).
+func queryFloat(r *http.Request, name string) (float64, error) {
+	v := r.URL.Query().Get(name)
+	if v == "" {
+		return 0, nil
+	}
+	f, err := strconv.ParseFloat(v, 64)
+	if err != nil || math.IsNaN(f) || math.IsInf(f, 0) {
+		return 0, errBadRequest
+	}
+	return f, nil
 }
 
 func queryInt(r *http.Request, name string, def int) int {
