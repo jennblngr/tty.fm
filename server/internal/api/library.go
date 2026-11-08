@@ -97,11 +97,42 @@ func (s *Server) home(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
+	mixes, err := s.DB.DailyMixes(ctx, false)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"recent_additions": added,
 		"recently_played":  played,
 		"moments":          moments,
+		"mixes":            mixes,
 	})
+}
+
+// mixes lists the mixes of the day (without their tracks).
+func (s *Server) mixes(w http.ResponseWriter, r *http.Request) {
+	mixes, err := s.DB.DailyMixes(r.Context(), false)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": mixes})
+}
+
+// mix returns one mix of the day with its tracks.
+func (s *Server) mix(w http.ResponseWriter, r *http.Request) {
+	n, err := pathID(r, "n")
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	m, err := s.DB.DailyMix(r.Context(), int(n))
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, m)
 }
 
 func (s *Server) artists(w http.ResponseWriter, r *http.Request) {

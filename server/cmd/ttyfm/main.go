@@ -123,6 +123,35 @@ func run() error {
 		}
 	}()
 
+	// Mixes of the day: computed at startup if today's are missing, then
+	// each night at 04:00.
+	bg.Add(1)
+	go func() {
+		defer bg.Done()
+		mixes := func() {
+			n, err := db.ComputeDailyMixes(ctx, time.Now())
+			if err != nil {
+				log.Error("daily mixes", "err", err)
+				return
+			}
+			log.Info("daily mixes", "count", n)
+			liveHub.Changed("library", 0) // the home screen reloads
+		}
+		if done, err := db.HasMixesFor(ctx, time.Now()); err == nil && !done {
+			mixes()
+		}
+		for {
+			t := time.NewTimer(time.Until(nextMixTime(time.Now())))
+			select {
+			case <-ctx.Done():
+				t.Stop()
+				return
+			case <-t.C:
+				mixes()
+			}
+		}
+	}()
+
 	errc := make(chan error, 1)
 	go func() { errc <- httpSrv.ListenAndServe() }()
 	log.Info("listening", "addr", cfg.Listen)
@@ -162,4 +191,14 @@ func healthcheck() int {
 		return 1
 	}
 	return 0
+}
+
+// nextMixTime is the next 04:00 (local time) after now.
+func nextMixTime(now time.Time) time.Time {
+	y, m, d := now.Date()
+	next := time.Date(y, m, d, 4, 0, 0, 0, now.Location())
+	if !next.After(now) {
+		next = next.AddDate(0, 0, 1)
+	}
+	return next
 }
