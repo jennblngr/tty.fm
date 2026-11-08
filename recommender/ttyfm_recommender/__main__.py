@@ -11,6 +11,7 @@ import threading
 
 from . import __version__, models
 from .client import Client
+from .listenbrainz import DiscoveryWorker, ListenBrainz
 from .musicbrainz import MusicBrainz, ReleaseWorker
 from .worker import Worker, analyze_file, preload
 
@@ -60,6 +61,10 @@ def main() -> int:
         mb = MusicBrainz(f"tty.fm/{version} ( https://github.com/jennblngr/tty.fm )")
         threading.Thread(target=ReleaseWorker(client, mb).run_forever, name="releases", daemon=True).start()
         logging.info("new releases: looking artists up on MusicBrainz")
+        # Discovery needs the MusicBrainz ids the releases worker finds.
+        lb = ListenBrainz(mb.user_agent)
+        threading.Thread(target=DiscoveryWorker(client, lb).run_forever, name="discovery", daemon=True).start()
+        logging.info("discovery: similar artists from ListenBrainz")
     Worker(
         client,
         env("MUSIC_DIR", "/music"),
