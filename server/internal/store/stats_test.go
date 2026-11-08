@@ -63,3 +63,78 @@ func TestListeningStats(t *testing.T) {
 		t.Fatalf("all time: %+v %v", all, err)
 	}
 }
+
+func TestListeningStatsTempo(t *testing.T) {
+	db := openTest(t)
+	ctx := context.Background()
+	ids := seed(t, db,
+		TrackFile{Path: "a.flac", Title: "Slow", Artist: "X", Album: "A", Mtime: 1},
+		TrackFile{Path: "b.flac", Title: "Fast", Artist: "X", Album: "A", Mtime: 1},
+		TrackFile{Path: "c.flac", Title: "Mid", Artist: "X", Album: "A", Mtime: 1},
+		TrackFile{Path: "d.flac", Title: "Unanalysed", Artist: "X", Album: "A", Mtime: 1},
+	)
+	for i, bpm := range []float64{78, 150, 110} {
+		if err := db.SaveAnalysis(ctx, ids[i], AnalysisReport{FileMtime: 1, Analyzer: "test/1", BPM: &bpm}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	loc := time.UTC
+	now := time.Date(2026, 11, 1, 22, 0, 0, 0, loc)
+	at := func(daysAgo, hour int) int64 { return time.Date(2026, 11, 1-daysAgo, hour, 0, 0, 0, loc).UnixMilli() }
+	min := int64(60_000)
+	if _, err := db.AddPlays(ctx, 0, []Play{
+		{TrackID: ids[1], StartedAt: at(0, 8), ListenedMs: 3 * min},   // morning, 150
+		{TrackID: ids[0], StartedAt: at(0, 21), ListenedMs: 1 * min},  // evening, 78
+		{TrackID: ids[2], StartedAt: at(0, 21), ListenedMs: 1 * min},  // evening, 110
+		{TrackID: ids[3], StartedAt: at(0, 14), ListenedMs: 9 * min},  // not analysed: left out
+		{TrackID: ids[2], StartedAt: at(10, 14), ListenedMs: 2 * min}, // previous period, 110
+	}); err != nil {
+		t.Fatal(err)
+	}
+	st, err := db.ListeningStats(ctx, 7, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tp := st.Tempo
+	if tp.AnalyzedMs != 5*min || tp.BandMs != [5]int64{1 * min, 0, 1 * min, 0, 3 * min} {
+		t.Fatalf("bands: %+v", tp)
+	}
+	// (150×3 + 78 + 110) / 5 = 127.6
+	if tp.AvgBPM == nil || *tp.AvgBPM != 128 || tp.PrevAvgBPM == nil || *tp.PrevAvgBPM != 110 {
+		t.Fatalf("average: %v, previous %v", tp.AvgBPM, tp.PrevAvgBPM)
+	}
+	if tp.MorningBPM == nil || *tp.MorningBPM != 150 || tp.EveningBPM == nil || *tp.EveningBPM != 94 {
+		t.Fatalf("morning / evening: %v %v", tp.MorningBPM, tp.EveningBPM)
+	}
+	if tp.Fastest == nil || tp.Fastest.Title != "Fast" || tp.Slowest == nil || tp.Slowest.Title != "Slow" {
+		t.Fatalf("fastest / slowest: %+v %+v", tp.Fastest, tp.Slowest)
+	}
+
+	// Nothing analysed listened: an empty tempo, no average.
+	empty, err := db.ListeningStats(ctx, 1, now.AddDate(0, 0, 30))
+	if err != nil || empty.Tempo.AvgBPM != nil || empty.Tempo.AnalyzedMs != 0 {
+		t.Fatalf("empty: %+v %v", empty.Tempo, err)
+	}
+}
+
+func TestAnalysisEnabled(t *testing.T) {
+	db := openTest(t)
+	ctx := context.Background()
+	seed(t, db, TrackFile{Path: "a.flac", Title: "A", Artist: "X", Album: "A", Mtime: 1})
+	st, err := db.AnalysisStatus(ctx)
+	if err != nil || !st.Enabled || st.Pending != 1 {
+		t.Fatalf("default: %+v %v", st, err)
+	}
+	if err := db.SetAnalysisEnabled(ctx, false); err != nil {
+		t.Fatal(err)
+	}
+	if st, _ := db.AnalysisStatus(ctx); st.Enabled {
+		t.Fatalf("off: %+v", st)
+	}
+	if err := db.SetAnalysisEnabled(ctx, true); err != nil {
+		t.Fatal(err)
+	}
+	if on, _ := db.AnalysisEnabled(ctx); !on {
+		t.Fatal("back on")
+	}
+}

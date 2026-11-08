@@ -97,12 +97,42 @@ func (s *Server) resetAllAnalysis(w http.ResponseWriter, r *http.Request) {
 // analysisQueue lists the tracks to analyse. The recommender passes its
 // analyzer name so that tracks analysed by an older version come back.
 func (s *Server) analysisQueue(w http.ResponseWriter, r *http.Request) {
+	on, err := s.DB.AnalysisEnabled(r.Context())
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if !on { // "analyse audio" off: nothing to do
+		writeJSON(w, http.StatusOK, map[string]any{"items": []store.AnalysisJob{}})
+		return
+	}
 	jobs, err := s.DB.AnalysisQueue(r.Context(), queryInt(r, "limit", 20), r.URL.Query().Get("analyzer"))
 	if err != nil {
 		s.fail(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": jobs})
+}
+
+// updateAnalysis turns audio analysis on or off ({"enabled": bool}) and
+// returns the status.
+func (s *Server) updateAnalysis(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Enabled *bool `json:"enabled"`
+	}
+	if err := decode(r, &req); err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if req.Enabled == nil {
+		s.fail(w, r, errBadRequest)
+		return
+	}
+	if err := s.DB.SetAnalysisEnabled(r.Context(), *req.Enabled); err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	s.analysisStatus(w, r)
 }
 
 func (s *Server) analysisStatus(w http.ResponseWriter, r *http.Request) {

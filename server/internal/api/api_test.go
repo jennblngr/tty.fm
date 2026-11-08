@@ -488,7 +488,7 @@ func TestAnalysisAPI(t *testing.T) {
 	}
 	var st store.AnalysisStatus
 	c.json("GET", "/analysis", nil, 200, &st)
-	if st != (store.AnalysisStatus{Total: 2, Analyzed: 2}) {
+	if st != (store.AnalysisStatus{Enabled: true, Total: 2, Analyzed: 2}) {
 		t.Fatalf("status: %+v", st)
 	}
 	c.json("GET", "/analysis/queue?analyzer=test%2F1", nil, 200, &queue)
@@ -526,6 +526,21 @@ func TestAnalysisAPI(t *testing.T) {
 	c.json("GET", "/analysis/queue", nil, 200, &queue)
 	if len(queue.Items) != 1 || queue.Items[0].ID != a.ID {
 		t.Fatalf("queue after reset: %+v", queue)
+	}
+	// "analyse audio" off: the recommender finds an empty queue.
+	c.json("PATCH", "/analysis", map[string]any{"enabled": false}, 200, &st)
+	if st.Enabled {
+		t.Fatalf("status after turning off: %+v", st)
+	}
+	c.json("GET", "/analysis/queue", nil, 200, &queue)
+	if len(queue.Items) != 0 {
+		t.Fatalf("queue while off: %+v", queue)
+	}
+	c.json("PATCH", "/analysis", map[string]any{}, 400, nil)
+	c.json("PATCH", "/analysis", map[string]any{"enabled": true}, 200, &st)
+	c.json("GET", "/analysis/queue", nil, 200, &queue)
+	if !st.Enabled || len(queue.Items) != 1 {
+		t.Fatalf("back on: %+v %+v", st, queue)
 	}
 	c.json("DELETE", "/analysis", nil, 204, nil)
 	c.json("GET", "/analysis", nil, 200, &st)

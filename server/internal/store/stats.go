@@ -2,6 +2,8 @@ package store
 
 import (
 	"context"
+	"database/sql"
+	"math"
 	"sort"
 	"strings"
 	"time"
@@ -35,6 +37,46 @@ type Stats struct {
 	TopGenres      []NamedTotal `json:"top_genres"`
 	TopTracks      []TrackCount `json:"top_tracks"`
 	Discovery      *NamedTotal  `json:"discovery,omitempty"` // most listened artist first heard in the period
+	Tempo          Tempo        `json:"tempo"`
+}
+
+// TempoBands are the upper bounds of the tempo bands of the stats (05,
+// D5): < 80, 80–100, 100–120, 120–140, ≥ 140 bpm.
+var TempoBands = [4]float64{80, 100, 120, 140}
+
+// Tempo is how fast the listening was, over the analysed tracks only,
+// weighted by listening time.
+type Tempo struct {
+	AnalyzedMs int64    `json:"analyzed_ms"` // listening time of tracks with a bpm
+	BandMs     [5]int64 `json:"band_ms"`     // per TempoBands band
+	AvgBPM     *float64 `json:"avg_bpm,omitempty"`
+	PrevAvgBPM *float64 `json:"prev_avg_bpm,omitempty"` // same length just before
+	MorningBPM *float64 `json:"morning_bpm,omitempty"`  // 5 h – 12 h
+	EveningBPM *float64 `json:"evening_bpm,omitempty"`  // 18 h – 24 h
+	Fastest    *Track   `json:"fastest,omitempty"`      // played in the period
+	Slowest    *Track   `json:"slowest,omitempty"`
+}
+
+// tempoAcc sums bpm weighted by listening time.
+type tempoAcc struct{ bpmMs, ms float64 }
+
+func (a *tempoAcc) add(bpm float64, ms int64) { a.bpmMs += bpm * float64(ms); a.ms += float64(ms) }
+
+func (a tempoAcc) avg() *float64 {
+	if a.ms == 0 {
+		return nil
+	}
+	v := math.Round(a.bpmMs / a.ms)
+	return &v
+}
+
+func tempoBand(bpm float64) int {
+	for i, hi := range TempoBands {
+		if bpm < hi {
+			return i
+		}
+	}
+	return len(TempoBands)
 }
 
 // ListeningStats aggregates plays since days ago (0: all time), in the
@@ -48,8 +90,9 @@ func (db *DB) ListeningStats(ctx context.Context, days int, now time.Time) (Stat
 		from = time.Date(y, m, d, 0, 0, 0, 0, loc).AddDate(0, 0, -(days - 1))
 	}
 	rows, err := db.r.QueryContext(ctx, `
-		SELECT p.started_at, p.listened_ms, p.track_id, t.artist_id, ar.name, COALESCE(t.genre, '')
+		SELECT p.started_at, p.listened_ms, p.track_id, t.artist_id, ar.name, COALESCE(t.genre, ''), ta.bpm
 		FROM plays p JOIN tracks t ON t.id = p.track_id JOIN artists ar ON ar.id = t.artist_id
+		LEFT JOIN track_analysis ta ON ta.track_id = t.id AND ta.error IS NULL
 		WHERE p.started_at >= ? ORDER BY p.started_at`, from.UnixMilli())
 	if err != nil {
 		return st, err
@@ -60,10 +103,16 @@ func (db *DB) ListeningStats(ctx context.Context, days int, now time.Time) (Stat
 	genres := map[string]*NamedTotal{}
 	trackCounts := map[int64]int{}
 	first := time.Time{}
+	var all, morning, evening tempoAcc
+	var fastest, slowest struct {
+		id  int64
+		bpm float64
+	}
 	for rows.Next() {
 		var at, ms, trackID, artistID int64
 		var artist, genre string
-		if err := rows.Scan(&at, &ms, &trackID, &artistID, &artist, &genre); err != nil {
+		var bpm sql.NullFloat64
+		if err := rows.Scan(&at, &ms, &trackID, &artistID, &artist, &genre, &bpm); err != nil {
 			return st, err
 		}
 		t := time.UnixMilli(at).In(loc)
@@ -75,6 +124,24 @@ func (db *DB) ListeningStats(ctx context.Context, days int, now time.Time) (Stat
 		st.HourMs[t.Hour()] += ms
 		st.WeekdayAvgMin[(int(t.Weekday())+6)%7] += int(ms / 1000) // seconds for now, averaged below
 		trackCounts[trackID]++
+		if bpm.Valid && bpm.Float64 > 0 {
+			b := bpm.Float64
+			st.Tempo.AnalyzedMs += ms
+			st.Tempo.BandMs[tempoBand(b)] += ms
+			all.add(b, ms)
+			switch h := t.Hour(); {
+			case h >= 5 && h < 12:
+				morning.add(b, ms)
+			case h >= 18:
+				evening.add(b, ms)
+			}
+			if fastest.id == 0 || b > fastest.bpm {
+				fastest.id, fastest.bpm = trackID, b
+			}
+			if slowest.id == 0 || b < slowest.bpm {
+				slowest.id, slowest.bpm = trackID, b
+			}
+		}
 		if a := artists[artistID]; a != nil {
 			a.Ms += ms
 		} else {
@@ -94,6 +161,18 @@ func (db *DB) ListeningStats(ctx context.Context, days int, now time.Time) (Stat
 	}
 	if days == 0 {
 		from = first
+	}
+	st.Tempo.AvgBPM, st.Tempo.MorningBPM, st.Tempo.EveningBPM = all.avg(), morning.avg(), evening.avg()
+	for _, x := range []struct {
+		id  int64
+		dst **Track
+	}{{fastest.id, &st.Tempo.Fastest}, {slowest.id, &st.Tempo.Slowest}} {
+		if x.id == 0 {
+			continue
+		}
+		if t, err := db.Track(ctx, x.id); err == nil {
+			*x.dst = &t
+		}
 	}
 	st.From = from.UnixMilli()
 	st.DistinctTracks = len(trackCounts)
@@ -150,6 +229,17 @@ func (db *DB) ListeningStats(ctx context.Context, days int, now time.Time) (Stat
 			return st, err
 		}
 		st.PrevTotalMs = &prev
+		var prevAvg sql.NullFloat64
+		if err := db.r.QueryRowContext(ctx, `SELECT SUM(ta.bpm * p.listened_ms) / SUM(p.listened_ms)
+			FROM plays p JOIN track_analysis ta ON ta.track_id = p.track_id AND ta.error IS NULL AND ta.bpm > 0
+			WHERE p.started_at >= ? AND p.started_at < ? AND p.listened_ms > 0`,
+			from.AddDate(0, 0, -days).UnixMilli(), from.UnixMilli()).Scan(&prevAvg); err != nil {
+			return st, err
+		}
+		if prevAvg.Valid {
+			v := math.Round(prevAvg.Float64)
+			st.Tempo.PrevAvgBPM = &v
+		}
 
 		// Discovery: the most listened artist whose first play is in the
 		// period (meaningless when the whole history fits in the period).
