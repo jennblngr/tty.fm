@@ -431,28 +431,67 @@ class PlayRecord {
 
 /// Search filters; null fields mean "any".
 class SearchFilter {
-  const SearchFilter({this.genre, this.yearMin, this.yearMax, this.format});
+  const SearchFilter({this.genre, this.yearMin, this.yearMax, this.format, this.bpmMin, this.bpmMax, this.camelot});
 
   final String? genre;
   final int? yearMin;
   final int? yearMax;
   final String? format;
 
-  bool get isActive => genre != null || yearMin != null || yearMax != null || format != null;
+  /// Tempo range (both ends included) and Camelot key ("8A"); they keep
+  /// analysed tracks only.
+  final double? bpmMin;
+  final double? bpmMax;
+  final String? camelot;
+
+  bool get isActive =>
+      genre != null ||
+      yearMin != null ||
+      yearMax != null ||
+      format != null ||
+      bpmMin != null ||
+      bpmMax != null ||
+      camelot != null;
 
   SearchFilter copyWith({
     String? Function()? genre,
     int? Function()? yearMin,
     int? Function()? yearMax,
     String? Function()? format,
+    double? Function()? bpmMin,
+    double? Function()? bpmMax,
+    String? Function()? camelot,
   }) => SearchFilter(
     genre: genre != null ? genre() : this.genre,
     yearMin: yearMin != null ? yearMin() : this.yearMin,
     yearMax: yearMax != null ? yearMax() : this.yearMax,
     format: format != null ? format() : this.format,
+    bpmMin: bpmMin != null ? bpmMin() : this.bpmMin,
+    bpmMax: bpmMax != null ? bpmMax() : this.bpmMax,
+    camelot: camelot != null ? camelot() : this.camelot,
   );
 
-  Map<String, dynamic> toQuery() => {'genre': ?genre, 'year_min': ?yearMin, 'year_max': ?yearMax, 'format': ?format};
+  /// This filter with what [other] sets on top (a prefix typed in the
+  /// search field wins over the chip of the same kind).
+  SearchFilter merge(SearchFilter other) => SearchFilter(
+    genre: other.genre ?? genre,
+    yearMin: other.yearMin ?? yearMin,
+    yearMax: other.yearMax ?? yearMax,
+    format: other.format ?? format,
+    bpmMin: other.bpmMin != null || other.bpmMax != null ? other.bpmMin : bpmMin,
+    bpmMax: other.bpmMin != null || other.bpmMax != null ? other.bpmMax : bpmMax,
+    camelot: other.camelot ?? camelot,
+  );
+
+  Map<String, dynamic> toQuery() => {
+    'genre': ?genre,
+    'year_min': ?yearMin,
+    'year_max': ?yearMax,
+    'format': ?format,
+    'bpm_min': ?bpmMin,
+    'bpm_max': ?bpmMax,
+    'camelot': ?camelot,
+  };
 }
 
 class Facet {

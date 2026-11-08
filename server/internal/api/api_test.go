@@ -172,6 +172,13 @@ func TestLibraryAndStream(t *testing.T) {
 	if len(sr.Tracks) != 1 || sr.Tracks[0].Title != "Beta" {
 		t.Fatalf("search: %+v", sr)
 	}
+	c.json("GET", "/search?bpm_min=100&bpm_max=130&camelot=8a", nil, 200, &sr)
+	if len(sr.Tracks) != 0 { // nothing analysed yet
+		t.Fatalf("search by bpm: %+v", sr)
+	}
+	c.json("GET", "/search?bpm_min=x", nil, 400, nil)
+	c.json("GET", "/search?camelot=13Z", nil, 400, nil)
+	c.json("GET", "/search?bpm_min=140&bpm_max=120", nil, 400, nil)
 
 	id := itoa(detail.Tracks[0].ID)
 	// Original with Range.

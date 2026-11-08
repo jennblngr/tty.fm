@@ -187,11 +187,23 @@ func (s *Server) track(w http.ResponseWriter, r *http.Request) {
 }
 
 // search: q (prefix words) and optional filters genre, year_min, year_max,
-// format. With filters only, it lists what matches them.
+// format, bpm_min, bpm_max and camelot (the last three keep analysed tracks
+// only). With filters only, it lists what matches them.
 func (s *Server) search(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	f := store.Filter{Genre: q.Get("genre"), YearMin: queryInt(r, "year_min", 0),
-		YearMax: queryInt(r, "year_max", 0), Format: q.Get("format")}
+		YearMax: queryInt(r, "year_max", 0), Format: q.Get("format"), Camelot: q.Get("camelot")}
+	var err error
+	if f.BPMMin, err = queryFloat(r, "bpm_min"); err == nil {
+		f.BPMMax, err = queryFloat(r, "bpm_max")
+	}
+	if err == nil {
+		err = f.Validate()
+	}
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
 	res, err := s.DB.Search(r.Context(), q.Get("q"), f, queryInt(r, "limit", 20))
 	if err != nil {
 		s.fail(w, r, err)

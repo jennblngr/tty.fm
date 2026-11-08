@@ -8,6 +8,7 @@ import '../../app_info.dart';
 import '../../core/api_client.dart';
 import '../../data/library_repository.dart';
 import '../../data/models.dart';
+import '../../data/search_query.dart';
 import '../../state/playback.dart';
 import '../../state/search.dart';
 import '../nav.dart';
@@ -40,9 +41,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _debounce = Timer(const Duration(milliseconds: 120), () => _run(q));
   }
 
-  Future<void> _run(String q) async {
+  Future<void> _run(String input) async {
     _cancel?.cancel();
-    if (q.trim().isEmpty && !_filter.isActive) {
+    // "bpm:>120 ton:8A néons": the prefixes become filters, over the chips.
+    final parsed = parseSearch(input);
+    final q = parsed.text;
+    final filter = _filter.merge(parsed.filter);
+    if (q.trim().isEmpty && !filter.isActive) {
       setState(() {
         _result = const SearchResult();
         _error = null;
@@ -54,7 +59,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     try {
       final r = await ref
           .read(libraryProvider)
-          .search(q, filter: _filter, limit: q.trim().isEmpty ? 300 : 30, cancel: token);
+          .search(q, filter: filter, limit: q.trim().isEmpty ? 300 : 30, cancel: token);
       if (!token.isCancelled && mounted) {
         setState(() {
           _result = r;
@@ -347,13 +352,43 @@ class _Browse extends ConsumerWidget {
   }
 }
 
-/// Genre / period / format filter chips.
+/// Tempo bands of the bpm chip (04, D4b). Both ends are included, and the
+/// bpm have one decimal: the bands do not overlap.
+const bpmBands = <(String, (double?, double?))>[
+  ('<90', (null, 89.9)),
+  ('90–120', (90, 119.9)),
+  ('120–140', (120, 139.9)),
+  ('>140', (140, null)),
+];
+
+/// 1A, 1B… 12B, in the order of the Camelot wheel.
+final camelotCodes = [
+  for (var n = 1; n <= 12; n++) ...['${n}A', '${n}B'],
+];
+
+/// "8A" → "la mineur".
+String camelotName(String code) {
+  const minor = ['la♭', 'mi♭', 'si♭', 'fa', 'do', 'sol', 'ré', 'la', 'mi', 'si', 'fa♯', 'do♯'];
+  const major = ['si', 'fa♯', 'ré♭', 'la♭', 'mi♭', 'si♭', 'fa', 'do', 'sol', 'ré', 'la', 'mi'];
+  final n = int.parse(code.substring(0, code.length - 1)) - 1;
+  return code.endsWith('A') ? '${minor[n]} mineur' : '${major[n]} majeur';
+}
+
+/// Genre / period / format / bpm / key filter chips.
 class _FilterBar extends ConsumerWidget {
   const _FilterBar({required this.filter, required this.onChanged});
   final SearchFilter filter;
   final ValueChanged<SearchFilter> onChanged;
 
   static String _decade(int d) => 'années ${d >= 2000 ? d : d % 100}';
+
+  static String _bpmLabel(SearchFilter f) {
+    if (f.bpmMin == null && f.bpmMax == null) return 'bpm';
+    for (final (label, (lo, hi)) in bpmBands) {
+      if (lo == f.bpmMin && hi == f.bpmMax) return 'bpm:$label';
+    }
+    return 'bpm:${f.bpmMin?.round() ?? '…'}–${f.bpmMax?.round() ?? '…'}';
+  }
 
   String _periodLabel(SearchFilter f) {
     final (lo, hi) = (f.yearMin, f.yearMax);
@@ -408,6 +443,12 @@ class _FilterBar extends ConsumerWidget {
           chip<String>(filter.format == null ? 'format' : 'format:${filter.format}', filter.format != null, [
             for (final f in facets.formats) ('${f.name} (${f.count})', f.name),
           ], (f) => onChanged(filter.copyWith(format: () => f))),
+          chip<(double?, double?)>(_bpmLabel(filter), filter.bpmMin != null || filter.bpmMax != null, [
+            for (final (label, range) in bpmBands) (label, range),
+          ], (r) => onChanged(filter.copyWith(bpmMin: () => r?.$1, bpmMax: () => r?.$2))),
+          chip<String>(filter.camelot == null ? 'ton' : 'ton:${filter.camelot}', filter.camelot != null, [
+            for (final code in camelotCodes) ('$code · ${camelotName(code)}', code),
+          ], (k) => onChanged(filter.copyWith(camelot: () => k))),
           if (filter.isActive) Center(child: TtyLink('effacer', onTap: () => onChanged(const SearchFilter()))),
         ],
       ),

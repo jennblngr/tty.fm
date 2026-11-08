@@ -15,7 +15,7 @@ Les phases 1 et 2 n'ont jamais été décrites dans le dépôt : leur contenu es
 
 Ce qui attend la phase 3 dans l'app (commentaires « phase 3 » dans `home.dart`, `now_playing.dart`, `shell.dart`, `stats.dart`) :
 
-- **Analyse audio** : fait dans le lecteur (bloc `$ analyse --piste`, enchaînement compatible), les listes de titres (bpm en pêche), la file d'attente desktop, le menu `···` des titres et le menu `[···]` du lecteur (« relancer l'analyse »). Genre et sous-genre, ambiance et acoustique : calculés par le recommender et affichés dans le lecteur (sans les %), avec les chips de genre sous le titre et le lien `[détails]` (confiance de la tonalité, dynamique, analyseur et date ; acoustique sur téléphone). Restent les filtres `bpm:` / `ton:` de la recherche (#18) et de la biblio (#24), le tempo des stats (#20), « réinitialiser l'analyse audio » et l'état de l'analyse dans les réglages (#25 ; l'API existe : `GET/DELETE /analysis`).
+- **Analyse audio** : fait dans le lecteur (bloc `$ analyse --piste`, enchaînement compatible), les listes de titres (bpm en pêche), la file d'attente desktop, le menu `···` des titres et le menu `[···]` du lecteur (« relancer l'analyse »). Genre et sous-genre, ambiance et acoustique : calculés par le recommender et affichés dans le lecteur (sans les %), avec les chips de genre sous le titre et le lien `[détails]` (confiance de la tonalité, dynamique, analyseur et date ; acoustique sur téléphone). Les filtres `bpm:` / `ton:` existent dans la recherche (#18) : préfixes `bpm:>120`, `bpm:90-120`, `bpm:118`, `ton:8A`, `ton:am`, et puces `bpm` (tranches `<90 · 90–120 · 120–140 · >140`) et `ton`. Restent ceux de la biblio et des playlists (#24), le tempo des stats (#20), « réinitialiser l'analyse audio » et l'état de l'analyse dans les réglages (#25 ; l'API existe : `GET/DELETE /analysis`).
 - **Recommandations** : l'API des titres similaires (`GET /tracks/{id}/similar`, remplie au fil de la réanalyse `discogs-effnet-2`) et celle de la radio (`GET /radio`) existent, et l'app s'en sert : « lancer la radio » dans le menu `[···]` du lecteur et le menu `···` des titres (depuis le titre en cours : remplace la suite de la file et lance le premier titre de la radio, avec confirmation s'il reste des ajouts manuels), lecture auto en fin de file quand la répétition est off (réglage `lecture auto`, on par défaut), titres marqués « · radio » / « · ajouté par toi » dans la file et ligne `// ensuite : radio « … »`, nouveau lot quand il reste moins de 3 titres. Restent mix du jour, radar, radios d'artistes à l'accueil (#14).
 - **Suivi des sorties** : nouvelles sorties à l'accueil (#14), artistes suivis dans la biblio (§3).
 - **Message du jour** : les variantes qui dépendent de ces données (#13).
@@ -83,7 +83,7 @@ Par écran. « → #n » renvoie à l'issue qui couvre l'écart ; les lignes **s
 
 ### Recherche (04, 04b, D4, D4b)
 
-- Préfixes, raccourcis, surlignage, état « aucun résultat » → #18.
+- Préfixes `bpm:` et `ton:` : faits, avec les puces `bpm` (tranches) et `ton` dans la rangée de filtres. Restent les autres préfixes (`paroles:`, `artiste:`, `album:`, `genre:`, `ajouté:`), les raccourcis sous le champ, le surlignage et l'état « aucun résultat » → #18.
 - **Sans issue** : historique des recherches (`↺ historique [effacer]`, avec le nombre de résultats et le type de chaque entrée) sur l'écran vide. L'app affiche seulement « parcourir ».
 - Retour arrière depuis une recherche filtrée → #2.
 
