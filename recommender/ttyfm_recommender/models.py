@@ -82,7 +82,8 @@ for _name, (_pb, _json) in _HEADS.items():
 
 # Bumped when the files or the way their output is read change: tracks
 # analysed with another version are analysed again.
-VERSION = "discogs-effnet-1"
+# 2: the report carries the mean embedding (similar tracks).
+VERSION = "discogs-effnet-2"
 
 
 def _sha256(path: str) -> str:
