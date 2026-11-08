@@ -102,12 +102,64 @@ func (s *Server) home(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
+	releases, err := s.DB.NewReleases(ctx, time.Now(), newReleaseDays, 6)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
+		"new_releases":     releases,
 		"recent_additions": added,
 		"recently_played":  played,
 		"moments":          moments,
 		"mixes":            mixes,
 	})
+}
+
+// newReleaseDays is how far back a release is still "new".
+const newReleaseDays = 90
+
+// newReleases lists the recent and upcoming releases of the library's
+// artists (?days=, 90 by default).
+func (s *Server) newReleases(w http.ResponseWriter, r *http.Request) {
+	items, err := s.DB.NewReleases(r.Context(), time.Now(), min(max(queryInt(r, "days", newReleaseDays), 1), 3650),
+		queryInt(r, "limit", 50))
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
+// releaseQueue lists the album artists the recommender should look up on
+// MusicBrainz.
+func (s *Server) releaseQueue(w http.ResponseWriter, r *http.Request) {
+	jobs, err := s.DB.ReleaseQueue(r.Context(), queryInt(r, "limit", 10), time.Now())
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": jobs})
+}
+
+// saveArtistReleases stores the releases the recommender found for an
+// artist ({mbid, releases}).
+func (s *Server) saveArtistReleases(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r, "id")
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	var req store.ReleaseReport
+	if err := decode(r, &req); err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if err := s.DB.SaveArtistReleases(r.Context(), id, req, time.Now()); err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // mixes lists the mixes of the day (without their tracks).

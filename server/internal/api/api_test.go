@@ -604,4 +604,30 @@ func TestRadioAPI(t *testing.T) {
 	if m, ok := home["mixes"].([]any); !ok || len(m) != 0 {
 		t.Fatalf("home mixes: %v", home["mixes"])
 	}
+
+	// New releases: the recommender takes the queue and sends what it found.
+	var rq struct {
+		Items []store.ReleaseJob `json:"items"`
+	}
+	c.json("GET", "/releases/queue", nil, 200, &rq)
+	if len(rq.Items) == 0 || rq.Items[0].Name == "" {
+		t.Fatalf("release queue: %+v", rq)
+	}
+	soon := time.Now().AddDate(0, 0, 10).Format("2006-01-02")
+	c.json("PUT", fmt.Sprintf("/artists/%d/releases", rq.Items[0].ArtistID), map[string]any{
+		"mbid": "x", "releases": []map[string]string{{"mbid": "rg", "title": "Next", "kind": "album", "released": soon}}}, 204, nil)
+	c.json("PUT", fmt.Sprintf("/artists/%d/releases", rq.Items[0].ArtistID), map[string]any{
+		"releases": []map[string]string{{"mbid": "rg", "title": "Next", "kind": "live", "released": soon}}}, 400, nil)
+	c.json("PUT", "/artists/999/releases", map[string]any{}, 404, nil)
+	var nr struct {
+		Items []store.NewRelease `json:"items"`
+	}
+	c.json("GET", "/releases", nil, 200, &nr)
+	if len(nr.Items) != 1 || nr.Items[0].Title != "Next" || !nr.Items[0].Upcoming {
+		t.Fatalf("new releases: %+v", nr)
+	}
+	c.json("GET", "/home", nil, 200, &home)
+	if m, ok := home["new_releases"].([]any); !ok || len(m) != 1 {
+		t.Fatalf("home new releases: %v", home["new_releases"])
+	}
 }
