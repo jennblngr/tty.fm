@@ -183,7 +183,8 @@ class _ContextLine extends ConsumerWidget {
   }
 }
 
-/// Art, title, "// artist · album · year", genre chip and like.
+/// Art, title, "// artist · album · year", genre chips (from the audio
+/// analysis, else the tag), bpm and like.
 class _TrackBlock extends ConsumerWidget {
   const _TrackBlock(this.track, {required this.wide});
   final Track track;
@@ -193,6 +194,8 @@ class _TrackBlock extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = Tty.of(context);
     final fav = ref.watch(favoritesProvider.select((f) => f.value?['tracks']?.contains(track.id) ?? false));
+    final a = ref.watch(analysisProvider(track.id)).value?.analysis;
+    final genres = a != null && a.error == null ? a.genres : const <(String, double)>[];
     return LayoutBuilder(
       builder: (context, box) {
         final size = box.maxWidth.clamp(120.0, wide ? 420.0 : 520.0);
@@ -237,9 +240,15 @@ class _TrackBlock extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Wrap(
                           spacing: 8,
+                          runSpacing: 4,
                           children: [
-                            if (track.genre != null)
+                            if (genres.isNotEmpty) ...[
+                              GenreChip(genres[0].$1, c.mauve),
+                              if (genres.length > 1) GenreChip(genres[1].$1, c.pink),
+                            ] else if (track.genre != null)
                               Text('[${track.genre!.toLowerCase()}]', style: TextStyle(color: c.mauve, fontSize: 12)),
+                            if (track.bpm != null)
+                              Text('${track.bpm!.round()} bpm', style: TextStyle(color: c.peach, fontSize: 12)),
                             InkWell(
                               onTap: () {
                                 Navigator.pop(context);
@@ -390,13 +399,23 @@ class _LyricsPanel extends StatelessWidget {
 
 /// "\$ analyse --piste": tags, file and audio analysis, then a track that
 /// chains well after this one. Before the analysis: "\$ stat --piste".
-class _FileFacts extends ConsumerWidget {
+/// "[détails]" unfolds the rest of the analysis.
+class _FileFacts extends ConsumerStatefulWidget {
   const _FileFacts(this.track);
   final Track track;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FileFacts> createState() => _FileFactsState();
+}
+
+class _FileFactsState extends ConsumerState<_FileFacts> {
+  var _details = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final track = widget.track;
     final c = Tty.of(context);
+    final wide = MediaQuery.sizeOf(context).width >= desktopWidth;
     final result = ref.watch(analysisProvider(track.id)).value;
     final a = result?.analysis;
     final analysed = a != null && a.error == null;
@@ -414,9 +433,16 @@ class _FileFacts extends ConsumerWidget {
             TrackAnalysis(stale: true) => 'calculé à partir du fichier audio · fichier modifié, à refaire',
             _ => 'calculé à partir du fichier audio',
           },
+          trailing: analysed
+              ? TtyLink(
+                  _details ? 'moins' : 'détails',
+                  active: _details,
+                  onTap: () => setState(() => _details = !_details),
+                )
+              : null,
         ),
         const SizedBox(height: 6),
-        TrackFacts(track),
+        TrackFacts(track, details: _details, acoustic: wide),
         Padding(
           padding: const EdgeInsets.only(top: 2),
           child: Row(
@@ -675,6 +701,33 @@ class QueueView extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// "[électro ▮▮▮▮]": a genre from the audio analysis, with a small graph
+/// that only decorates (02, D2). The graph is fixed by the name.
+class GenreChip extends StatelessWidget {
+  const GenreChip(this.name, this.color, {super.key});
+  final String name;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final seed = name.codeUnits.fold<int>(7, (h, u) => (h * 31 + u) & 0x7fffffff);
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: '[${name.toLowerCase()} '),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: MiniGraph(sparkline(seed, length: 4), color: color, fontSize: 12),
+          ),
+          const TextSpan(text: ']'),
+        ],
+      ),
+      style: TextStyle(color: color, fontSize: 12),
     );
   }
 }

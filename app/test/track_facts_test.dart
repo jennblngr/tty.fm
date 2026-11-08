@@ -18,15 +18,16 @@ const _track = Track(
   format: 'flac',
 );
 
-Future<void> _pump(WidgetTester tester, AnalysisResult? result) => tester.pumpWidget(
-  ProviderScope(
-    overrides: [analysisProvider(1).overrideWith((ref) async => result)],
-    child: MaterialApp(
-      theme: ttyTheme(Tty.mocha),
-      home: const Scaffold(body: TrackFacts(_track)),
-    ),
-  ),
-);
+Future<void> _pump(WidgetTester tester, AnalysisResult? result, {Widget facts = const TrackFacts(_track)}) =>
+    tester.pumpWidget(
+      ProviderScope(
+        overrides: [analysisProvider(1).overrideWith((ref) async => result)],
+        child: MaterialApp(
+          theme: ttyTheme(Tty.mocha),
+          home: Scaffold(body: facts),
+        ),
+      ),
+    );
 
 void main() {
   testWidgets('without analysis: tags and file only', (tester) async {
@@ -66,5 +67,35 @@ void main() {
     await _pump(tester, const AnalysisResult(TrackAnalysis(error: 'decode', bpm: 100), []));
     await tester.pump();
     expect(find.text('tempo'), findsNothing);
+  });
+
+  final full = AnalysisResult(
+    TrackAnalysis(
+      bpm: 118,
+      key: 'A',
+      scale: 'minor',
+      camelot: '8A',
+      acousticness: 0.08,
+      keyStrength: 0.8,
+      loudnessRange: 6.3,
+      analyzer: 'essentia/2',
+      analyzedAt: DateTime(2026, 11, 8),
+    ),
+    const [],
+  );
+
+  testWidgets('the details add key confidence, loudness range and the analyser', (tester) async {
+    await _pump(tester, full, facts: const TrackFacts(_track, acoustic: false));
+    await tester.pump();
+    expect(find.text('acoustique'), findsNothing);
+    expect(find.text('confiance'), findsNothing);
+    expect(find.text('dynamique'), findsNothing);
+
+    await _pump(tester, full, facts: const TrackFacts(_track, acoustic: false, details: true));
+    await tester.pump();
+    expect(find.text('acoustique'), findsOneWidget);
+    expect(find.text('confiance'), findsOneWidget);
+    expect(find.textContaining('6.3 LU', findRichText: true), findsOneWidget);
+    expect(find.text('essentia/2 · 8 nov. 2026'), findsOneWidget);
   });
 }

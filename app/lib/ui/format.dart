@@ -11,3 +11,8 @@ String formatCountDuration(int count, int durationMs) {
   final dur = mins >= 60 ? '${mins ~/ 60} h ${mins % 60} min' : '$mins min';
   return '$count titre${count > 1 ? 's' : ''} · $dur';
 }
+
+const _months = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+
+/// "8 nov. 2026".
+String formatDate(DateTime d) => '${d.day} ${_months[d.month - 1]} ${d.year}';
