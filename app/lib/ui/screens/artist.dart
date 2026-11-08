@@ -36,8 +36,9 @@ class ArtistScreen extends ConsumerWidget {
             IconButton(tooltip: 'Lire', icon: const Icon(Icons.play_arrow), onPressed: () => play(shuffle: false)),
             IconButton(tooltip: 'Aléatoire', icon: const Icon(Icons.shuffle), onPressed: () => play(shuffle: true)),
           ],
+          // Liking an artist also follows its releases (biblio, accueil).
           IconButton(
-            tooltip: fav ? 'Retirer des favoris' : 'Ajouter aux favoris',
+            tooltip: fav ? 'Retirer des favoris (ne plus suivre)' : 'Ajouter aux favoris et suivre ses sorties',
             icon: HeartIcon(fav, size: 22),
             onPressed: () => guard(context, () => ref.read(favoritesProvider.notifier).toggle('artists', id)),
           ),

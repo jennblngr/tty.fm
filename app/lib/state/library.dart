@@ -29,6 +29,9 @@ final albumProvider = StreamProvider.autoDispose.family<(Album, List<Track>), in
 
 final playlistTreeProvider = StreamProvider<PlaylistTree>((ref) => _repo(ref).playlistTree());
 
+/// "● artistes suivis" (biblio): the liked artists.
+final followsProvider = StreamProvider<List<FollowedArtist>>((ref) => _repo(ref).follows());
+
 final playlistTracksProvider = StreamProvider.autoDispose.family<List<PlaylistEntry>, int>(
   (ref, id) => _repo(ref).playlistTracks(id),
 );
@@ -56,6 +59,8 @@ class FavoritesNotifier extends AsyncNotifier<Map<String, Set<int>>> {
       state = AsyncData(cur); // revert
       rethrow;
     }
+    // Liking an artist follows it: "● artistes suivis" changes.
+    if (kind == 'artists') ref.invalidate(followsProvider);
   }
 }
 
