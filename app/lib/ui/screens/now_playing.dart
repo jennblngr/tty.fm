@@ -242,11 +242,8 @@ class _TrackBlock extends ConsumerWidget {
                           spacing: 8,
                           runSpacing: 4,
                           children: [
-                            if (genres.isNotEmpty) ...[
-                              GenreChip(genres[0].$1, c.mauve),
-                              if (genres.length > 1) GenreChip(genres[1].$1, c.pink),
-                            ] else if (track.genre != null)
-                              Text('[${track.genre!.toLowerCase()}]', style: TextStyle(color: c.mauve, fontSize: 12)),
+                            for (final (i, name) in genreChips(track.genre, genres).indexed)
+                              GenreChip(name, i == 0 ? c.mauve : c.pink),
                             if (track.bpm != null)
                               Text('${track.bpm!.round()} bpm', style: TextStyle(color: c.peach, fontSize: 12)),
                             InkWell(
@@ -705,7 +702,19 @@ class QueueView extends ConsumerWidget {
   }
 }
 
-/// "[électro ▮▮▮▮]": a genre from the audio analysis, with a small graph
+/// The genre chips under the title: the file's genre tag first (the
+/// user's own data, more reliable than the model on the edge cases), then
+/// the style the analysis heard ("dance-pop"); without a tag, the genre
+/// and style of the analysis. A tag listing several genres ("Pop;Films")
+/// gives its first one.
+List<String> genreChips(String? tag, List<(String, double)> analysed) {
+  final main = tag?.split(';').first.split(' / ').first.trim().toLowerCase() ?? '';
+  if (main.isEmpty) return [for (final (name, _) in analysed.take(2)) name.toLowerCase()];
+  final style = analysed.length > 1 ? analysed[1].$1.toLowerCase() : null;
+  return [main, if (style != null && style != main) style];
+}
+
+/// "[électro ▮▮▮▮]": a genre from the tag or the audio analysis, with a small graph
 /// that only decorates (02, D2). The graph is fixed by the name.
 class GenreChip extends StatelessWidget {
   const GenreChip(this.name, this.color, {super.key});
