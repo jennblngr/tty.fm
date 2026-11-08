@@ -107,8 +107,14 @@ func (s *Server) home(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
+	discoveries, err := s.DB.Discoveries(ctx, 8)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"new_releases":     releases,
+		"discoveries":      discoveries,
 		"recent_additions": added,
 		"recently_played":  played,
 		"moments":          moments,
@@ -170,6 +176,50 @@ func (s *Server) follows(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
+// discoveries lists artists similar to the liked ones that the library
+// lacks (ListenBrainz).
+func (s *Server) discoveries(w http.ResponseWriter, r *http.Request) {
+	items, err := s.DB.Discoveries(r.Context(), queryInt(r, "limit", 30))
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
+// discoveryQueue lists the liked artists the recommender should look up on
+// ListenBrainz.
+func (s *Server) discoveryQueue(w http.ResponseWriter, r *http.Request) {
+	jobs, err := s.DB.DiscoveryQueue(r.Context(), queryInt(r, "limit", 10), time.Now())
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": jobs})
+}
+
+// saveSimilarArtists stores the similar artists the recommender found for a
+// liked artist ({items}).
+func (s *Server) saveSimilarArtists(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r, "id")
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	var req struct {
+		Items []store.SimilarRecord `json:"items"`
+	}
+	if err := decode(r, &req); err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if err := s.DB.SaveSimilarArtists(r.Context(), id, req.Items, time.Now()); err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // mixes lists the mixes of the day (without their tracks).

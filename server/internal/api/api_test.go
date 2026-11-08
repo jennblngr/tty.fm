@@ -644,4 +644,28 @@ func TestRadioAPI(t *testing.T) {
 	if len(fol.Items) != 1 || fol.Items[0].NewRelease == nil {
 		t.Fatalf("follows after a like: %+v", fol)
 	}
+
+	// Discovery: the liked artist has an mbid (the releases lookup above).
+	var dq struct {
+		Items []store.SimilarJob `json:"items"`
+	}
+	c.json("GET", "/discovery/queue", nil, 200, &dq)
+	if len(dq.Items) != 1 || dq.Items[0].MBID != "x" {
+		t.Fatalf("discovery queue: %+v", dq)
+	}
+	c.json("PUT", fmt.Sprintf("/artists/%d/similar", dq.Items[0].ArtistID), map[string]any{
+		"items": []map[string]any{{"mbid": "mb-1", "name": "Someone New", "score": 10}}}, 204, nil)
+	c.json("PUT", fmt.Sprintf("/artists/%d/similar", dq.Items[0].ArtistID), map[string]any{
+		"items": []map[string]any{{"name": "No Id"}}}, 400, nil)
+	var disc struct {
+		Items []store.Discovery `json:"items"`
+	}
+	c.json("GET", "/discovery", nil, 200, &disc)
+	if len(disc.Items) != 1 || disc.Items[0].Name != "Someone New" || len(disc.Items[0].Because) != 1 {
+		t.Fatalf("discoveries: %+v", disc)
+	}
+	c.json("GET", "/home", nil, 200, &home)
+	if m, ok := home["discoveries"].([]any); !ok || len(m) != 1 {
+		t.Fatalf("home discoveries: %v", home["discoveries"])
+	}
 }
