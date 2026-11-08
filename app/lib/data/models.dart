@@ -892,3 +892,25 @@ class AnalysisStatus {
     pending: j['pending'] as int? ?? 0,
   );
 }
+
+/// An artist of "● artistes suivis": followed for being listened the most
+/// ([auto]) or by hand, with its fresh release (the "•") if any.
+class FollowedArtist {
+  const FollowedArtist({required this.id, required this.name, this.coverId, this.auto = false, this.newRelease});
+
+  final int id;
+  final String name;
+  final int? coverId;
+  final bool auto;
+  final NewRelease? newRelease;
+
+  factory FollowedArtist.fromJson(Map<String, dynamic> j) => FollowedArtist(
+    id: j['id'] as int,
+    name: j['name'] as String? ?? '',
+    coverId: j['cover_id'] as int?,
+    auto: j['auto'] as bool? ?? false,
+    newRelease: j['new_release'] is Map<String, dynamic>
+        ? NewRelease.fromJson(j['new_release'] as Map<String, dynamic>)
+        : null,
+  );
+}

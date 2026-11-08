@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_info.dart';
 import '../../offline/downloads.dart';
+import '../../data/models.dart';
 import '../../state/library.dart';
 import '../../state/playback.dart';
 import '../dialogs.dart';
@@ -208,9 +209,89 @@ class _Playlists extends ConsumerWidget {
               padding: const EdgeInsets.all(8),
               child: TtyLink('réorganiser', onTap: () => openFolderRoot(context)),
             ),
+            const SizedBox(height: 12),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: FollowedArtists()),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// "● artistes suivis [23] ▾" (03, D3): the followed artists as chips, a
+/// red "•" by those with a new release; folded, the first ones and "+N".
+class FollowedArtists extends ConsumerStatefulWidget {
+  const FollowedArtists({super.key});
+
+  @override
+  ConsumerState<FollowedArtists> createState() => _FollowedArtistsState();
+}
+
+class _FollowedArtistsState extends ConsumerState<FollowedArtists> {
+  var _open = false;
+
+  /// Chips shown while folded (03 shows four, D3 five).
+  static const folded = 4;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Tty.of(context);
+    final follows = ref.watch(followsProvider).value ?? const <FollowedArtist>[];
+    if (follows.isEmpty) return const SizedBox.shrink();
+    final shown = _open ? follows : follows.take(folded).toList();
+    final hidden = follows.length - shown.length;
+    Widget chip(String label, Color color, VoidCallback onTap, {bool dot = false}) => Material(
+      color: c.surface,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: label),
+                if (dot)
+                  TextSpan(
+                    text: ' •',
+                    style: TextStyle(color: c.red),
+                  ),
+              ],
+            ),
+            style: TextStyle(color: color),
+          ),
+        ),
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TtySection(
+          'artistes suivis',
+          glyph: '●',
+          color: c.teal,
+          ruled: true,
+          trailing: InkWell(
+            onTap: () => setState(() => _open = !_open),
+            child: Text('[${follows.length}] ${_open ? '▴' : '▾'}', style: TextStyle(color: c.muted)),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final a in shown)
+              chip(a.name.toLowerCase(), c.accentFor(a.id), () => openArtist(context, a.id), dot: a.newRelease != null),
+            if (hidden > 0) chip('+$hidden', c.muted, () => setState(() => _open = true)),
+          ],
+        ),
+        if (follows.any((a) => a.newRelease != null)) ...[
+          const SizedBox(height: 8),
+          const Comment('• = nouvelle sortie'),
+        ],
+      ],
     );
   }
 }
