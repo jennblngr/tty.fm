@@ -42,7 +42,7 @@ type ReleaseRecord struct {
 
 var releaseDate = regexp.MustCompile(`^\d{4}(-\d{2}(-\d{2})?)?$`)
 
-// ReleaseQueue lists the album artists (and the artists followed by hand)
+// ReleaseQueue lists the album artists (and the liked artists)
 // whose releases were never looked up or are more than a week old, the
 // most listened first.
 func (db *DB) ReleaseQueue(ctx context.Context, limit int, now time.Time) ([]ReleaseJob, error) {
@@ -51,7 +51,7 @@ func (db *DB) ReleaseQueue(ctx context.Context, limit int, now time.Time) ([]Rel
 		SELECT ar.id, ar.name, COALESCE(NULLIF(ar.mbid, ''), l.mbid)
 		FROM artists ar LEFT JOIN artist_lookups l ON l.artist_id = ar.id
 		WHERE (EXISTS (SELECT 1 FROM albums al WHERE al.album_artist_id = ar.id AND al.track_count > 0)
-		       OR ar.id IN (SELECT artist_id FROM artist_follows WHERE followed = 1))
+		       OR ar.id IN (SELECT artist_id FROM favorite_artists))
 		  AND (l.checked_at IS NULL OR l.checked_at < ?)
 		ORDER BY l.checked_at IS NOT NULL, l.checked_at,
 		         (SELECT -COALESCE(SUM(p.listened_ms), 0) FROM plays p JOIN tracks t ON t.id = p.track_id

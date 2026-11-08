@@ -2,8 +2,6 @@ package store
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"testing"
 	"time"
 )
@@ -11,22 +9,19 @@ import (
 func TestFollowedArtists(t *testing.T) {
 	db := openTest(t)
 	ctx := context.Background()
-	var files []TrackFile
-	for i := range 12 {
-		files = append(files, TrackFile{Path: fmt.Sprintf("%02d.flac", i), Title: "T", Artist: fmt.Sprintf("A%02d", i),
-			Album: fmt.Sprintf("Al%02d", i), Mtime: 1})
-	}
-	ids := seed(t, db, files...)
+	ids := seed(t, db,
+		TrackFile{Path: "a.flac", Title: "T", Artist: "Sia", Album: "A", Mtime: 1},
+		TrackFile{Path: "b.flac", Title: "T", Artist: "Adele", Album: "B", Mtime: 1},
+		TrackFile{Path: "c.flac", Title: "T", Artist: "Tove Lo", Album: "C", Mtime: 1},
+	)
 	now := time.Date(2026, 11, 9, 12, 0, 0, 0, time.UTC)
-	min := int64(60_000)
-	var plays []Play
-	// A00 to A10 listened 40 min to 30 min; A11 only 5 min (below the bar).
-	for i := range 11 {
-		plays = append(plays, Play{TrackID: ids[i], StartedAt: now.Add(-time.Hour).UnixMilli(), ListenedMs: int64(40-i) * min})
-	}
-	plays = append(plays, Play{TrackID: ids[11], StartedAt: now.Add(-time.Hour).UnixMilli(), ListenedMs: 5 * min})
-	if _, err := db.AddPlays(ctx, 0, plays); err != nil {
-		t.Fatal(err)
+	artist := func(name string) int64 {
+		t.Helper()
+		var id int64
+		if err := db.r.QueryRow(`SELECT id FROM artists WHERE name = ?`, name).Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		return id
 	}
 	names := func() []string {
 		t.Helper()
@@ -40,56 +35,42 @@ func TestFollowedArtists(t *testing.T) {
 		}
 		return out
 	}
-	// The ten most listened above 30 min: A00…A09 (A10 is the eleventh).
-	if got := names(); len(got) != 10 || got[0] != "A00" || got[9] != "A09" {
-		t.Fatalf("auto: %v", got)
+	// Listening alone follows no one.
+	if _, err := db.AddPlays(ctx, 0, []Play{
+		{TrackID: ids[0], StartedAt: now.Add(-time.Hour).UnixMilli(), ListenedMs: 3_600_000},
+		{TrackID: ids[1], StartedAt: now.Add(-time.Hour).UnixMilli(), ListenedMs: 60_000},
+	}); err != nil {
+		t.Fatal(err)
 	}
-	artist := func(name string) int64 {
-		t.Helper()
-		var id int64
-		if err := db.r.QueryRow(`SELECT id FROM artists WHERE name = ?`, name).Scan(&id); err != nil {
+	if got := names(); len(got) != 0 {
+		t.Fatalf("followed without a like: %v", got)
+	}
+	// Liked artists are followed, the most listened first.
+	for _, n := range []string{"Adele", "Sia"} {
+		if err := db.SetFavorite(ctx, "artists", artist(n), true); err != nil {
 			t.Fatal(err)
 		}
-		return id
 	}
-	// By hand: follow A11, stop following A00 (an automatic one).
-	if err := db.SetFollowed(ctx, artist("A11"), true); err != nil {
-		t.Fatal(err)
+	if got := names(); len(got) != 2 || got[0] != "Sia" || got[1] != "Adele" {
+		t.Fatalf("liked: %v", got)
 	}
-	if err := db.SetFollowed(ctx, artist("A00"), false); err != nil {
-		t.Fatal(err)
-	}
-	got := names()
-	if len(got) != 10 || got[0] != "A01" || got[9] != "A11" {
-		t.Fatalf("after the choices: %v", got)
-	}
-	fs, _ := db.FollowedArtists(ctx, now)
-	if fs[9].Auto || !fs[0].Auto {
-		t.Errorf("auto flags: %+v / %+v", fs[0], fs[9])
-	}
-
-	// A fresh release not in the library puts the artist first, with it.
+	// A fresh release the library lacks puts the artist first, with it.
 	soon := now.AddDate(0, 0, 10).Format("2006-01-02")
-	if err := db.SaveArtistReleases(ctx, artist("A05"), ReleaseReport{Releases: []ReleaseRecord{
+	if err := db.SaveArtistReleases(ctx, artist("Adele"), ReleaseReport{Releases: []ReleaseRecord{
 		{MBID: "rg1", Title: "Next", Kind: "album", Released: soon},
-		{MBID: "rg2", Title: "Al05", Kind: "album", Released: now.Format("2006-01-02")}, // already in the library
+		{MBID: "rg2", Title: "B", Kind: "album", Released: now.Format("2006-01-02")}, // already in the library
 	}}, now); err != nil {
 		t.Fatal(err)
 	}
-	fs, _ = db.FollowedArtists(ctx, now)
-	if fs[0].Name != "A05" || fs[0].NewRelease == nil || fs[0].NewRelease.Title != "Next" || fs[1].NewRelease != nil {
-		t.Fatalf("new release first: %+v", fs[:2])
+	fs, _ := db.FollowedArtists(ctx, now)
+	if fs[0].Name != "Adele" || fs[0].NewRelease == nil || fs[0].NewRelease.Title != "Next" || fs[1].NewRelease != nil {
+		t.Fatalf("new release first: %+v", fs)
 	}
-	// An artist followed by hand is looked up on MusicBrainz too.
-	jobs, _ := db.ReleaseQueue(ctx, 50, now)
-	found := false
-	for _, j := range jobs {
-		found = found || j.Name == "A11"
+	// Unliking stops following.
+	if err := db.SetFavorite(ctx, "artists", artist("Sia"), false); err != nil {
+		t.Fatal(err)
 	}
-	if !found {
-		t.Errorf("A11 not in the release queue: %+v", jobs)
-	}
-	if err := db.SetFollowed(ctx, 999, true); !errors.Is(err, ErrNotFound) {
-		t.Errorf("unknown artist: %v", err)
+	if got := names(); len(got) != 1 || got[0] != "Adele" {
+		t.Fatalf("after unliking: %v", got)
 	}
 }

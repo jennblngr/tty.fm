@@ -631,7 +631,7 @@ func TestRadioAPI(t *testing.T) {
 		t.Fatalf("home new releases: %v", home["new_releases"])
 	}
 
-	// Followed artists: none listened yet; follow one by hand.
+	// Followed artists: the liked ones.
 	var fol struct {
 		Items []store.FollowedArtist `json:"items"`
 	}
@@ -639,11 +639,9 @@ func TestRadioAPI(t *testing.T) {
 	if fol.Items == nil || len(fol.Items) != 0 {
 		t.Fatalf("follows: %+v", fol)
 	}
-	c.json("PUT", fmt.Sprintf("/artists/%d/follow", rq.Items[0].ArtistID), map[string]any{"followed": true}, 204, nil)
+	c.json("PUT", fmt.Sprintf("/favorites/artists/%d", rq.Items[0].ArtistID), nil, 204, nil)
 	c.json("GET", "/follows", nil, 200, &fol)
-	if len(fol.Items) != 1 || fol.Items[0].Auto || fol.Items[0].NewRelease == nil {
-		t.Fatalf("follows after following: %+v", fol)
+	if len(fol.Items) != 1 || fol.Items[0].NewRelease == nil {
+		t.Fatalf("follows after a like: %+v", fol)
 	}
-	c.json("PUT", fmt.Sprintf("/artists/%d/follow", rq.Items[0].ArtistID), map[string]any{}, 400, nil)
-	c.json("PUT", "/artists/999/follow", map[string]any{"followed": true}, 404, nil)
 }
