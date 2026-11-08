@@ -526,3 +526,44 @@ func TestAnalysisAPI(t *testing.T) {
 		t.Fatalf("status after reset: %+v", st)
 	}
 }
+
+func TestRadioAPI(t *testing.T) {
+	c := setup(t)
+	login(c)
+	var queue struct {
+		Items []store.AnalysisJob `json:"items"`
+	}
+	c.json("GET", "/analysis/queue?limit=10", nil, 200, &queue)
+	a, b := queue.Items[0], queue.Items[1]
+	var radio store.Radio
+	// Nothing analysed yet: the fallback still plays the other track.
+	c.json("GET", fmt.Sprintf("/radio?track=%d", a.ID), nil, 200, &radio)
+	if radio.Mode != "fallback" || radio.Seed.Kind != "track" || len(radio.Items) != 1 || radio.Items[0].ID != b.ID {
+		t.Fatalf("fallback radio: %+v", radio)
+	}
+	vec := make([]float32, store.EmbeddingDims)
+	vec[0] = 1
+	for _, j := range []store.AnalysisJob{a, b} {
+		c.json("PUT", fmt.Sprintf("/tracks/%d/analysis", j.ID), map[string]any{
+			"file_mtime": j.FileMtime, "analyzer": "test/1", "embedding": vec}, 204, nil)
+	}
+	c.json("GET", fmt.Sprintf("/radio?track=%d&limit=5", a.ID), nil, 200, &radio)
+	if radio.Mode != "similar" || len(radio.Items) != 1 || radio.Items[0].ID != b.ID || radio.Items[0].Similarity == nil {
+		t.Fatalf("radio: %+v", radio)
+	}
+	artist := radio.Items[0].ArtistID
+	c.json("GET", fmt.Sprintf("/radio?track=%d&exclude=%d", a.ID, b.ID), nil, 200, &radio)
+	if len(radio.Items) != 0 {
+		t.Fatalf("radio with the only other track excluded: %+v", radio)
+	}
+	c.json("GET", fmt.Sprintf("/radio?artist=%d&recent=%d", artist, a.ID), nil, 200, &radio)
+	if radio.Seed.Kind != "artist" || len(radio.Items) != 1 || radio.Items[0].ID != b.ID {
+		t.Fatalf("artist radio: %+v", radio)
+	}
+	c.json("GET", "/radio", nil, 400, nil)
+	c.json("GET", "/radio?track=1&artist=1", nil, 400, nil)
+	c.json("GET", "/radio?track=x", nil, 400, nil)
+	c.json("GET", fmt.Sprintf("/radio?track=%d&recent=1,x", a.ID), nil, 400, nil)
+	c.json("GET", "/radio?track=999", nil, 404, nil)
+	c.json("GET", "/radio?artist=999", nil, 404, nil)
+}

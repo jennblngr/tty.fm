@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"ttyfm/internal/store"
 )
@@ -111,4 +112,44 @@ func (s *Server) analysisStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, st)
+}
+
+// radio returns a batch of tracks to play after a track (?track=) or an
+// artist (?artist=). For the next batch the client sends the same seed, the
+// tracks played since (?recent=, oldest first: they steer the radio and
+// are left out) and those still queued (?exclude=), comma-separated.
+func (s *Server) radio(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	req := store.RadioRequest{Limit: queryInt(r, "limit", 20)}
+	var err error
+	if (q.Get("track") == "") == (q.Get("artist") == "") {
+		s.fail(w, r, errBadRequest)
+		return
+	}
+	for _, p := range []struct {
+		name string
+		dst  *int64
+	}{{"track", &req.TrackID}, {"artist", &req.ArtistID}} {
+		if q.Get(p.name) == "" {
+			continue
+		}
+		if *p.dst, err = strconv.ParseInt(q.Get(p.name), 10, 64); err != nil || *p.dst <= 0 {
+			s.fail(w, r, errBadRequest)
+			return
+		}
+	}
+	if req.Recent, err = queryIDs(r, "recent", 1000); err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	if req.Exclude, err = queryIDs(r, "exclude", 1000); err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	radio, err := s.DB.Radio(r.Context(), req)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, radio)
 }

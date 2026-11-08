@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"ttyfm/internal/app"
@@ -59,6 +60,7 @@ func (s *Server) Handler() http.Handler {
 	priv.HandleFunc("PUT "+prefix+"/tracks/{id}/analysis", s.saveAnalysis)
 	priv.HandleFunc("DELETE "+prefix+"/tracks/{id}/analysis", s.resetAnalysis)
 	priv.HandleFunc("GET "+prefix+"/tracks/{id}/similar", s.similarTracks)
+	priv.HandleFunc("GET "+prefix+"/radio", s.radio)
 	priv.HandleFunc("GET "+prefix+"/search", s.search)
 	priv.HandleFunc("GET "+prefix+"/search/facets", s.searchFacets)
 	priv.HandleFunc("GET "+prefix+"/covers/{id}", s.cover)
@@ -170,6 +172,27 @@ func queryInt(r *http.Request, name string, def int) int {
 		return v
 	}
 	return def
+}
+
+// queryIDs parses a comma-separated list of ids (at most max of them).
+func queryIDs(r *http.Request, name string, max int) ([]int64, error) {
+	v := r.URL.Query().Get(name)
+	if v == "" {
+		return nil, nil
+	}
+	parts := strings.Split(v, ",")
+	if len(parts) > max {
+		return nil, errBadRequest
+	}
+	ids := make([]int64, 0, len(parts))
+	for _, p := range parts {
+		id, err := strconv.ParseInt(strings.TrimSpace(p), 10, 64)
+		if err != nil || id <= 0 {
+			return nil, errBadRequest
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
 }
 
 func decode(r *http.Request, v any) error {
