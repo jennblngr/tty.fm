@@ -8,6 +8,7 @@ import '../../core/network.dart';
 import '../../core/session.dart';
 import '../../core/settings.dart';
 import '../../data/library_repository.dart';
+import '../../data/models.dart';
 import '../../data/notifications.dart';
 import '../../offline/downloads.dart';
 import '../../state/notifications.dart';
@@ -134,6 +135,8 @@ class SettingsScreen extends ConsumerWidget {
                     onPick: (v) => notifier.update(s.copyWith(hideArchived: v)),
                   ),
                   Text('// dans les albums ; un album tout archivé quitte la biblio', style: secondary),
+                  const SizedBox(height: 8),
+                  const _AudioAnalysis(),
                 ],
               ),
             ),
@@ -148,6 +151,27 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () async {
                 await ref.read(jsonCacheProvider).clear();
                 if (context.mounted) toast(context, 'Cache vidé');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.graphic_eq),
+              title: const Text("Réinitialiser l'analyse audio"),
+              subtitle: const Text('Tous les titres seront analysés à nouveau'),
+              onTap: () async {
+                if (!await confirm(
+                  context,
+                  "Réinitialiser l'analyse audio ?",
+                  'Le bpm, la tonalité, les genres et la similarité de tous les titres seront recalculés. '
+                      'Ça prend environ 20 s par titre sur le serveur.',
+                  action: 'Réinitialiser',
+                )) {
+                  return;
+                }
+                if (!context.mounted) return;
+                await guard(context, () async {
+                  await ref.read(libraryProvider).resetAllAnalysis();
+                  ref.invalidate(analysisStatusProvider);
+                }, success: 'Analyse relancée pour tous les titres');
               },
             ),
             ListTile(
@@ -548,4 +572,50 @@ class _Notifications extends ConsumerWidget {
       ],
     );
   }
+}
+
+/// How far the analysis of the library is (GET /analysis).
+final analysisStatusProvider = FutureProvider.autoDispose<AnalysisStatus>(
+  (ref) => ref.watch(libraryProvider).analysisStatus(),
+);
+
+/// "analyse audio [off] [on]" (server-wide, 06 / D6) and where the
+/// analysis of the library stands.
+class _AudioAnalysis extends ConsumerWidget {
+  const _AudioAnalysis();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final secondary = TextStyle(color: Tty.of(context).muted);
+    final status = ref.watch(analysisStatusProvider);
+    final st = status.value;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Choices<bool>(
+          label: 'analyse audio',
+          values: const [false, true],
+          name: (v) => v ? 'on' : 'off',
+          selected: st?.enabled ?? true,
+          onPick: (v) => guard(context, () async {
+            await ref.read(libraryProvider).setAnalysisEnabled(v);
+            ref.invalidate(analysisStatusProvider);
+          }),
+        ),
+        Text("// calcule genre, bpm et tonalité à l'import", style: secondary),
+        if (st != null) Text('// ${analysisSummary(st)}', style: secondary),
+        if (status.hasError && st == null) Text("// état de l'analyse indisponible", style: secondary),
+      ],
+    );
+  }
+}
+
+/// "340 / 345 titres analysés · 3 en attente · 2 en échec", or "en pause".
+String analysisSummary(AnalysisStatus st) {
+  final parts = [
+    '${st.analyzed} / ${st.total} titres analysés',
+    if (st.pending > 0) st.enabled ? '${st.pending} en cours' : '${st.pending} en pause',
+    if (st.failed > 0) '${st.failed} en échec',
+  ];
+  return parts.join(' · ');
 }

@@ -72,7 +72,7 @@ func TestAnalysis(t *testing.T) {
 	if err != nil || len(comp) != 1 || comp[0].ID != ids[1] {
 		t.Fatalf("compatible: %+v %v", comp, err)
 	}
-	if st, _ := db.AnalysisStatus(ctx); st != (AnalysisStatus{Total: 4, Analyzed: 3, Failed: 1}) {
+	if st, _ := db.AnalysisStatus(ctx); st != (AnalysisStatus{Enabled: true, Total: 4, Analyzed: 3, Failed: 1}) {
 		t.Fatalf("status: %+v", st)
 	}
 	if q, _ := db.AnalysisQueue(ctx, 10, ""); len(q) != 0 {

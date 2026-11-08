@@ -99,6 +99,7 @@ func (s *Server) Handler() http.Handler {
 	priv.HandleFunc("POST "+prefix+"/admin/scan", s.startScan)
 	priv.HandleFunc("GET "+prefix+"/admin/scan", s.scanStatus)
 	priv.HandleFunc("GET "+prefix+"/analysis", s.analysisStatus)
+	priv.HandleFunc("PATCH "+prefix+"/analysis", s.updateAnalysis)
 	priv.HandleFunc("GET "+prefix+"/analysis/queue", s.analysisQueue)
 	priv.HandleFunc("DELETE "+prefix+"/analysis", s.resetAllAnalysis)
 

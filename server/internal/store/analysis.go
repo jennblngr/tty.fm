@@ -276,10 +276,11 @@ func (db *DB) AnalysisQueue(ctx context.Context, limit int, analyzer string) ([]
 
 // AnalysisStatus counts present tracks by analysis state.
 type AnalysisStatus struct {
-	Total    int `json:"total"`
-	Analyzed int `json:"analyzed"`
-	Failed   int `json:"failed"`
-	Pending  int `json:"pending"` // never analysed, or the file changed
+	Enabled  bool `json:"enabled"` // "analyse audio": off, the queue stays empty
+	Total    int  `json:"total"`
+	Analyzed int  `json:"analyzed"`
+	Failed   int  `json:"failed"`
+	Pending  int  `json:"pending"` // never analysed, or the file changed
 }
 
 func (db *DB) AnalysisStatus(ctx context.Context) (AnalysisStatus, error) {
@@ -290,8 +291,34 @@ func (db *DB) AnalysisStatus(ctx context.Context) (AnalysisStatus, error) {
 		       COALESCE(SUM(a.track_id IS NOT NULL AND a.file_mtime = t.file_mtime AND a.error IS NOT NULL), 0)
 		FROM tracks t LEFT JOIN track_analysis a ON a.track_id = t.id
 		WHERE t.missing_since IS NULL`).Scan(&s.Total, &s.Analyzed, &s.Failed)
+	if err != nil {
+		return s, err
+	}
 	s.Pending = s.Total - s.Analyzed - s.Failed
+	s.Enabled, err = db.AnalysisEnabled(ctx)
 	return s, err
+}
+
+// AnalysisEnabled tells whether audio analysis is on (the default).
+func (db *DB) AnalysisEnabled(ctx context.Context) (bool, error) {
+	var v string
+	err := db.r.QueryRowContext(ctx, `SELECT value FROM settings WHERE key = 'analysis_enabled'`).Scan(&v)
+	if err == sql.ErrNoRows {
+		return true, nil
+	}
+	return v != "0", err
+}
+
+// SetAnalysisEnabled turns audio analysis on or off. Off, the recommender
+// finds an empty queue; the analyses already made stay.
+func (db *DB) SetAnalysisEnabled(ctx context.Context, on bool) error {
+	v := "0"
+	if on {
+		v = "1"
+	}
+	_, err := db.w.ExecContext(ctx, `INSERT INTO settings (key, value) VALUES ('analysis_enabled', ?)
+		ON CONFLICT (key) DO UPDATE SET value = excluded.value`, v)
+	return err
 }
 
 // CompatibleTracks returns tracks that chain well after trackID: a

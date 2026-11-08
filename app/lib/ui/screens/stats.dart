@@ -53,7 +53,13 @@ class StatsScreen extends ConsumerWidget {
       builder: (s) {
         final panels = s.plays == 0
             ? <Widget>[const Comment('aucune écoute sur cette période.')]
-            : <Widget>[_ListeningTime(s, label), _TopArtists(s, label), _TopGenres(s, label), _Highlights(s, label)];
+            : <Widget>[
+                _ListeningTime(s, label),
+                _TopArtists(s, label),
+                _TopGenres(s, label),
+                _TempoPanel(s, label),
+                _Highlights(s, label),
+              ];
         return TtyPage(
           gap: 20,
           onRefresh: () => ref.refresh(statsProvider(days).future),
@@ -271,6 +277,93 @@ class _TopGenres extends StatelessWidget {
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "∿ tempo": how the listening time spreads over the tempo bands, the
+/// mean bpm and its trend, the fastest and slowest tracks played, morning
+/// against evening (05, D5). Analysed tracks only.
+class _TempoPanel extends StatelessWidget {
+  const _TempoPanel(this.s, this.period);
+  final ListeningStats s;
+  final String period;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Tty.of(context);
+    final t = s.tempo;
+    final total = t.analyzedMs == 0 ? 1 : t.analyzedMs;
+    final top = t.bandMs.fold<int>(1, (a, b) => b > a ? b : a);
+    InlineSpan value(String v, [Color? color]) => TextSpan(
+      text: v,
+      style: TextStyle(color: color ?? c.text),
+    );
+    Widget line(String k, List<InlineSpan> v) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 1),
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: '$k: ',
+              style: TextStyle(color: c.muted),
+            ),
+            ...v,
+          ],
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+    String bpm(double v) => '${v.round()}';
+    final avg = t.avgBpm, prev = t.prevAvgBpm;
+    final trend = avg != null && prev != null && avg != prev
+        ? ' ${avg > prev ? '↑' : '↓'}${(avg - prev).abs().round()}'
+        : '';
+    final (morning, evening) = (t.morningBpm, t.eveningBpm);
+    return TtyPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TtySection('tempo [$period]', glyph: '∿', color: c.peach, comment: 'répartition de tes écoutes par bpm'),
+          const SizedBox(height: 6),
+          if (t.analyzedMs == 0)
+            const Comment('aucun titre analysé parmi tes écoutes')
+          else ...[
+            for (var i = 0; i < Tempo.bands.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 1),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 72,
+                      child: Text(Tempo.bands[i], style: TextStyle(color: c.muted)),
+                    ),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: TtyMeter(t.bandMs[i] / top, color: c.peach),
+                      ),
+                    ),
+                    Text('${(t.bandMs[i] * 100 / total).round()}%', style: TextStyle(color: c.muted)),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 6),
+            if (avg != null) line('bpm moyen', [value(bpm(avg), c.peach), value(trend, c.muted)]),
+            if (t.fastest case final f?)
+              line('le + rapide', [value(f.title.toLowerCase()), value(' — ${f.bpm?.round()} bpm', c.muted)]),
+            if (t.slowest case final f? when f.id != t.fastest?.id)
+              line('le + lent', [value(f.title.toLowerCase()), value(' — ${f.bpm?.round()} bpm', c.muted)]),
+            if (morning != null && evening != null && morning.round() != evening.round())
+              Comment(
+                morning > evening
+                    ? 'plus rapide le matin (${bpm(morning)}) que le soir (${bpm(evening)})'
+                    : 'plus rapide le soir (${bpm(evening)}) que le matin (${bpm(morning)})',
+              ),
+          ],
         ],
       ),
     );
