@@ -58,6 +58,7 @@ func (s *Server) Handler() http.Handler {
 	priv.HandleFunc("GET "+prefix+"/tracks/{id}/analysis", s.trackAnalysis)
 	priv.HandleFunc("PUT "+prefix+"/tracks/{id}/analysis", s.saveAnalysis)
 	priv.HandleFunc("DELETE "+prefix+"/tracks/{id}/analysis", s.resetAnalysis)
+	priv.HandleFunc("GET "+prefix+"/tracks/{id}/similar", s.similarTracks)
 	priv.HandleFunc("GET "+prefix+"/search", s.search)
 	priv.HandleFunc("GET "+prefix+"/search/facets", s.searchFacets)
 	priv.HandleFunc("GET "+prefix+"/covers/{id}", s.cover)

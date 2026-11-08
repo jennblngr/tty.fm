@@ -3,6 +3,7 @@ module ttyfm
 go 1.27.1
 
 require (
+	github.com/asg017/sqlite-vec-go-bindings v0.1.6
 	github.com/coder/websocket v1.8.15 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/mattn/go-sqlite3 v1.14.52 // indirect

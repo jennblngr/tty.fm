@@ -36,6 +36,23 @@ func (s *Server) trackAnalysis(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"analysis": a, "compatible": compatible})
 }
 
+// similarTracks lists the tracks that sound closest to a track (embeddings
+// sent with the analysis), the foundation of the radio. Empty while the
+// track has no embedding; 404 if it is not in the library.
+func (s *Server) similarTracks(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r, "id")
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	items, err := s.DB.SimilarTracks(r.Context(), id, queryInt(r, "limit", 20))
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
 func (s *Server) saveAnalysis(w http.ResponseWriter, r *http.Request) {
 	id, err := pathID(r, "id")
 	if err != nil {
