@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ttyfm/data/models.dart';
+import 'package:ttyfm/ui/screens/home.dart';
 
 void main() {
   test('recently played: albums, artists and playlists, unknown kinds skipped', () {
@@ -92,5 +93,32 @@ void main() {
     expect(h.mixes[0].coverIds, [3, 4]);
     expect(h.mixes[1].caption, '');
     expect(HomeData.fromJson({'recent_additions': [], 'recently_played': []}).mixes, isEmpty);
+  });
+
+  test('new releases: parsed, month-only dates, subtitles', () {
+    final h = HomeData.fromJson({
+      'recent_additions': [],
+      'recently_played': [],
+      'new_releases': [
+        {
+          'artist_id': 4,
+          'artist': 'Charlotte Cardin',
+          'title': 'Midnight, mon amour',
+          'kind': 'album',
+          'released': '2027-01-29',
+          'upcoming': true,
+        },
+        {'artist_id': 1, 'artist': 'Sia', 'title': 'DISGUISE', 'kind': 'single', 'released': '2026-08', 'album_id': 9},
+        {'artist_id': 1, 'artist': 'Sia', 'title': 'X', 'kind': 'ep', 'released': '2026'},
+      ],
+    });
+    final now = DateTime(2026, 11, 9);
+    final r = h.newReleases;
+    expect(r[1].albumId, 9);
+    expect(r[1].date, DateTime(2026, 8, 1));
+    expect(newReleaseSubtitle(r[0], now: now), 'charlotte cardin · album · à venir le 29 janv. 2027');
+    expect(newReleaseSubtitle(r[1], now: now), 'sia · single · sorti en août');
+    expect(newReleaseSubtitle(r[2], now: now), 'sia · EP');
+    expect(HomeData.fromJson({'recent_additions': [], 'recently_played': []}).newReleases, isEmpty);
   });
 }
