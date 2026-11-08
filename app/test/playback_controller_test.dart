@@ -345,4 +345,129 @@ void main() {
     expect(engine.opens.last.index, 1);
     expect(engine.opens.last.start, const Duration(seconds: 5));
   });
+
+  group('radio', () {
+    late List<({RadioSeed seed, List<int> recent, List<int> exclude})> calls;
+    var nextId = 100;
+    setUp(() {
+      calls = [];
+      nextId = 100;
+      c.fetchRadio = (seed, {recent = const [], exclude = const []}) async {
+        calls.add((seed: seed, recent: recent, exclude: exclude));
+        return [for (var i = 0; i < 4; i++) t(nextId++)];
+      };
+    });
+    Future<void> settle() => Future<void>.delayed(Duration.zero);
+    List<QueueSource> sources() => [for (final q in c.state.queue) q.source];
+
+    test('from the current track it replaces the rest of the queue and plays the radio', () async {
+      await c.playTracks([t(1), t(2), t(3)]);
+      await c.addToQueue([t(4)]);
+      expect(c.state.hasUserUpcoming, isTrue);
+      await c.pause();
+      await c.startRadio(RadioSeed.track(t(1)), from: t(1));
+      expect(ids(), [1, 100, 101, 102, 103]);
+      expect(engine.urls, ['u1', 'u100', 'u101', 'u102', 'u103']);
+      expect(c.state.current!.id, 100);
+      expect(engine.current, 1);
+      expect(c.state.playing, isTrue);
+      expect(sources().skip(1), everyElement(QueueSource.radio));
+      expect(c.state.radio, RadioSeed.track(t(1)));
+      expect(calls.single.recent, [1]);
+      expect(calls.single.exclude, [1]);
+      expect(c.state.hasUserUpcoming, isFalse);
+    });
+
+    test('from another track it plays it, then the radio', () async {
+      await c.playTracks([t(1), t(2)]);
+      await c.startRadio(RadioSeed.track(t(7)), from: t(7));
+      expect(ids(), [7, 100, 101, 102, 103]);
+      expect(c.state.current!.id, 7);
+      expect(c.state.contextKind, 'radio');
+    });
+
+    test('an artist radio plays its first batch', () async {
+      await c.startRadio(const RadioSeed('artist', 5, 'X'));
+      expect(ids(), [100, 101, 102, 103]);
+      expect(c.state.radio!.kind, 'artist');
+      expect(calls.single.seed.id, 5);
+    });
+
+    test('the radio loads more when few tracks are left', () async {
+      await c.startRadio(RadioSeed.track(t(1)), from: t(1));
+      expect(calls, hasLength(1));
+      engine.finishTrack(); // now at 100, three left: still enough
+      await settle();
+      expect(calls, hasLength(1));
+      engine.finishTrack(); // at 101, two left
+      await settle();
+      expect(calls, hasLength(2));
+      expect(calls.last.recent, [1, 100, 101]);
+      expect(calls.last.exclude, [1, 100, 101, 102, 103]);
+      expect(ids(), [1, 100, 101, 102, 103, 104, 105, 106, 107]);
+    });
+
+    test('tracks added by the user go before the radio', () async {
+      await c.startRadio(RadioSeed.track(t(1)), from: t(1));
+      await c.addToQueue([t(9)]);
+      expect(ids(), [1, 9, 100, 101, 102, 103]);
+      expect(engine.urls, ['u1', 'u9', 'u100', 'u101', 'u102', 'u103']);
+      expect(c.state.queue[1].source, QueueSource.user);
+    });
+
+    test('a new list stops the radio', () async {
+      await c.startRadio(RadioSeed.track(t(1)), from: t(1));
+      await c.playTracks([t(1), t(2)]);
+      expect(c.state.radio, isNull);
+      expect(sources(), everyElement(QueueSource.context));
+    });
+
+    test('autoplay starts a radio at the last track, if on and repeat is off', () async {
+      await c.playTracks([t(1), t(2)]);
+      engine.finishTrack(); // last track, autoplay off
+      await settle();
+      expect(calls, isEmpty);
+
+      var on = true;
+      c.autoplay = () => on;
+      await c.playTracks([t(1), t(2)]);
+      engine.finishTrack();
+      await settle();
+      expect(calls.single.seed, RadioSeed.track(t(2)));
+      expect(ids(), [1, 2, 100, 101, 102, 103]);
+      expect(c.state.radio, RadioSeed.track(t(2)));
+
+      calls.clear();
+      await c.setRepeat(RepeatMode.all);
+      await c.playTracks([t(1)]);
+      await settle();
+      expect(calls, isEmpty);
+      on = false;
+    });
+
+    test('a batch arriving after the queue changed is dropped', () async {
+      final pending = Completer<List<Track>>();
+      c.fetchRadio = (seed, {recent = const [], exclude = const []}) => pending.future;
+      c.autoplay = () => true;
+      await c.playTracks([t(1)]); // last track: autoplay asks for a batch
+      c.fetchRadio = null;
+      await c.playTracks([t(5), t(6)]);
+      pending.complete([t(100)]);
+      await settle();
+      expect(ids(), [5, 6]);
+    });
+
+    test('the queue sources and the radio survive a restore', () async {
+      await c.startRadio(RadioSeed.track(t(1)), from: t(1));
+      await c.addToQueue([t(9)]);
+      final engine2 = FakeEngine();
+      final c2 = PlaybackController(engine2, sourceFor: (t) => EngineSource('u${t.id}'));
+      await c2.restore(c.toJson());
+      expect(c2.state.radio, RadioSeed.track(t(1)));
+      expect(
+        [for (final q in c2.state.queue) q.source],
+        [QueueSource.context, QueueSource.user, ...List.filled(4, QueueSource.radio)],
+      );
+    });
+  });
 }

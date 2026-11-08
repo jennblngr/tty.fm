@@ -137,6 +137,21 @@ class LibraryRepository {
   /// Queues the track for analysis again ("relancer l'analyse").
   Future<void> resetAnalysis(int trackId) => _api.delete('/tracks/$trackId/analysis');
 
+  /// A batch of radio tracks after [seed]. [recent]: the tracks played
+  /// since the last batch, oldest first (they steer the radio); [exclude]:
+  /// the tracks still queued. Not cached: a radio needs the server.
+  Future<List<Track>> radio(RadioSeed seed, {List<int> recent = const [], List<int> exclude = const []}) async {
+    final j = await _api.get(
+      '/radio',
+      query: {
+        seed.kind: seed.id,
+        if (recent.isNotEmpty) 'recent': recent.join(','),
+        if (exclude.isNotEmpty) 'exclude': exclude.join(','),
+      },
+    ) as Map<String, dynamic>;
+    return [for (final t in j['items'] as List) Track.fromJson(t as Map<String, dynamic>)];
+  }
+
   // --- playlists -----------------------------------------------------------
 
   Stream<PlaylistTree> playlistTree() => _cached(

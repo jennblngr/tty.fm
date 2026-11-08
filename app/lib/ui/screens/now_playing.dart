@@ -21,6 +21,7 @@ import '../widgets/cover.dart';
 import '../widgets/lyrics_view.dart';
 import '../widgets/mini_player.dart';
 import '../widgets/player_menu.dart';
+import '../widgets/radio.dart';
 import '../widgets/tty.dart';
 import 'devices.dart';
 
@@ -569,9 +570,10 @@ class _QueueSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 6),
-        if (compact)
-          for (var i = st.index; i < st.queue.length && i < st.index + 12; i++) _QueueRow(i)
-        else
+        if (compact) ...[
+          for (var i = st.index; i < st.queue.length && i < st.index + 12; i++) _QueueRow(i),
+          if (st.queue.length <= st.index + 12) const Padding(padding: EdgeInsets.only(top: 6), child: QueueTail()),
+        ] else
           SizedBox(height: 420, child: const QueueView()),
       ],
     );
@@ -603,7 +605,9 @@ class _QueueRow extends ConsumerWidget {
         ),
         title: item.track.title.toLowerCase(),
         titleColor: current ? c.green : null,
-        subtitle: '${item.track.artist.toLowerCase()} · ${current ? 'en cours' : formatDuration(item.track.duration)}',
+        subtitle:
+            '${item.track.artist.toLowerCase()} · ${current ? 'en cours' : formatDuration(item.track.duration)}'
+            '${current ? '' : queueSourceSuffix(item)}',
         onTap: () => ref.read(playbackControllerProvider).jumpTo(i),
         trailing: current
             ? null
@@ -628,6 +632,7 @@ class QueueView extends ConsumerWidget {
     final c = Tty.of(context);
     if (st.queue.isEmpty) return const Center(child: Comment('la file est vide'));
     return ReorderableListView.builder(
+      footer: const Padding(padding: EdgeInsets.fromLTRB(16, 8, 16, 16), child: QueueTail()),
       buildDefaultDragHandles: false,
       itemCount: st.queue.length,
       onReorderItem: pc.move,
@@ -652,10 +657,12 @@ class QueueView extends ConsumerWidget {
               title: item.track.title.toLowerCase(),
               titleColor: current ? c.green : null,
               bold: current,
-              subtitle: [
-                item.track.artist.toLowerCase(),
-                if (item.track.bpm != null) '${item.track.bpm!.round()} bpm',
-              ].join(' · '),
+              subtitle:
+                  [
+                    item.track.artist.toLowerCase(),
+                    if (item.track.bpm != null) '${item.track.bpm!.round()} bpm',
+                  ].join(' · ') +
+                  queueSourceSuffix(item),
               onTap: () => pc.jumpTo(i),
               trailing: ReorderableDragStartListener(
                 index: i,

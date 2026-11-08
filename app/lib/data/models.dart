@@ -661,3 +661,23 @@ class AnalysisResult {
     [for (final t in j['compatible'] as List? ?? const []) Track.fromJson(t as Map<String, dynamic>)],
   );
 }
+
+/// What a radio started from: a track or an artist (GET /radio). [name] is
+/// the track title or the artist name, for "// ensuite : radio « … »".
+class RadioSeed {
+  const RadioSeed(this.kind, this.id, this.name);
+  RadioSeed.track(Track t) : this('track', t.id, t.title);
+
+  final String kind; // "track" or "artist"
+  final int id;
+  final String name;
+
+  factory RadioSeed.fromJson(Map<String, dynamic> j) =>
+      RadioSeed(j['kind'] as String, j['id'] as int, j['name'] as String? ?? '');
+  Map<String, dynamic> toJson() => {'kind': kind, 'id': id, 'name': name};
+
+  @override
+  bool operator ==(Object other) => other is RadioSeed && other.kind == kind && other.id == id;
+  @override
+  int get hashCode => Object.hash(kind, id);
+}
