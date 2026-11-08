@@ -9,6 +9,7 @@ import '../state/notifications.dart';
 import '../state/playback.dart';
 import '../state/search.dart';
 import 'dialogs.dart';
+import 'format.dart';
 import 'icons.dart';
 import 'nav.dart';
 import 'screens/favorites.dart';
@@ -536,9 +537,14 @@ class TrackArt extends StatelessWidget {
 
 /// "key  value" facts about a track: tags and file, plus the audio
 /// analysis (tempo, key, energy…) once the recommender has analysed it.
+/// [details] adds what "[détails]" unfolds: how sure the key is, the
+/// loudness range and the analyser; [acoustic] shows the acousticness
+/// (left for the details on the phone, as in 02).
 class TrackFacts extends ConsumerWidget {
-  const TrackFacts(this.t, {super.key});
+  const TrackFacts(this.t, {super.key, this.details = false, this.acoustic = true});
   final Track t;
+  final bool details;
+  final bool acoustic;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -564,19 +570,28 @@ class TrackFacts extends ConsumerWidget {
     final genres = ok ? a.genres : const <(String, double)>[];
     final rows = <(String, Widget)>[
       if (genres.isNotEmpty) ...[
-        ('genre', withNote(genres[0].$1.toLowerCase(), c.mauve, pct(genres[0].$2))),
-        if (genres.length > 1) ('sous-genre', withNote(genres[1].$1.toLowerCase(), c.pink, pct(genres[1].$2))),
+        // No share: it is a part of the summed activations of 400 styles,
+        // which reads as a confidence it is not.
+        ('genre', text(genres[0].$1.toLowerCase(), c.mauve)),
+        if (genres.length > 1) ('sous-genre', text(genres[1].$1.toLowerCase(), c.pink)),
       ] else if (t.genre != null)
         ('genre', text(t.genre!.toLowerCase(), c.mauve)),
       if (t.year != null) ('année', text('${t.year}')),
       if (ok && a.bpm != null)
         ('tempo', withNote('${a.bpm!.round()} bpm', c.peach, '♩ = ${(60 / a.bpm!).toStringAsFixed(2)} s')),
       if (ok && a.keyName != null) ('tonalité', withNote(a.keyName!, null, '(${a.camelot})')),
+      if (details && ok && a.keyStrength != null) ('confiance', TtyMeter(a.keyStrength!, suffix: pct(a.keyStrength!))),
       if (ok && a.energy != null) ('énergie', TtyMeter(a.energy!, suffix: pct(a.energy!))),
       if (ok && a.danceability != null) ('dansant', TtyMeter(a.danceability!, suffix: pct(a.danceability!))),
-      if (ok && a.acousticness != null) ('acoustique', TtyMeter(a.acousticness!, suffix: pct(a.acousticness!))),
+      if ((acoustic || details) && ok && a.acousticness != null)
+        ('acoustique', TtyMeter(a.acousticness!, suffix: pct(a.acousticness!))),
       if (ok && a.mood != null) ('ambiance', text(a.mood!, c.blue)),
       if (ok && a.loudnessLufs != null) ('volume', text('${a.loudnessLufs!.toStringAsFixed(1)} LUFS')),
+      if (details && ok && a.loudnessRange != null)
+        (
+          'dynamique',
+          withNote('${a.loudnessRange!.toStringAsFixed(1)} LU', null, 'écart entre passages doux et forts'),
+        ),
       (
         'fichier',
         text(
@@ -589,6 +604,8 @@ class TrackFacts extends ConsumerWidget {
           ].join(' · '),
         ),
       ),
+      if (details && a != null && a.analyzer != null)
+        ('analyse', text([a.analyzer!, if (a.analyzedAt != null) formatDate(a.analyzedAt!)].join(' · '), c.muted)),
     ];
     return Column(
       children: [

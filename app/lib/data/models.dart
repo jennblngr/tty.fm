@@ -587,6 +587,10 @@ class TrackAnalysis {
     this.mood,
     this.genres = const [],
     this.stale = false,
+    this.keyStrength,
+    this.loudnessRange,
+    this.analyzer,
+    this.analyzedAt,
   });
 
   final String? error;
@@ -601,6 +605,13 @@ class TrackAnalysis {
   final String? mood;
   final List<(String, double)> genres; // name, share 0..1
   final bool stale; // the file changed since: queued again
+
+  /// Shown under "[détails]": how sure the key is (0..1), the loudness
+  /// range in LU, and which analyser ran when.
+  final double? keyStrength;
+  final double? loudnessRange;
+  final String? analyzer;
+  final DateTime? analyzedAt;
 
   static double? _d(Object? v) => (v as num?)?.toDouble();
 
@@ -620,6 +631,10 @@ class TrackAnalysis {
         ((g as Map)['name'] as String? ?? '', (g['share'] as num?)?.toDouble() ?? 0),
     ],
     stale: j['stale'] as bool? ?? false,
+    keyStrength: _d(j['key_strength']),
+    loudnessRange: _d(j['loudness_range']),
+    analyzer: j['analyzer'] as String?,
+    analyzedAt: j['analyzed_at'] is int ? DateTime.fromMillisecondsSinceEpoch((j['analyzed_at'] as int) * 1000) : null,
   );
 
   /// "la mineur".
