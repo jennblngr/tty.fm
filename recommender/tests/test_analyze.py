@@ -1,10 +1,16 @@
 """End-to-end analysis of a synthetic file: a 124 bpm kick over an A minor
-chord. Skipped where Essentia is not installed."""
+chord. Skipped where Essentia is not installed; the ML part runs when
+TTYFM_MODELS_DIR points to the downloaded models."""
 
+import functools
 import os
 import tempfile
 import unittest
 import wave
+
+from ttyfm_recommender import models, worker
+
+MODELS_DIR = os.environ.get("TTYFM_MODELS_DIR")
 
 try:
     import essentia  # noqa: F401
@@ -45,6 +51,23 @@ class AnalyzeTest(unittest.TestCase):
         for k in ("energy", "danceability", "key_strength"):
             self.assertTrue(0 <= r[k] <= 1, k)
         self.assertTrue(analyzer_name().startswith("essentia-"))
+
+    @unittest.skipUnless(MODELS_DIR, "TTYFM_MODELS_DIR not set")
+    def test_ml_fields(self):
+        self.assertTrue(models.available(MODELS_DIR), f"models missing from {MODELS_DIR}")
+        from ttyfm_recommender.analyze import analyzer_name
+
+        path = os.path.join(tempfile.mkdtemp(), "t.wav")
+        write_test_wav(path)
+        # Through the worker's child process, as in production.
+        r = worker.analyze_isolated(path, 120, functools.partial(worker.analyze_file, models_dir=MODELS_DIR))
+        self.assertNotIn("error", r)
+        self.assertTrue(0 <= r["acousticness"] <= 1)
+        genre, style = r["genres"]
+        self.assertTrue(genre["name"] and style["name"])
+        self.assertTrue(0 < style["share"] <= genre["share"] <= 1)
+        self.assertNotIn("+", analyzer_name())
+        self.assertTrue(analyzer_name(MODELS_DIR).endswith("+" + models.VERSION))
 
     def test_undecodable_file(self):
         from ttyfm_recommender.analyze import analyze

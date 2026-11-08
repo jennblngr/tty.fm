@@ -3,12 +3,14 @@ environment variables, like the server."""
 
 from __future__ import annotations
 
+import functools
 import logging
 import os
 import sys
 
+from . import models
 from .client import Client
-from .worker import Worker, preload
+from .worker import Worker, analyze_file, preload
 
 
 def env(key: str, default: str | None = None) -> str | None:
@@ -27,6 +29,16 @@ def main() -> int:
         return 2
     from .analyze import analyzer_name
 
+    models_dir = env("MODELS_DIR", "/models")
+    if models.available(models_dir):
+        logging.info("ML models found in %s: genre, mood and acousticness enabled", models_dir)
+    else:
+        logging.warning(
+            "ML models missing from %s: genre, mood and acousticness are skipped "
+            "(python -m ttyfm_recommender.models %s downloads them)",
+            models_dir,
+            models_dir,
+        )
     preload()
 
     # Analysis is background work: leave the CPU to the server and the NAS.
@@ -43,10 +55,11 @@ def main() -> int:
     Worker(
         client,
         env("MUSIC_DIR", "/music"),
-        analyzer_name(),
+        analyzer_name(models_dir),
         workers=int(env("ANALYSIS_WORKERS", "1")),
         timeout=float(env("ANALYSIS_TIMEOUT", "300")),
         poll=float(env("ANALYSIS_POLL", "60")),
+        analyze_fn=functools.partial(analyze_file, models_dir=models_dir),
     ).run_forever()
     return 0
 

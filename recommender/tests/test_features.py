@@ -28,6 +28,21 @@ class FeaturesTest(unittest.TestCase):
         self.assertEqual(features.normalize_key("Eb"), "D#")
         self.assertEqual(features.normalize_key("A"), "A")
 
+    def test_genre_shares(self):
+        labels = ["Electronic---Synthwave", "Electronic---Techno", "Rock---Indie Rock", "Hip Hop---Trap"]
+        # Rock has the strongest style, but Electronic weighs more overall.
+        shares = features.genre_shares([0.3, 0.2, 0.4, 0.1], labels)
+        self.assertEqual(shares, [{"name": "électro", "share": 0.5}, {"name": "synthwave", "share": 0.3}])
+        self.assertEqual(features.genre_shares([0, 0, 0, 0], labels), [])
+        self.assertEqual(features.genre_shares([1.0], ["Unknown---X"])[0]["name"], "unknown")
+
+    def test_mood_label(self):
+        self.assertEqual(
+            features.mood_label({"calme": 0.7, "mélancolique": 0.9, "festif": 0.6}), "mélancolique · calme"
+        )
+        self.assertEqual(features.mood_label({"calme": 0.7, "festif": 0.2}), "calme")
+        self.assertIsNone(features.mood_label({"calme": 0.4}))
+
 
 if __name__ == "__main__":
     unittest.main()

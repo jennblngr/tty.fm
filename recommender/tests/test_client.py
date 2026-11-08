@@ -12,6 +12,7 @@ class FakeServer(BaseHTTPRequestHandler):
     logins = 0
     valid = set()
     reports = {}
+    last_get = None
 
     def log_message(self, *args):
         pass
@@ -41,6 +42,7 @@ class FakeServer(BaseHTTPRequestHandler):
     def do_GET(self):
         if not self._authed():
             return self._send(401, {"error": "unauthorized"})
+        FakeServer.last_get = self.path
         self._send(200, {"items": [{"id": 7, "path": "a.flac", "file_mtime": 1, "duration_ms": 1}]})
 
     def do_PUT(self):
@@ -64,6 +66,9 @@ class ClientTest(unittest.TestCase):
     def test_login_reuse_and_relogin(self):
         c = Client(self.url, "admin", "pw", self.token_file)
         self.assertEqual(c.queue()[0]["id"], 7)
+        self.assertEqual(FakeServer.last_get, "/api/v1/analysis/queue?limit=20")
+        c.queue(5, analyzer="essentia-x/1+m")
+        self.assertEqual(FakeServer.last_get, "/api/v1/analysis/queue?limit=5&analyzer=essentia-x%2F1%2Bm")
         c.report(7, {"analyzer": "x"})
         self.assertEqual(FakeServer.reports["/api/v1/tracks/7/analysis"], {"analyzer": "x"})
         logins = FakeServer.logins

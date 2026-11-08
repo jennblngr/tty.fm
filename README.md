@@ -7,7 +7,7 @@ Lecteur de musique auto-hébergé : un serveur Go + SQLite tourne sur le NAS, le
 ```
 server/       API REST + streaming (Go, SQLite WAL + FTS5, ffmpeg)
 app/          client Flutter
-recommender/  service de recommandations (phase 3, Python + Essentia) : analyse audio pour l'instant
+recommender/  service de recommandations (phase 3, Python + Essentia) : analyse audio (dont genre et ambiance) pour l'instant
 ```
 
 ## Installation sur le NAS (UGREEN DXP2800, UGOS Pro)
