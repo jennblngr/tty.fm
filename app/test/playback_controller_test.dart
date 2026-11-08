@@ -360,13 +360,17 @@ void main() {
     Future<void> settle() => Future<void>.delayed(Duration.zero);
     List<QueueSource> sources() => [for (final q in c.state.queue) q.source];
 
-    test('from the current track it replaces the rest of the queue', () async {
+    test('from the current track it replaces the rest of the queue and plays the radio', () async {
       await c.playTracks([t(1), t(2), t(3)]);
       await c.addToQueue([t(4)]);
       expect(c.state.hasUserUpcoming, isTrue);
+      await c.pause();
       await c.startRadio(RadioSeed.track(t(1)), from: t(1));
       expect(ids(), [1, 100, 101, 102, 103]);
       expect(engine.urls, ['u1', 'u100', 'u101', 'u102', 'u103']);
+      expect(c.state.current!.id, 100);
+      expect(engine.current, 1);
+      expect(c.state.playing, isTrue);
       expect(sources().skip(1), everyElement(QueueSource.radio));
       expect(c.state.radio, RadioSeed.track(t(1)));
       expect(calls.single.recent, [1]);

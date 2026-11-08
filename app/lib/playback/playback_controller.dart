@@ -137,6 +137,7 @@ class PlaybackController {
   RadioSeed? _radio;
   var _radioLoading = false;
   var _gen = 0; // bumped when the queue is replaced: late radio batches are dropped
+  var _jumpGen = -1; // the queue generation whose next radio batch starts playing
   _Session? _session;
   PlaybackState _state = const PlaybackState();
 
@@ -271,9 +272,10 @@ class PlaybackController {
   }
 
   /// Starts a radio from [seed] ("lancer la radio"). From the current
-  /// track, the rest of the queue is replaced by the radio; from another
-  /// track, it plays now with the radio after it; from an artist, the
-  /// radio's first batch plays.
+  /// track, the rest of the queue is replaced by the radio and its first
+  /// track plays at once (the current one stays just before it); from
+  /// another track, that track plays now with the radio after it; from an
+  /// artist, the radio's first batch plays.
   Future<void> startRadio(RadioSeed seed, {Track? from}) async {
     final fetch = fetchRadio;
     if (fetch == null) return;
@@ -285,6 +287,7 @@ class PlaybackController {
         await _engine.remove(i);
       }
       _radio = seed;
+      _jumpGen = _gen; // play the first track of the batch when it comes
       _emit();
       await _topUp();
       return;
@@ -335,8 +338,14 @@ class PlaybackController {
       _radio = seed;
       if (tracks.isEmpty) return _emit();
       final ended = _completed;
+      final first = _queue.length;
       await _append(_items(tracks, QueueSource.radio));
-      if (ended) await jumpTo(_index + 1); // the queue ended while loading
+      if (_jumpGen == gen) {
+        _jumpGen = -1;
+        await jumpTo(first); // "lancer la radio" from the current track
+      } else if (ended) {
+        await jumpTo(_index + 1); // the queue ended while loading
+      }
     } catch (_) {
       // No radio this time; the next track change tries again.
     } finally {
