@@ -346,6 +346,7 @@ class HomeData {
     this.moments = const Moments(),
     this.mixes = const [],
     this.newReleases = const [],
+    this.discoveries = const [],
   });
 
   final List<RecentAddition> recentlyAdded;
@@ -357,6 +358,9 @@ class HomeData {
 
   /// Recent and upcoming releases of the library's artists (MusicBrainz).
   final List<NewRelease> newReleases;
+
+  /// Artists similar to the liked ones that the library lacks (ListenBrainz).
+  final List<Discovery> discoveries;
 
   factory HomeData.fromJson(Map<String, dynamic> j) => HomeData(
     recentlyAdded: j['recent_additions'] is List
@@ -378,6 +382,7 @@ class HomeData {
     newReleases: [
       for (final r in j['new_releases'] as List? ?? const []) NewRelease.fromJson(r as Map<String, dynamic>),
     ],
+    discoveries: [for (final d in j['discoveries'] as List? ?? const []) Discovery.fromJson(d as Map<String, dynamic>)],
   );
 }
 
@@ -911,4 +916,28 @@ class FollowedArtist {
         ? NewRelease.fromJson(j['new_release'] as Map<String, dynamic>)
         : null,
   );
+}
+
+/// An artist to discover: similar to liked ones ([because], closest first),
+/// not in the library, so it cannot be played here.
+class Discovery {
+  const Discovery({required this.mbid, required this.name, this.comment = '', this.because = const []});
+
+  final String mbid;
+  final String name;
+  final String comment; // MusicBrainz disambiguation: "Barbadian R&B/pop singer"
+  final List<String> because;
+
+  factory Discovery.fromJson(Map<String, dynamic> j) => Discovery(
+    mbid: j['mbid'] as String? ?? '',
+    name: j['name'] as String? ?? '',
+    comment: j['comment'] as String? ?? '',
+    because: (j['because'] as List? ?? const []).cast<String>(),
+  );
+
+  /// "proche de sia, adele · barbadian r&b/pop singer".
+  String get caption {
+    final near = because.take(2).map((b) => b.toLowerCase()).join(', ');
+    return [if (near.isNotEmpty) 'proche de $near', if (comment.isNotEmpty) comment.toLowerCase()].join(' · ');
+  }
 }

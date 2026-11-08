@@ -121,4 +121,28 @@ void main() {
     expect(newReleaseSubtitle(r[2], now: now), 'sia · EP');
     expect(HomeData.fromJson({'recent_additions': [], 'recently_played': []}).newReleases, isEmpty);
   });
+
+  test('discoveries: parsed, with their caption', () {
+    final h = HomeData.fromJson({
+      'recent_additions': [],
+      'recently_played': [],
+      'discoveries': [
+        {
+          'mbid': 'm1',
+          'name': 'Ellie Goulding',
+          'score': 1.5,
+          'because': ['Adele', 'Sia', 'Tove Lo'],
+        },
+        {
+          'mbid': 'm2',
+          'name': 'Rihanna',
+          'comment': 'Barbadian R&B/pop singer',
+          'because': ['Sia'],
+        },
+      ],
+    });
+    expect(h.discoveries[0].caption, 'proche de adele, sia');
+    expect(h.discoveries[1].caption, 'proche de sia · barbadian r&b/pop singer');
+    expect(HomeData.fromJson({'recent_additions': [], 'recently_played': []}).discoveries, isEmpty);
+  });
 }
