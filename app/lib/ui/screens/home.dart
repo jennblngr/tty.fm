@@ -178,6 +178,7 @@ class HomeScreen extends ConsumerWidget {
             if (h.recentlyAdded.isNotEmpty) added,
             if (h.mixes.isNotEmpty) _Mixes(h.mixes),
             if (h.newReleases.isNotEmpty) _NewReleases(h.newReleases.take(4).toList()),
+            if (h.discoveries.isNotEmpty) _Discoveries(h.discoveries.take(5).toList()),
           ],
         );
       },
@@ -287,6 +288,34 @@ class _NewReleases extends StatelessWidget {
             subtitle: newReleaseSubtitle(r),
             trailing: r.albumId == null ? null : Text('[✓]', style: TextStyle(color: c.green)),
             onTap: () => r.albumId != null ? openAlbum(context, r.albumId!) : openArtist(context, r.artistId),
+          ),
+      ],
+    );
+  }
+}
+
+/// "◇ à découvrir": artists close to the liked ones that the library lacks
+/// (ListenBrainz). Not in the library, so nothing to play: a list to look
+/// up elsewhere.
+class _Discoveries extends StatelessWidget {
+  const _Discoveries(this.items);
+  final List<Discovery> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Tty.of(context);
+    final wide = MediaQuery.sizeOf(context).width >= desktopWidth;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TtySection('à découvrir', glyph: '◇', color: c.yellow, ruled: wide, comment: 'hors de ta biblio'),
+        const SizedBox(height: 4),
+        for (final (i, d) in items.indexed)
+          TtyRow(
+            leading: InitialsTile(d.name, size: 44, color: c.accents[i % c.accents.length]),
+            title: d.name.toLowerCase(),
+            titleColor: c.accents[i % c.accents.length],
+            subtitle: d.caption,
           ),
       ],
     );

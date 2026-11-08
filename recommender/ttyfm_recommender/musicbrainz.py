@@ -6,15 +6,12 @@ between requests and backs off when told to (HTTP 503)."""
 
 from __future__ import annotations
 
-import json
 import logging
 import re
-import threading
 import time
 import unicodedata
-import urllib.error
-import urllib.parse
-import urllib.request
+
+from .web import PoliteClient, SlowWorker
 
 BASE = "https://musicbrainz.org/ws/2"
 KINDS = ("album", "ep", "single")
@@ -32,41 +29,11 @@ def title_key(title: str) -> str:
     return " ".join(t.split())
 
 
-class MusicBrainz:
-    def __init__(self, user_agent: str, min_interval: float = 1.1, base: str = BASE, opener=None, sleep=time.sleep):
-        self.user_agent = user_agent
-        self.min_interval = min_interval
-        self.base = base.rstrip("/")
-        self.open = opener or (lambda req: urllib.request.urlopen(req, timeout=30))
-        self.sleep = sleep
-        self._lock = threading.Lock()
-        self._last = 0.0
+class MusicBrainz(PoliteClient):
+    query = {"fmt": "json"}
 
-    def get(self, path: str, query: dict) -> dict:
-        url = f"{self.base}/{path}?{urllib.parse.urlencode({**query, 'fmt': 'json'})}"
-        attempts = 5
-        for attempt in range(attempts):
-            with self._lock:
-                wait = self._last + self.min_interval - time.monotonic()
-                if wait > 0:
-                    self.sleep(wait)
-                self._last = time.monotonic()
-            req = urllib.request.Request(url, headers={"User-Agent": self.user_agent, "Accept": "application/json"})
-            try:
-                with self.open(req) as resp:
-                    return json.loads(resp.read())
-            except urllib.error.HTTPError as e:
-                # 503: rate limited or busy, which happens now and then even
-                # within the limits. Wait as told, longer each time.
-                if e.code == 503 and attempt < attempts - 1:
-                    after = (e.headers or {}).get("Retry-After") if e.headers else None
-                    delay = 5 * 2**attempt
-                    if after and str(after).isdigit():
-                        delay = max(delay, int(after))
-                    self.sleep(delay)
-                    continue
-                raise
-        raise RuntimeError("unreachable")
+    def __init__(self, user_agent: str, min_interval: float = 1.1, base: str = BASE, opener=None, sleep=time.sleep):
+        super().__init__(user_agent, base, min_interval, opener, sleep)
 
     def find_artist(self, name: str, albums: list[str]) -> str | None:
         """The MusicBrainz id of the artist called name. Between namesakes,
@@ -107,14 +74,16 @@ class MusicBrainz:
                 return out
 
 
-class ReleaseWorker:
+class ReleaseWorker(SlowWorker):
     """Looks the library's album artists up on MusicBrainz, as the server
     asks (each at most once a week), and sends their releases back."""
 
+    label = "new releases"
+
     def __init__(self, client, mb: MusicBrainz, poll: float = 3600):
+        super().__init__(mb.sleep, poll)
         self.client = client
         self.mb = mb
-        self.poll = poll
 
     def process(self, job: dict) -> dict:
         mbid = job.get("mbid") or self.mb.find_artist(job["name"], job.get("albums", []))
@@ -132,17 +101,3 @@ class ReleaseWorker:
         for job in jobs:
             self.process(job)
         return len(jobs)
-
-    def run_forever(self) -> None:
-        backoff = 30.0
-        while True:
-            try:
-                n = self.run_once()
-                backoff = 30.0
-            except Exception as e:  # server or MusicBrainz down, network...
-                log.warning("new releases: %s; retrying in %.0f s", e, backoff)
-                self.mb.sleep(backoff)
-                backoff = min(backoff * 2, 3600)
-                continue
-            if n == 0:
-                self.mb.sleep(self.poll)

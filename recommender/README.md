@@ -48,6 +48,10 @@ Sans les modèles (`TTYFM_MODELS_DIR` vide ou incomplet), le service le signale 
 
 MusicBrainz demande au plus une requête par seconde et un User-Agent qui nomme l'application (`tty.fm/<version> ( https://github.com/jennblngr/tty.fm )`). Le client attend donc 1,1 s entre deux requêtes. Sur un 503, qui arrive de temps en temps même sous la limite, il réessaie jusqu'à cinq fois en attendant de plus en plus longtemps. Le cache, c'est le serveur : un artiste n'est revérifié qu'au bout d'une semaine. `TTYFM_RELEASES=off` coupe ce fil.
 
+## Découverte (ListenBrainz)
+
+Un troisième fil récupère, pour chaque artiste liké dont l'identifiant MusicBrainz est connu, ses artistes proches dans le jeu de données « similar artists » de ListenBrainz. C'est l'API labs (`labs.api.listenbrainz.org`, sans jeton), avec l'algorithme des pages artiste de ListenBrainz. Il le fait au plus une fois par semaine par artiste (`GET /discovery/queue`, `PUT /artists/{id}/similar`), avec la même politesse que pour MusicBrainz : 1,1 s entre deux requêtes, et de la patience sur les 429 / 503. L'identifiant vient du fil des sorties ; un artiste liké tout juste n'est donc cherché qu'après lui. `TTYFM_RELEASES=off` coupe aussi ce fil.
+
 ## Configuration
 
 | Variable | Défaut | Rôle |
@@ -61,7 +65,7 @@ MusicBrainz demande au plus une requête par seconde et un User-Agent qui nomme 
 | `TTYFM_ANALYSIS_TIMEOUT` | `300` | secondes max par fichier |
 | `TTYFM_ANALYSIS_POLL` | `60` | secondes entre deux vérifications quand la file est vide |
 | `TTYFM_ANALYSIS_NICE` | `10` | priorité CPU |
-| `TTYFM_RELEASES` | `on` | nouvelles sorties sur MusicBrainz (`off` pour couper) |
+| `TTYFM_RELEASES` | `on` | nouvelles sorties (MusicBrainz) et découverte (ListenBrainz) ; `off` coupe les deux |
 | `TTYFM_LOG_LEVEL` | `info` | |
 
 Pour mettre l'analyse en pause : `docker compose stop recommender`.

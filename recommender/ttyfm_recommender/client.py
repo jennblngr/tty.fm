@@ -101,3 +101,10 @@ class Client:
 
     def save_releases(self, artist_id: int, report: dict) -> None:
         self.call("PUT", f"/artists/{artist_id}/releases", report)
+
+    def discovery_queue(self, limit: int = 10) -> list[dict]:
+        """Liked artists to look up on ListenBrainz."""
+        return self.call("GET", f"/discovery/queue?limit={limit}")["items"]
+
+    def save_similar(self, artist_id: int, body: dict) -> None:
+        self.call("PUT", f"/artists/{artist_id}/similar", body)
