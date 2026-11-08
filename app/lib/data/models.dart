@@ -340,11 +340,19 @@ class RecentAddition {
 }
 
 class HomeData {
-  const HomeData({this.recentlyAdded = const [], this.recentlyPlayed = const [], this.moments = const Moments()});
+  const HomeData({
+    this.recentlyAdded = const [],
+    this.recentlyPlayed = const [],
+    this.moments = const Moments(),
+    this.mixes = const [],
+  });
 
   final List<RecentAddition> recentlyAdded;
   final List<RecentItem> recentlyPlayed;
   final Moments moments;
+
+  /// "tes mix du jour", without their tracks (GET /mixes/{n}).
+  final List<DailyMix> mixes;
 
   factory HomeData.fromJson(Map<String, dynamic> j) => HomeData(
     recentlyAdded: j['recent_additions'] is List
@@ -362,7 +370,46 @@ class HomeData {
               RecentItem.album(Album.fromJson(a as Map<String, dynamic>)),
           ],
     moments: j['moments'] is Map ? Moments.fromJson(j['moments'] as Map<String, dynamic>) : const Moments(),
+    mixes: [for (final m in j['mixes'] as List? ?? const []) DailyMix.fromJson(m as Map<String, dynamic>)],
   );
+}
+
+/// A mix of the day: listened tracks of one sound and seldom played
+/// neighbours, computed each night by the server.
+class DailyMix {
+  const DailyMix({
+    required this.position,
+    required this.name,
+    this.description = '',
+    this.artists = const [],
+    this.coverIds = const [],
+    this.trackCount = 0,
+    this.durationMs = 0,
+  });
+
+  final int position; // 1, 2…
+  final String name; // mix_01
+  final String description; // "dance-pop · festif"
+  final List<String> artists;
+  final List<int> coverIds;
+  final int trackCount;
+  final int durationMs;
+
+  factory DailyMix.fromJson(Map<String, dynamic> j) => DailyMix(
+    position: j['position'] as int,
+    name: j['name'] as String? ?? 'mix_${(j['position'] as int).toString().padLeft(2, '0')}',
+    description: j['description'] as String? ?? '',
+    artists: (j['artists'] as List? ?? const []).cast<String>(),
+    coverIds: (j['cover_ids'] as List? ?? const []).cast<int>(),
+    trackCount: j['track_count'] as int? ?? 0,
+    durationMs: j['duration_ms'] as int? ?? 0,
+  );
+
+  /// "dance-pop · calme · sia, tove lo…" under the tile.
+  String get caption {
+    final who = artists.map((a) => a.toLowerCase()).join(', ');
+    return [if (description.isNotEmpty) description, if (who.isNotEmpty) '$who…'].join(' · ');
+  }
 }
 
 /// Facts from the listening history for the message of the day.

@@ -69,4 +69,28 @@ void main() {
     });
     expect((old.recentlyAdded.single.tracks, old.recentlyAdded.single.wholeAlbum), (5, true));
   });
+
+  test('mixes of the day: parsed, with their caption; none from older servers', () {
+    final h = HomeData.fromJson({
+      'recent_additions': [],
+      'recently_played': [],
+      'mixes': [
+        {
+          'position': 1,
+          'name': 'mix_01',
+          'description': 'dance-pop · calme',
+          'artists': ['Sia', 'Tove Lo'],
+          'cover_ids': [3, 4],
+          'track_count': 25,
+          'duration_ms': 5460000,
+        },
+        {'position': 2, 'artists': []},
+      ],
+    });
+    expect(h.mixes.map((m) => m.name), ['mix_01', 'mix_02']);
+    expect(h.mixes[0].caption, 'dance-pop · calme · sia, tove lo…');
+    expect(h.mixes[0].coverIds, [3, 4]);
+    expect(h.mixes[1].caption, '');
+    expect(HomeData.fromJson({'recent_additions': [], 'recently_played': []}).mixes, isEmpty);
+  });
 }

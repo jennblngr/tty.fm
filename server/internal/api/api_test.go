@@ -588,4 +588,20 @@ func TestRadioAPI(t *testing.T) {
 	c.json("GET", fmt.Sprintf("/radio?track=%d&recent=1,x", a.ID), nil, 400, nil)
 	c.json("GET", "/radio?track=999", nil, 404, nil)
 	c.json("GET", "/radio?artist=999", nil, 404, nil)
+
+	// No listening history: no mixes of the day yet.
+	var mixes struct {
+		Items []store.Mix `json:"items"`
+	}
+	c.json("GET", "/mixes", nil, 200, &mixes)
+	if mixes.Items == nil || len(mixes.Items) != 0 {
+		t.Fatalf("mixes: %+v", mixes)
+	}
+	c.json("GET", "/mixes/1", nil, 404, nil)
+	c.json("GET", "/mixes/x", nil, 400, nil)
+	var home map[string]any
+	c.json("GET", "/home", nil, 200, &home)
+	if m, ok := home["mixes"].([]any); !ok || len(m) != 0 {
+		t.Fatalf("home mixes: %v", home["mixes"])
+	}
 }

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_info.dart';
+import '../../data/library_repository.dart';
+import '../../data/models.dart';
 import '../../state/library.dart';
 import '../../state/notifications.dart';
+import '../../state/playback.dart';
 import '../daily_message.dart';
 import '../icons.dart';
 import '../nav.dart';
@@ -172,9 +175,88 @@ class HomeScreen extends ConsumerWidget {
                 ],
               ),
             if (h.recentlyAdded.isNotEmpty) added,
+            if (h.mixes.isNotEmpty) _Mixes(h.mixes),
           ],
         );
       },
+    );
+  }
+}
+
+/// "✦ tes mix du jour" (02 Main, D1): one tile per mix, side by side and
+/// scrolling sideways; a tap plays the mix.
+class _Mixes extends ConsumerWidget {
+  const _Mixes(this.mixes);
+  final List<DailyMix> mixes;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = Tty.of(context);
+    final colors = [c.blue, c.mauve, c.peach, c.green, c.pink, c.yellow];
+    Future<void> play(DailyMix m) => guard(context, () async {
+      final tracks = await ref.read(libraryProvider).mixTracks(m.position);
+      await ref
+          .read(playbackControllerProvider)
+          .playTracks(tracks, shuffle: false, contextKind: 'mix', contextId: m.position);
+    });
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TtySection('tes mix du jour', glyph: '✦', color: c.mauve, comment: 'générés selon tes écoutes'),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 196,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: mixes.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final m = mixes[i];
+              final color = colors[i % colors.length];
+              return SizedBox(
+                width: 140,
+                child: InkWell(
+                  onTap: () => play(m),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Semantics(
+                        button: true,
+                        label: 'Lire ${m.name}, ${m.trackCount} titres',
+                        child: Container(
+                          width: 140,
+                          height: 140,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(color: c.tint(color), borderRadius: BorderRadius.circular(6)),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                m.name,
+                                style: TextStyle(color: color, fontWeight: FontWeight.w700),
+                              ),
+                              MiniGraph(sparkline(m.position * 7919, length: 6), color: color, fontSize: 18),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '// ${m.caption}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: c.muted, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

@@ -137,6 +137,12 @@ class LibraryRepository {
   /// Queues the track for analysis again ("relancer l'analyse").
   Future<void> resetAnalysis(int trackId) => _api.delete('/tracks/$trackId/analysis');
 
+  /// The tracks of a mix of the day, in play order.
+  Future<List<Track>> mixTracks(int position) async {
+    final j = await _api.get('/mixes/$position') as Map<String, dynamic>;
+    return [for (final t in j['tracks'] as List? ?? const []) Track.fromJson(t as Map<String, dynamic>)];
+  }
+
   /// How far the analysis of the library is, and whether it is on.
   Future<AnalysisStatus> analysisStatus() async =>
       AnalysisStatus.fromJson(await _api.get('/analysis') as Map<String, dynamic>);
