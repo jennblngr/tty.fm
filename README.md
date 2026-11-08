@@ -115,7 +115,8 @@ Toutes les routes sauf `health` et `auth/login` exigent `Authorization: Bearer <
 | GET | `/api/v1/albums/{id}` | album + morceaux |
 | GET | `/api/v1/tracks?sort=name\|added&cursor=&limit=`, `/tracks/{id}` | |
 | GET | `/api/v1/tracks/{id}/analysis` | `{analysis, compatible}` : bpm, tonalité (+ Camelot), LUFS, énergie, dansant… et les titres qui s'enchaînent bien (ton voisin, tempo à ±6 %) ; 404 si pas encore analysé. Les titres analysés portent aussi `bpm` et `camelot` dans toutes les listes |
-| PUT/DELETE | `/api/v1/tracks/{id}/analysis` | PUT : résultat envoyé par `recommender` ; DELETE : relancer l'analyse du titre |
+| PUT/DELETE | `/api/v1/tracks/{id}/analysis` | PUT : résultat envoyé par `recommender` (avec `embedding`, 1280 valeurs, quand il a les modèles ML) ; DELETE : relancer l'analyse du titre |
+| GET | `/api/v1/tracks/{id}/similar?limit=` | `{items}` : les titres au son le plus proche (distance cosinus entre embeddings, table `sqlite-vec`), chacun avec `similarity` (1 = identique), sans le titre lui-même ni les archivés ; vide tant que le titre n'a pas d'embedding, 404 s'il n'existe pas |
 | GET/DELETE | `/api/v1/analysis` | GET : `{total, analyzed, failed, pending}` ; DELETE : tout réanalyser |
 | GET | `/api/v1/analysis/queue?limit=&analyzer=` | titres à analyser (`id`, `path` relatif, `file_mtime`) ; avec `analyzer`, aussi ceux analysés par une autre version |
 | GET | `/api/v1/tracks/{id}/lyrics` | `{synced, source, lines: [{ms, text}]}` ; 404 sans paroles |

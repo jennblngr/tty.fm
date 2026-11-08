@@ -43,6 +43,13 @@ class FeaturesTest(unittest.TestCase):
         self.assertEqual(features.mood_label({"calme": 0.7, "festif": 0.2}), "calme")
         self.assertIsNone(features.mood_label({"calme": 0.4}))
 
+    def test_mean_embedding(self):
+        e = features.mean_embedding([[3.0, 0.0, 1.0], [3.0, 8.0, -1.0]])
+        self.assertEqual(e, [0.6, 0.8, 0.0])  # mean (3, 4, 0), unit length
+        self.assertIsNone(features.mean_embedding([]))
+        self.assertIsNone(features.mean_embedding([[1.0, 0.0], [-1.0, 0.0]]))
+        self.assertIsNone(features.mean_embedding([[math.nan, 1.0]]))
+
 
 if __name__ == "__main__":
     unittest.main()

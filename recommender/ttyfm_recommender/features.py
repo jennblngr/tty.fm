@@ -104,3 +104,20 @@ def mood_label(probabilities: dict[str, float], threshold: float = 0.5, most: in
     joined like the design ("calme · mélancolique"); None if there is none."""
     picked = sorted((p, name) for name, p in probabilities.items() if p >= threshold)
     return " · ".join(name for _, name in reversed(picked[-most:])) or None
+
+
+def mean_embedding(windows, decimals: int = 5) -> list[float] | None:
+    """The track's embedding for the similarity search: the mean of the
+    per-window embeddings, scaled to unit length (the server compares
+    directions, by cosine distance) and rounded to keep the report small.
+    None if there is nothing to average or no direction."""
+    import numpy as np
+
+    windows = np.asarray(windows, dtype=np.float64)
+    if windows.ndim != 2 or len(windows) == 0:
+        return None
+    mean = windows.mean(axis=0)
+    norm = float(np.linalg.norm(mean))
+    if not math.isfinite(norm) or norm == 0:
+        return None
+    return [round(float(x), decimals) for x in mean / norm]

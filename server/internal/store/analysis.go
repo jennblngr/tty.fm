@@ -53,6 +53,9 @@ type AnalysisReport struct {
 	Acousticness  *float64     `json:"acousticness,omitempty"`
 	Mood          string       `json:"mood,omitempty"`
 	Genres        []GenreShare `json:"genres,omitempty"`
+	// Mean Discogs EffNet embedding of the track (EmbeddingDims values),
+	// for the similarity between tracks. Needs the ML models.
+	Embedding []float32 `json:"embedding,omitempty"`
 }
 
 // pitch classes, sharps first; flats are accepted on input.
@@ -156,6 +159,13 @@ func (db *DB) SaveAnalysis(ctx context.Context, trackID int64, r AnalysisReport)
 		b, _ := json.Marshal(r.Genres)
 		genres = nullStr(string(b))
 	}
+	var embedding []byte
+	if r.Embedding != nil {
+		var err error
+		if embedding, err = serializeEmbedding(r.Embedding); err != nil {
+			return err
+		}
+	}
 	return db.Tx(ctx, func(tx *sql.Tx) error {
 		var present bool
 		if err := tx.QueryRowContext(ctx,
@@ -174,7 +184,10 @@ func (db *DB) SaveAnalysis(ctx context.Context, trackID int64, r AnalysisReport)
 			trackID, r.FileMtime, r.Analyzer, now(), nullStr(r.Error),
 			r.BPM, key, nullStr(r.Scale), camelot, r.KeyStrength, r.LoudnessLUFS, r.LoudnessRange,
 			r.Energy, r.Danceability, r.Acousticness, nullStr(r.Mood), genres)
-		return err
+		if err != nil {
+			return err
+		}
+		return saveEmbedding(ctx, tx, trackID, embedding)
 	})
 }
 

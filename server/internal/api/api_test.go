@@ -492,6 +492,28 @@ func TestAnalysisAPI(t *testing.T) {
 	if len(queue.Items) != 2 {
 		t.Fatalf("queue for a new analyzer: %+v", queue)
 	}
+	var similar struct {
+		Items []store.SimilarTrack `json:"items"`
+	}
+	c.json("GET", fmt.Sprintf("/tracks/%d/similar", a.ID), nil, 200, &similar)
+	if similar.Items == nil || len(similar.Items) != 0 {
+		t.Fatalf("similar without embeddings: %+v", similar)
+	}
+	vec := make([]float32, store.EmbeddingDims)
+	vec[0] = 1
+	c.json("PUT", fmt.Sprintf("/tracks/%d/analysis", b.ID), map[string]any{
+		"file_mtime": b.FileMtime, "analyzer": "test/1", "embedding": vec[:10]}, 400, nil)
+	for _, j := range []store.AnalysisJob{a, b} {
+		c.json("PUT", fmt.Sprintf("/tracks/%d/analysis", j.ID), map[string]any{
+			"file_mtime": j.FileMtime, "analyzer": "test/1", "bpm": 120, "key": "A", "scale": "minor",
+			"embedding": vec}, 204, nil)
+	}
+	c.json("GET", fmt.Sprintf("/tracks/%d/similar?limit=5", a.ID), nil, 200, &similar)
+	if len(similar.Items) != 1 || similar.Items[0].ID != b.ID || similar.Items[0].Similarity != 1 ||
+		similar.Items[0].Title == "" {
+		t.Fatalf("similar: %+v", similar)
+	}
+	c.json("GET", "/tracks/999/similar", nil, 404, nil)
 	c.json("DELETE", fmt.Sprintf("/tracks/%d/analysis", a.ID), nil, 204, nil)
 	c.json("DELETE", "/tracks/999/analysis", nil, 404, nil)
 	c.json("GET", "/analysis/queue", nil, 200, &queue)

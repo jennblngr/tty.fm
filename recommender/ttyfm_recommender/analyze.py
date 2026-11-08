@@ -2,7 +2,8 @@
 key, loudness (EBU R128), energy and danceability.
 
 With Essentia's TensorFlow models (see models.py), also genre and sub-genre,
-mood and acousticness; without them these fields are left out of the report.
+mood, acousticness and the track's embedding (similarity between tracks);
+without them these fields are left out of the report.
 """
 
 from __future__ import annotations
@@ -83,7 +84,8 @@ def analyze(path: str, models_dir: str | None = None) -> dict:
 
 def _classify(es, models_dir: str, audio: np.ndarray) -> dict:
     """Genre, mood and acousticness from the Discogs EffNet embeddings of
-    16 kHz mono audio, averaged over the track."""
+    16 kHz mono audio, averaged over the track, and the mean embedding
+    itself, which the server indexes to find similar tracks."""
 
     def path(name: str) -> str:
         return os.path.join(models_dir, name)
@@ -110,6 +112,8 @@ def _classify(es, models_dir: str, audio: np.ndarray) -> dict:
     report: dict = {
         "acousticness": round(features.clamp01(positive(models.ACOUSTIC, "acoustic")), 3),
     }
+    if (embedding := features.mean_embedding(embeddings)) is not None:
+        report["embedding"] = embedding
     if genres := features.genre_shares(scores, labels):
         report["genres"] = genres
     moods = {fr: positive(models.mood_model(name), name) for name, fr in models.MOODS.items()}

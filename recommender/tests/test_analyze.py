@@ -66,6 +66,9 @@ class AnalyzeTest(unittest.TestCase):
         genre, style = r["genres"]
         self.assertTrue(genre["name"] and style["name"])
         self.assertTrue(0 < style["share"] <= genre["share"] <= 1)
+        embedding = r["embedding"]
+        self.assertEqual(len(embedding), 1280)  # the server's EmbeddingDims
+        self.assertAlmostEqual(sum(x * x for x in embedding), 1, delta=1e-3)
         self.assertNotIn("+", analyzer_name())
         self.assertTrue(analyzer_name(MODELS_DIR).endswith("+" + models.VERSION))
 

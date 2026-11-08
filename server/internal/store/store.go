@@ -16,8 +16,13 @@ import (
 	"strings"
 	"time"
 
+	sqlitevec "github.com/asg017/sqlite-vec-go-bindings/cgo"
 	"github.com/mattn/go-sqlite3"
 )
+
+// sqlite-vec (track_embeddings, see similar.go) is compiled in and loaded
+// into every connection the process opens, the migrations' included.
+func init() { sqlitevec.Auto() }
 
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
