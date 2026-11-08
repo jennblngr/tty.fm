@@ -345,6 +345,7 @@ class HomeData {
     this.recentlyPlayed = const [],
     this.moments = const Moments(),
     this.mixes = const [],
+    this.newReleases = const [],
   });
 
   final List<RecentAddition> recentlyAdded;
@@ -353,6 +354,9 @@ class HomeData {
 
   /// "tes mix du jour", without their tracks (GET /mixes/{n}).
   final List<DailyMix> mixes;
+
+  /// Recent and upcoming releases of the library's artists (MusicBrainz).
+  final List<NewRelease> newReleases;
 
   factory HomeData.fromJson(Map<String, dynamic> j) => HomeData(
     recentlyAdded: j['recent_additions'] is List
@@ -371,7 +375,49 @@ class HomeData {
           ],
     moments: j['moments'] is Map ? Moments.fromJson(j['moments'] as Map<String, dynamic>) : const Moments(),
     mixes: [for (final m in j['mixes'] as List? ?? const []) DailyMix.fromJson(m as Map<String, dynamic>)],
+    newReleases: [
+      for (final r in j['new_releases'] as List? ?? const []) NewRelease.fromJson(r as Map<String, dynamic>),
+    ],
   );
+}
+
+/// A recent or upcoming release of an artist of the library, from
+/// MusicBrainz; [albumId] is set when the library has it.
+class NewRelease {
+  const NewRelease({
+    required this.artistId,
+    required this.artist,
+    required this.title,
+    required this.kind,
+    required this.released,
+    this.upcoming = false,
+    this.albumId,
+  });
+
+  final int artistId;
+  final String artist;
+  final String title;
+  final String kind; // album, ep, single
+  final String released; // YYYY-MM-DD or YYYY-MM
+  final bool upcoming;
+  final int? albumId;
+
+  factory NewRelease.fromJson(Map<String, dynamic> j) => NewRelease(
+    artistId: j['artist_id'] as int,
+    artist: j['artist'] as String? ?? '',
+    title: j['title'] as String? ?? '',
+    kind: j['kind'] as String? ?? 'album',
+    released: j['released'] as String? ?? '',
+    upcoming: j['upcoming'] as bool? ?? false,
+    albumId: j['album_id'] as int?,
+  );
+
+  /// The release date, a month-only date as its first day.
+  DateTime? get date {
+    final p = released.split('-').map(int.tryParse).toList();
+    if (p.length < 2 || p.contains(null)) return null;
+    return DateTime(p[0]!, p[1]!, p.length > 2 ? p[2]! : 1);
+  }
 }
 
 /// A mix of the day: listened tracks of one sound and seldom played

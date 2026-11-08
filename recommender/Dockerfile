@@ -14,6 +14,7 @@ ARG VERSION=dev
 LABEL org.opencontainers.image.version=$VERSION
 
 ENV PYTHONUNBUFFERED=1 \
+    TTYFM_VERSION=$VERSION \
     TF_CPP_MIN_LOG_LEVEL=2 \
     TTYFM_MUSIC_DIR=/music \
     TTYFM_STATE_DIR=/state \

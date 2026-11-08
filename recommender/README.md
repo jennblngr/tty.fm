@@ -38,6 +38,16 @@ Les modèles (environ 25 Mo) viennent de [essentia.upf.edu/models](https://essen
 
 Sans les modèles (`TTYFM_MODELS_DIR` vide ou incomplet), le service le signale au démarrage et ne calcule que les champs classiques, sous l'analyseur `…/1`. Une fois les modèles en place, l'analyseur devient `…/1+discogs-effnet-2` et toute la bibliothèque repasse dans la file pour gagner ces champs. Le suffixe vient de `models.VERSION`, à changer quand les fichiers ou la lecture de leurs sorties changent ; `discogs-effnet-2` ajoute l'`embedding` aux champs de `discogs-effnet-1`, si bien qu'une bibliothèque déjà analysée repasse entièrement dans la file (une quinzaine d'heures pour 5 000 titres), les anciens résultats restant affichés en attendant.
 
+## Nouvelles sorties (MusicBrainz)
+
+À côté de l'analyse, un second fil cherche les sorties des artistes de la bibliothèque sur MusicBrainz :
+
+1. Il demande au serveur les artistes d'album à vérifier (`GET /releases/queue`) : ceux jamais vérifiés, puis ceux vérifiés il y a plus d'une semaine, les plus écoutés d'abord.
+2. Sans identifiant MusicBrainz dans les tags, il cherche l'artiste par son nom exact. Entre deux homonymes, il garde celui dont les sorties ont le plus de titres en commun avec les albums de la bibliothèque.
+3. Il liste ses albums, EP et singles. Il laisse de côté les compilations, les live, les remix (types secondaires) et les sorties sans date, puis les envoie au serveur (`PUT /artists/{id}/releases`). Le serveur les compare à la bibliothèque et en tire l'accueil (`GET /releases`).
+
+MusicBrainz demande au plus une requête par seconde et un User-Agent qui nomme l'application (`tty.fm/<version> ( https://github.com/jennblngr/tty.fm )`). Le client attend donc 1,1 s entre deux requêtes. Sur un 503, qui arrive de temps en temps même sous la limite, il réessaie jusqu'à cinq fois en attendant de plus en plus longtemps. Le cache, c'est le serveur : un artiste n'est revérifié qu'au bout d'une semaine. `TTYFM_RELEASES=off` coupe ce fil.
+
 ## Configuration
 
 | Variable | Défaut | Rôle |
@@ -51,6 +61,7 @@ Sans les modèles (`TTYFM_MODELS_DIR` vide ou incomplet), le service le signale 
 | `TTYFM_ANALYSIS_TIMEOUT` | `300` | secondes max par fichier |
 | `TTYFM_ANALYSIS_POLL` | `60` | secondes entre deux vérifications quand la file est vide |
 | `TTYFM_ANALYSIS_NICE` | `10` | priorité CPU |
+| `TTYFM_RELEASES` | `on` | nouvelles sorties sur MusicBrainz (`off` pour couper) |
 | `TTYFM_LOG_LEVEL` | `info` | |
 
 Pour mettre l'analyse en pause : `docker compose stop recommender`.
