@@ -145,4 +145,23 @@ void main() {
     expect(h.discoveries[1].caption, 'proche de sia · barbadian r&b/pop singer');
     expect(HomeData.fromJson({'recent_additions': [], 'recently_played': []}).discoveries, isEmpty);
   });
+
+  test('artist radios: parsed, each with its radio seed', () {
+    final h = HomeData.fromJson({
+      'recent_additions': [],
+      'recently_played': [],
+      'artist_radios': [
+        {'id': 3, 'name': 'Sia', 'cover_id': 9, 'liked': true},
+        {'id': 4, 'name': 'Adele', 'liked': false},
+      ],
+    });
+    expect(h.artistRadios.map((a) => a.name), ['Sia', 'Adele']);
+    expect(h.artistRadios[0].coverId, 9);
+    expect(h.artistRadios[0].liked, isTrue);
+    expect(h.artistRadios[1].coverId, isNull);
+    expect(h.artistRadios[1].seed, const RadioSeed('artist', 4, 'Adele'));
+    expect(h.artistRadios[1].seed.name, 'Adele');
+    // Servers before artist radios, and cached responses from them.
+    expect(HomeData.fromJson({'recent_additions': [], 'recently_played': []}).artistRadios, isEmpty);
+  });
 }

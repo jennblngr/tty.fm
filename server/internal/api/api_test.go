@@ -668,4 +668,8 @@ func TestRadioAPI(t *testing.T) {
 	if m, ok := home["discoveries"].([]any); !ok || len(m) != 1 {
 		t.Fatalf("home discoveries: %v", home["discoveries"])
 	}
+	// The liked artist has a radio on the home screen.
+	if m, ok := home["artist_radios"].([]any); !ok || len(m) != 1 || m[0].(map[string]any)["liked"] != true {
+		t.Fatalf("home artist radios: %v", home["artist_radios"])
+	}
 }

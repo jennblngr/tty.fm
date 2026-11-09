@@ -59,9 +59,9 @@ Par écran. « → #n » renvoie à l'issue qui couvre l'écart ; les lignes **s
 ### Accueil (01, D1)
 
 - Fait : en-tête `tty.fm $ accueil` avec cloche et engrenage, message du jour, écouté récemment (albums, artistes, playlists), ajouts récents par lot, deux colonnes et champ de recherche en desktop.
-- Mix du jour : faits (`✦ tes mix du jour // générés selon tes écoutes`, tuiles 140 px `mix_01`… défilant de côté, `// dance-pop · calme · sia, tove lo…` dessous, un appui lance le mix). Calcul côté serveur chaque nuit (`daily_mixes`, `GET /mixes`). Pas encore : la tuile `radar` (découvertes du lundi), une page pour voir un mix avant de le lancer.
-- Nouvelles sorties : faites (4 au plus, vignette générée faute de pochette, `[✓]` vert quand la biblio a l'album ; un appui ouvre l'album, sinon l'artiste). Pas encore : `[tout]`, le `[+]` de la maquette (sens à préciser).
-- Manque : radios d'artistes → #14.
+- Mix du jour : faits (`✦ tes mix du jour // générés selon tes écoutes`, tuiles 140 px `mix_01`… défilant de côté, `// dance-pop · calme · sia, tove lo…` dessous, un appui lance le mix). Calcul côté serveur chaque nuit (`daily_mixes`, `GET /mixes`). Pas encore : une page pour voir un mix avant de le lancer. Tuile `radar` (« // 30 découvertes, chaque lundi ») : laissée de côté le 9 nov., aucun document ne dit ce qu'elle contient (les découvertes ListenBrainz ne sont pas dans la biblio, donc rien à lire) ; question à poser au design.
+- Nouvelles sorties : faites (4 au plus, vignette générée faute de pochette, `[✓]` vert quand la biblio a l'album ; un appui ouvre l'album, sinon l'artiste). Pas encore : `[tout]`, et le `[+]` d'une sortie absente de la biblio, qui ouvrira sa page MusicBrainz (décidé le 9 nov.).
+- Radios d'artistes : faites (`◉ radios d'artistes`, pochettes rondes de 104 px défilant de côté, nom dessous ; un appui lance la radio de l'artiste). Les artistes likés d'abord, puis les plus écoutés des 28 derniers jours, 8 au plus (`artist_radios` dans `GET /home`).
 - Panneau « à suivre » de D1 : case carrée 24 px ou non, décision ouverte (HANDOFF §8) → #14.
 
 ### Lecteur (02, 02b, D2)

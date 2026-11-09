@@ -112,7 +112,13 @@ func (s *Server) home(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, r, err)
 		return
 	}
+	radios, err := s.DB.ArtistRadios(ctx, time.Now(), 8)
+	if err != nil {
+		s.fail(w, r, err)
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
+		"artist_radios":    radios,
 		"new_releases":     releases,
 		"discoveries":      discoveries,
 		"recent_additions": added,
