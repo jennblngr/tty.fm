@@ -1,6 +1,7 @@
 # Checks every pull request (and main after a merge): the Go server, the
 # Flutter app and the Python recommender are each formatted, linted and
-# tested; the server and the app are also compiled.
+# tested; the server and the app are also compiled, and the Docker images
+# deployed on the NAS are built and started.
 name: ci
 
 on:
@@ -103,3 +104,50 @@ jobs:
         env:
           TTYFM_MODELS_DIR: ${{ runner.temp }}/essentia-models
           TF_CPP_MIN_LOG_LEVEL: "2"
+
+  # Builds the images deployed on the NAS, as tools/deploy-nas.sh does, so a
+  # Dockerfile that no longer builds (missing headers, as in PR 49) shows up
+  # here rather than at deploy time. Nothing is pushed.
+  docker:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [server, recommender]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.image }}
+          platforms: linux/amd64
+          build-args: VERSION=ci-${{ github.sha }}
+          tags: ttyfm-${{ matrix.image }}:ci
+          load: true
+          push: false
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+      # Starts the server on an empty library and waits for the image's
+      # HEALTHCHECK to pass: the binary runs and the database opens.
+      - name: Smoke test (server)
+        if: matrix.image == 'server'
+        run: |
+          mkdir -p "$RUNNER_TEMP/music"
+          docker run -d --name ttyfm -v "$RUNNER_TEMP/music:/music:ro" \
+            --health-interval 2s --health-start-period 0s ttyfm-server:ci
+          for _ in $(seq 30); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' ttyfm)
+            [ "$status" = healthy ] && exit 0
+            [ "$(docker inspect -f '{{.State.Running}}' ttyfm)" = true ] || break
+            sleep 2
+          done
+          echo "::error::Server container is not healthy (${status:-stopped})"
+          docker logs ttyfm; exit 1
+      # The worker needs a server to talk to; checking that it and Essentia
+      # import is enough to catch a broken image.
+      - name: Smoke test (recommender)
+        if: matrix.image == 'recommender'
+        run: >
+          docker run --rm --entrypoint python ttyfm-recommender:ci
+          -c "import essentia.standard, ttyfm_recommender.__main__"
