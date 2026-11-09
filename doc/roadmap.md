@@ -107,6 +107,7 @@ Par écran. « → #n » renvoie à l'issue qui couvre l'écart ; les lignes **s
 ### Transverse
 
 - Animations → #21. Clic droit / appui long → #3. Bandeau multi-appareils → #17.
+- CI : le job `docker` construit les images du serveur et du recommender à chaque PR, démarre le serveur sur une biblio vide jusqu'à son healthcheck et vérifie que le recommender importe Essentia (casse de la PR 49). Fait.
 - Boutons-icônes carrés 40×40 / 36×36, icônes pleines → #23 (le widget `SquareIconButton` existe ; l'appliquer partout).
 
 ## 4. Questions ouvertes du design
