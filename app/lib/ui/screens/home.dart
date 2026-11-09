@@ -18,8 +18,8 @@ import '../widgets/cover.dart';
 import '../widgets/tty.dart';
 import 'favorites.dart';
 
-/// "$ accueil": recently played, recently added. Daily mixes, new releases
-/// and artist radios arrive with recommendations (phase 3).
+/// "$ accueil": recently played, recently added, daily mixes, new
+/// releases, discoveries and artist radios.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -179,6 +179,7 @@ class HomeScreen extends ConsumerWidget {
             if (h.mixes.isNotEmpty) _Mixes(h.mixes),
             if (h.newReleases.isNotEmpty) _NewReleases(h.newReleases.take(4).toList()),
             if (h.discoveries.isNotEmpty) _Discoveries(h.discoveries.take(5).toList()),
+            if (h.artistRadios.isNotEmpty) _ArtistRadios(h.artistRadios),
           ],
         );
       },
@@ -317,6 +318,62 @@ class _Discoveries extends StatelessWidget {
             titleColor: c.accents[i % c.accents.length],
             subtitle: d.caption,
           ),
+      ],
+    );
+  }
+}
+
+/// "◉ radios d'artistes" (02 Main, D1): round 104 px covers scrolling
+/// sideways, the name under each; a tap starts the artist's radio.
+class _ArtistRadios extends ConsumerWidget {
+  const _ArtistRadios(this.artists);
+  final List<ArtistRadio> artists;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = Tty.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TtySection("radios d'artistes", glyph: '◉', color: c.yellow),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 136,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: artists.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final a = artists[i];
+              final color = c.accentFor(a.id);
+              return SizedBox(
+                width: 104,
+                child: Semantics(
+                  button: true,
+                  label: 'Lancer la radio de ${a.name}',
+                  excludeSemantics: true,
+                  child: InkWell(
+                    onTap: () => guard(context, () => ref.read(playbackControllerProvider).startRadio(a.seed)),
+                    borderRadius: BorderRadius.circular(52),
+                    child: Column(
+                      children: [
+                        CoverImage(a.coverId, size: 104, radius: 52, label: a.name, seed: a.id),
+                        const SizedBox(height: 8),
+                        Text(
+                          a.name.toLowerCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: color, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ],
     );
   }

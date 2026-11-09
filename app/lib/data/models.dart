@@ -347,6 +347,7 @@ class HomeData {
     this.mixes = const [],
     this.newReleases = const [],
     this.discoveries = const [],
+    this.artistRadios = const [],
   });
 
   final List<RecentAddition> recentlyAdded;
@@ -361,6 +362,9 @@ class HomeData {
 
   /// Artists similar to the liked ones that the library lacks (ListenBrainz).
   final List<Discovery> discoveries;
+
+  /// "◉ radios d'artistes": the liked artists, then the most listened.
+  final List<ArtistRadio> artistRadios;
 
   factory HomeData.fromJson(Map<String, dynamic> j) => HomeData(
     recentlyAdded: j['recent_additions'] is List
@@ -383,7 +387,29 @@ class HomeData {
       for (final r in j['new_releases'] as List? ?? const []) NewRelease.fromJson(r as Map<String, dynamic>),
     ],
     discoveries: [for (final d in j['discoveries'] as List? ?? const []) Discovery.fromJson(d as Map<String, dynamic>)],
+    artistRadios: [
+      for (final a in j['artist_radios'] as List? ?? const []) ArtistRadio.fromJson(a as Map<String, dynamic>),
+    ],
   );
+}
+
+/// An artist whose radio the home screen offers (GET /home).
+class ArtistRadio {
+  const ArtistRadio({required this.id, required this.name, this.coverId, this.liked = false});
+
+  final int id;
+  final String name;
+  final int? coverId;
+  final bool liked;
+
+  factory ArtistRadio.fromJson(Map<String, dynamic> j) => ArtistRadio(
+    id: j['id'] as int,
+    name: j['name'] as String? ?? '',
+    coverId: j['cover_id'] as int?,
+    liked: j['liked'] as bool? ?? false,
+  );
+
+  RadioSeed get seed => RadioSeed('artist', id, name);
 }
 
 /// A recent or upcoming release of an artist of the library, from
