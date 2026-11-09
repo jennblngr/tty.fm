@@ -8,13 +8,14 @@ import '../../state/library.dart';
 import '../../state/notifications.dart';
 import '../../state/playback.dart';
 import '../daily_message.dart';
-import '../format.dart';
 import '../icons.dart';
+import '../links.dart';
 import '../nav.dart';
 import '../shell.dart';
 import '../theme.dart';
 import '../widgets/async_view.dart';
 import '../widgets/cover.dart';
+import '../widgets/release_row.dart';
 import '../widgets/tty.dart';
 import 'favorites.dart';
 
@@ -265,9 +266,8 @@ class _Mixes extends ConsumerWidget {
   }
 }
 
-/// "● nouvelles sorties" (02 Main, D1): recent and upcoming releases of
-/// the library's artists, "[✓]" when the library has them (a tap opens the
-/// album); otherwise a tap opens the artist.
+/// "● nouvelles sorties" (02 Main, D1): the first releases, "[tout]" for
+/// the whole list.
 class _NewReleases extends StatelessWidget {
   const _NewReleases(this.releases);
   final List<NewRelease> releases;
@@ -279,25 +279,23 @@ class _NewReleases extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TtySection('nouvelles sorties', glyph: '●', color: c.teal, ruled: wide),
+        TtySection(
+          'nouvelles sorties',
+          glyph: '●',
+          color: c.teal,
+          ruled: wide,
+          trailing: TtyLink('tout', onTap: () => openReleases(context)),
+        ),
         const SizedBox(height: 4),
-        for (final r in releases)
-          TtyRow(
-            leading: CoverImage(null, size: 44, label: r.artist, seed: r.artistId),
-            title: r.title.toLowerCase(),
-            titleColor: c.teal,
-            subtitle: newReleaseSubtitle(r),
-            trailing: r.albumId == null ? null : Text('[✓]', style: TextStyle(color: c.green)),
-            onTap: () => r.albumId != null ? openAlbum(context, r.albumId!) : openArtist(context, r.artistId),
-          ),
+        for (final r in releases) ReleaseRow(r),
       ],
     );
   }
 }
 
 /// "◇ à découvrir": artists close to the liked ones that the library lacks
-/// (ListenBrainz). Not in the library, so nothing to play: a list to look
-/// up elsewhere.
+/// (ListenBrainz). Not in the library, so nothing to play: a tap opens the
+/// artist on ListenBrainz.
 class _Discoveries extends StatelessWidget {
   const _Discoveries(this.items);
   final List<Discovery> items;
@@ -317,6 +315,7 @@ class _Discoveries extends StatelessWidget {
             title: d.name.toLowerCase(),
             titleColor: c.accents[i % c.accents.length],
             subtitle: d.caption,
+            onTap: d.mbid.isEmpty ? null : () => openLink(context, listenBrainzArtist(d.mbid)),
           ),
       ],
     );
@@ -377,29 +376,6 @@ class _ArtistRadios extends ConsumerWidget {
       ],
     );
   }
-}
-
-/// "charlotte cardin · album · à venir le 29 janv. 2027", "sia · single ·
-/// sorti le 20 août" (the year only when it is not the current one).
-String newReleaseSubtitle(NewRelease r, {DateTime? now}) {
-  final d = r.date;
-  final year = (now ?? DateTime.now()).year;
-  String day(DateTime d) {
-    final s = formatDate(d);
-    return d.year == year ? s.substring(0, s.length - 5) : s;
-  }
-
-  final String? when;
-  if (d == null) {
-    when = null;
-  } else if (r.released.length == 7) {
-    // Only the month is known: "sorti en août", "à venir en janv. 2027".
-    final month = day(d).split(' ').skip(1).join(' ');
-    when = '${r.upcoming ? 'à venir' : 'sorti'} en $month';
-  } else {
-    when = '${r.upcoming ? 'à venir le' : 'sorti le'} ${day(d)}';
-  }
-  return [r.artist.toLowerCase(), if (r.kind == 'ep') 'EP' else r.kind, ?when].join(' · ');
 }
 
 /// Recently played shortcut: tile + label on a surface strip.

@@ -143,6 +143,12 @@ class LibraryRepository {
     return [for (final a in (j as Map)['items'] as List) FollowedArtist.fromJson(a as Map<String, dynamic>)];
   });
 
+  /// The recent and upcoming releases of the library's artists, most
+  /// recent first ("[tout]" of "● nouvelles sorties").
+  Stream<List<NewRelease>> releases() => _cached('releases', () => _api.get('/releases'), (j) {
+    return [for (final r in (j as Map)['items'] as List) NewRelease.fromJson(r as Map<String, dynamic>)];
+  });
+
   /// The tracks of a mix of the day, in play order.
   Future<List<Track>> mixTracks(int position) async {
     final j = await _api.get('/mixes/$position') as Map<String, dynamic>;

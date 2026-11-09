@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ttyfm/data/models.dart';
-import 'package:ttyfm/ui/screens/home.dart';
+import 'package:ttyfm/ui/widgets/release_row.dart';
 
 void main() {
   test('recently played: albums, artists and playlists, unknown kinds skipped', () {
