@@ -48,6 +48,7 @@ dependencies:
   crypto: ^3.0.8
   flutter_cache_manager: ^3.4.6
   flutter_svg: ^2.3.2
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:

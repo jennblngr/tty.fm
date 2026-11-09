@@ -29,6 +29,9 @@ final albumProvider = StreamProvider.autoDispose.family<(Album, List<Track>), in
 
 final playlistTreeProvider = StreamProvider<PlaylistTree>((ref) => _repo(ref).playlistTree());
 
+/// "● nouvelles sorties" in full.
+final releasesProvider = StreamProvider.autoDispose<List<NewRelease>>((ref) => _repo(ref).releases());
+
 /// "● artistes suivis" (biblio): the liked artists.
 final followsProvider = StreamProvider<List<FollowedArtist>>((ref) => _repo(ref).follows());
 

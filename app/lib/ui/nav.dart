@@ -6,6 +6,7 @@ import 'screens/notifications.dart';
 import 'screens/now_playing.dart';
 import 'screens/playlist.dart';
 import 'screens/playlists.dart';
+import 'screens/releases.dart';
 import 'screens/settings.dart';
 import 'shell.dart';
 
@@ -23,6 +24,9 @@ void openPlaylist(BuildContext context, int id) =>
 
 void openFolder(BuildContext context, int id) =>
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => PlaylistsScreen(folderId: id)));
+
+void openReleases(BuildContext context) =>
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ReleasesScreen()));
 
 void openNowPlaying(BuildContext context, {bool lyrics = false}) => Navigator.of(
   context,

@@ -423,6 +423,7 @@ class NewRelease {
     required this.released,
     this.upcoming = false,
     this.albumId,
+    this.mbid = '',
   });
 
   final int artistId;
@@ -432,6 +433,7 @@ class NewRelease {
   final String released; // YYYY-MM-DD or YYYY-MM
   final bool upcoming;
   final int? albumId;
+  final String mbid; // MusicBrainz release group
 
   factory NewRelease.fromJson(Map<String, dynamic> j) => NewRelease(
     artistId: j['artist_id'] as int,
@@ -441,6 +443,7 @@ class NewRelease {
     released: j['released'] as String? ?? '',
     upcoming: j['upcoming'] as bool? ?? false,
     albumId: j['album_id'] as int?,
+    mbid: j['mbid'] as String? ?? '',
   );
 
   /// The release date, a month-only date as its first day.
