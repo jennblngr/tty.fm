@@ -15,13 +15,15 @@ class FakeEngine implements AudioEngine {
   RepeatMode repeat = RepeatMode.off;
   final opens = <({int index, Duration start, bool play})>[];
 
-  final _index = StreamController<int>.broadcast(sync: true);
+  final _index = StreamController<EngineEntry>.broadcast(sync: true);
   final _playing = StreamController<bool>.broadcast(sync: true);
   final _position = StreamController<Duration>.broadcast(sync: true);
   final _completed = StreamController<void>.broadcast(sync: true);
 
   @override
-  Stream<int> get index => _index.stream;
+  Stream<EngineEntry> get index => _index.stream;
+
+  void _report() => _index.add((index: current, key: urls[current]));
   @override
   Stream<bool> get playing => _playing.stream;
   @override
@@ -51,7 +53,7 @@ class FakeEngine implements AudioEngine {
     if (current < urls.length - 1) {
       current++;
       pos = Duration.zero;
-      _index.add(current);
+      _report();
       _position.add(Duration.zero);
     } else {
       _setPlaying(false);
@@ -71,7 +73,7 @@ class FakeEngine implements AudioEngine {
       ..clear()
       ..addAll(sources.map((s) => s.url));
     current = index;
-    _index.add(index);
+    _report();
     pos = start;
     _setPlaying(play);
   }
@@ -79,7 +81,21 @@ class FakeEngine implements AudioEngine {
   @override
   Future<void> add(EngineSource source) async => urls.add(source.url);
   @override
-  Future<void> move(int from, int to) async => urls.insert(to, urls.removeAt(from));
+  Future<void> move(int from, int to) async {
+    urls.insert(to, urls.removeAt(from));
+    // Like mpv: the playing entry keeps playing, and its new index is
+    // reported.
+    final before = current;
+    if (from == current) {
+      current = to;
+    } else if (from < current && to >= current) {
+      current--;
+    } else if (from > current && to <= current) {
+      current++;
+    }
+    if (current != before) _report();
+  }
+
   @override
   Future<void> remove(int index) async {
     urls.removeAt(index);
@@ -89,7 +105,7 @@ class FakeEngine implements AudioEngine {
   @override
   Future<void> jump(int index) async {
     current = index;
-    _index.add(index);
+    _report();
   }
 
   @override
@@ -283,11 +299,48 @@ void main() {
     expect(c.state.current!.id, 5);
     expect(ids().sublist(0, 5), [1, 2, 3, 4, 5]); // history untouched
     expect(ids().toSet(), tracks.map((t) => t.id).toSet());
-    expect(engine.opens.last.start, const Duration(seconds: 30)); // resumes in place
+    // The engine playlist is reordered in place, not reopened (#1).
+    expect(engine.opens, hasLength(1));
+    expect(engine.urls, [for (final i in ids()) 'u$i']);
+    expect(engine.current, 4);
     await c.setShuffle(false);
     expect(ids(), [for (var i = 1; i <= 20; i++) i]);
     expect(c.state.current!.id, 5);
+    expect(engine.opens, hasLength(1));
+    expect(engine.urls, [for (var i = 1; i <= 20; i++) 'u$i']);
+    expect(engine.current, 4);
     expect(plays, isEmpty); // reordering is not a track change
+  });
+
+  test('shuffle off moves the current track without a track change (#1)', () async {
+    // The engine reports the current track at each index it passes on the
+    // way, which depends on the shuffled order: try many orders.
+    for (var round = 0; round < 40; round++) {
+      final engine = FakeEngine();
+      final plays = <PlayRecord>[];
+      final c = PlaybackController(engine, sourceFor: (t) => EngineSource('u${t.id}'), onPlay: plays.add);
+      await c.playTracks([for (var i = 1; i <= 10; i++) t(i)], index: 6, shuffle: true);
+      engine.finishTrack(); // a shuffled track plays
+      final now = c.state.current!.id;
+      for (var s = 1; s <= 40; s++) {
+        engine.tick(Duration(seconds: s));
+      }
+      await c.setShuffle(false);
+      expect([for (final q in c.state.queue) q.track.id], [for (var i = 1; i <= 10; i++) i]);
+      expect(c.state.current!.id, now);
+      expect(c.state.index, now - 1);
+      expect(engine.current, now - 1); // the engine moved it there
+      expect(engine.opens, hasLength(1));
+      expect(plays, isEmpty, reason: 'round $round: reordering is not a track change');
+      // The next natural advance still follows the engine, and the track
+      // listened to through the reorder counts as one play.
+      if (now < 10) {
+        engine.finishTrack();
+        expect(c.state.current!.id, now + 1);
+        expect(plays.single.trackId, now);
+        expect(plays.single.listenedMs, closeTo(40000, 1000));
+      }
+    }
   });
 
   test('playTracks with shuffle starts with the chosen track', () async {

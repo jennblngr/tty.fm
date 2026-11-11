@@ -26,7 +26,6 @@ Ce que la phase 3 a apporté à l'app, et ce qui en reste :
 
 | # | sujet |
 |---|---|
-| #1 | Activer / désactiver « aléatoire » coupe brièvement la lecture |
 | #4 | Coupure audio d'environ 1 s lors d'un changement de Wi-Fi |
 | #27 | « Précédent » reprend la piste à un ancien point au lieu du début |
 
