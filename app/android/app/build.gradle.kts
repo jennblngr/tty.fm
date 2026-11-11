@@ -60,8 +60,10 @@ android {
         // Test builds from the preview workflow: they install alongside both
         // the release app and the local debug app, and are signed with the
         // release key so that each build installs over the previous one.
+        // The ".preview" suffix is set on the variant below: Flutter copies
+        // this build type onto the plugins, and libraries reject
+        // applicationIdSuffix.
         maybeCreate("profile").apply {
-            applicationIdSuffix = ".preview"
             manifestPlaceholders["appLabel"] = "tty.fm (preview)"
             signingConfig = signingConfigs.findByName("release")
                 ?: signingConfigs.getByName("debug")
@@ -70,6 +72,12 @@ android {
             signingConfig = signingConfigs.findByName("release")
                 ?: signingConfigs.getByName("debug")
         }
+    }
+}
+
+androidComponents {
+    onVariants(selector().withBuildType("profile")) { variant ->
+        variant.applicationId.set("fm.tty.app.preview")
     }
 }
 

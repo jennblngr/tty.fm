@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ttyfm/ui/theme.dart';
 import 'package:ttyfm/ui/widgets/async_view.dart';

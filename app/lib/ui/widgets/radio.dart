@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' hide RepeatMode;
+import 'package:material_ui/material_ui.dart' hide RepeatMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/settings.dart';
