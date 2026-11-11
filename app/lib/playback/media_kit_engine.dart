@@ -22,7 +22,7 @@ class MediaKitEngine implements AudioEngine {
     }
     _subs.add(
       _player.stream.playlist.listen((p) {
-        if (p.medias.isNotEmpty) _index.add(p.index);
+        if (p.index >= 0 && p.index < p.medias.length) _index.add((index: p.index, key: p.medias[p.index].uri));
       }),
     );
   }
@@ -30,13 +30,13 @@ class MediaKitEngine implements AudioEngine {
   final _player = Player(
     configuration: const PlayerConfiguration(title: appDisplayName, bufferSize: 64 << 20),
   );
-  final _index = StreamController<int>.broadcast();
+  final _index = StreamController<EngineEntry>.broadcast();
   final _subs = <StreamSubscription<dynamic>>[];
 
   Media _media(EngineSource s) => Media(s.url, httpHeaders: s.headers);
 
   @override
-  Stream<int> get index => _index.stream.distinct();
+  Stream<EngineEntry> get index => _index.stream.distinct();
   @override
   Stream<bool> get playing => _player.stream.playing;
   @override

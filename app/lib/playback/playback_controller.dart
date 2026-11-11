@@ -462,10 +462,14 @@ class PlaybackController {
     await _engine.seek(to);
   }
 
+  /// Turns shuffle on or off. Only the engine playlist around the current
+  /// track is reordered: reopening it would reload the track and cut the
+  /// sound for a moment (#1).
   Future<void> setShuffle(bool on) async {
     if (on == _shuffle) return;
     _shuffle = on;
     if (_queue.isEmpty) return _emit();
+    final before = [..._queue];
     final cur = _queue[_index];
     if (on) {
       // Keep what was already played, shuffle what is coming.
@@ -477,8 +481,30 @@ class PlaybackController {
       _index = _queue.indexOf(cur);
     }
     _emit();
-    await _reopen();
+    await _reorderEngine(before);
   }
+
+  /// Brings the engine playlist, in the order of [before], to the order of
+  /// [_queue] with moves only, so the current track keeps playing. The
+  /// engine reports each new index of the current track on the way, in no
+  /// set order: see [_onEngineIndex].
+  Future<void> _reorderEngine(List<QueueItem> before) async {
+    final order = [...before];
+    for (var i = 0; i < _queue.length; i++) {
+      final j = order.indexWhere((q) => identical(q, _queue[i]), i);
+      if (j <= i) continue;
+      _reordered = true;
+      order.insert(i, order.removeAt(j));
+      await _engine.move(j, i);
+    }
+  }
+
+  /// Set when [_reorderEngine] moved entries since the last track change:
+  /// the engine may then report the current track at other indexes.
+  var _reordered = false;
+
+  /// The key of the engine's last reported entry.
+  String? _engineKey;
 
   Future<void> cycleRepeat() => setRepeat(RepeatMode.values[(_repeat.index + 1) % RepeatMode.values.length]);
 
@@ -520,6 +546,7 @@ class PlaybackController {
   /// loading (they reflect our own state, not a track change).
   Future<void> _open({required int index, Duration start = Duration.zero, bool play = true}) async {
     if (play) _pauseRequested = false;
+    _reordered = false; // a new playlist: its indexes are ours again
     _opening++;
     try {
       await _engine.open(_sources(), index: index, start: start, play: play);
@@ -591,12 +618,18 @@ class PlaybackController {
 
   var _completed = false;
 
-  void _onEngineIndex(int i) {
-    if (_opening > 0 || i == _index || i < 0 || i >= _queue.length) return;
+  void _onEngineIndex(EngineEntry e) {
+    // After a reorder, the same media at another index is the current
+    // track moved, not a new one.
+    final moved = _reordered && e.key == _engineKey;
+    _engineKey = e.key;
+    final i = e.index;
+    if (moved || _opening > 0 || i == _index || i < 0 || i >= _queue.length) return;
     _changeIndex(i, byUser: false); // natural advance (gapless)
   }
 
   void _changeIndex(int i, {required bool byUser}) {
+    _reordered = false;
     _finishSession(byUser: byUser);
     _index = i;
     _position = Duration.zero;
