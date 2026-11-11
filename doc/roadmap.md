@@ -26,7 +26,6 @@ Ce qui attend la phase 3 dans l'app (commentaires « phase 3 » dans `home.dart`
 
 | # | sujet |
 |---|---|
-| #1 | Activer / désactiver « aléatoire » coupe brièvement la lecture |
 | #2 | Mobile : le retour depuis une recherche filtrée quitte l'onglet au lieu de revenir à son état initial |
 | #4 | Coupure audio d'environ 1 s lors d'un changement de Wi-Fi |
 | #27 | « Précédent » reprend la piste à un ancien point au lieu du début |
