@@ -48,7 +48,12 @@ void openNotifications(BuildContext context) {
     MaterialPageRoute(
       builder: (_) => shell == null
           ? const NotificationsScreen()
-          : ShellScope(open: shell.open, select: shell.select, child: const NotificationsScreen()),
+          : ShellScope(
+              open: shell.open,
+              select: shell.select,
+              setBackHandler: shell.setBackHandler,
+              child: const NotificationsScreen(),
+            ),
     ),
   );
 }

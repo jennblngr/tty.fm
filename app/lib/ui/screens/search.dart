@@ -83,8 +83,32 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _run(_ctrl.text);
   }
 
+  /// "Back" on a query or a filter clears them and comes back to the empty
+  /// search (#2); on the empty search, the shell goes back to the home tab.
+  bool _back() {
+    if (_ctrl.text.trim().isEmpty && !_filter.isActive) return false;
+    _debounce?.cancel();
+    _ctrl.clear();
+    FocusManager.instance.primaryFocus?.unfocus();
+    _setFilter(const SearchFilter());
+    return true;
+  }
+
+  ShellScope? _shell;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final shell = ShellScope.of(context);
+    if (shell != _shell) {
+      _shell?.setBackHandler(searchTab, null);
+      _shell = shell?..setBackHandler(searchTab, _back);
+    }
+  }
+
   @override
   void dispose() {
+    _shell?.setBackHandler(searchTab, null);
     _debounce?.cancel();
     _cancel?.cancel();
     _ctrl.dispose();

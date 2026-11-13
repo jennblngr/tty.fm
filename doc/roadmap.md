@@ -26,7 +26,6 @@ Ce que la phase 3 a apporté à l'app, et ce qui en reste :
 
 | # | sujet |
 |---|---|
-| #2 | Mobile : le retour depuis une recherche filtrée quitte l'onglet au lieu de revenir à son état initial |
 | #4 | Coupure audio d'environ 1 s lors d'un changement de Wi-Fi |
 | #27 | « Précédent » reprend la piste à un ancien point au lieu du début |
 
@@ -84,7 +83,7 @@ Par écran. « → #n » renvoie à l'issue qui couvre l'écart ; les lignes **s
 
 - Préfixes `bpm:` et `ton:` : faits, avec les puces `bpm` (tranches) et `ton` dans la rangée de filtres. Restent les autres préfixes (`paroles:`, `artiste:`, `album:`, `genre:`, `ajouté:`), les raccourcis sous le champ, le surlignage et l'état « aucun résultat » → #18.
 - **Sans issue** : historique des recherches (`↺ historique [effacer]`, avec le nombre de résultats et le type de chaque entrée) sur l'écran vide. L'app affiche seulement « parcourir ».
-- Retour arrière depuis une recherche filtrée → #2.
+- Retour arrière depuis une recherche filtrée : fait (#2). Le premier retour vide la requête et les filtres, le suivant ramène à l'accueil.
 
 ### Stats (05, D5)
 

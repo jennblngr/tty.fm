@@ -52,9 +52,20 @@ const asideWidth = 1280.0;
 /// Lets descendants open a page in a given tab (the sidebar's playlists open
 /// in "biblio").
 class ShellScope extends InheritedWidget {
-  const ShellScope({super.key, required this.open, required this.select, required super.child});
+  const ShellScope({
+    super.key,
+    required this.open,
+    required this.select,
+    required this.setBackHandler,
+    required super.child,
+  });
   final void Function(int tab, Widget page) open;
   final void Function(int tab) select;
+
+  /// Lets the root page of [tab] handle "back" before the shell does (it
+  /// goes back to the home tab): [handler] returns true when it used it,
+  /// e.g. to clear a search. Null removes it.
+  final void Function(int tab, bool Function()? handler) setBackHandler;
 
   static ShellScope? of(BuildContext context) => context.dependOnInheritedWidgetOfExactType<ShellScope>();
 
@@ -76,6 +87,7 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _index = 0;
   final _keys = List.generate(_tabs.length, (_) => GlobalKey<NavigatorState>());
+  final _backHandlers = <int, bool Function()>{};
 
   void _select(int i) {
     if (i == _index) {
@@ -117,6 +129,7 @@ class _AppShellState extends State<AppShell> {
     return ShellScope(
       open: _open,
       select: (i) => setState(() => _index = i),
+      setBackHandler: (tab, handler) => handler == null ? _backHandlers.remove(tab) : _backHandlers[tab] = handler,
       child: PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, _) async {
@@ -124,6 +137,8 @@ class _AppShellState extends State<AppShell> {
           final nav = _keys[_index].currentState;
           if (nav != null && nav.canPop()) {
             nav.pop();
+          } else if (_backHandlers[_index]?.call() ?? false) {
+            // The tab's root page used it (a search cleared).
           } else if (_index != 0) {
             setState(() => _index = 0);
           }
