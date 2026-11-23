@@ -10,7 +10,7 @@ Repères pour les agents qui travaillent sur ce dépôt.
 - `app/README.md` : client Flutter.
 - `design/HANDOFF.md` : écrans, tokens, règles et décisions du design ; les maquettes de `design/mockups/` font foi pour les détails visuels.
 - `doc/conventions.md` : guide rapide, branches, commits, pull requests, reverts et vérifications.
-- `doc/roadmap.md` : phases du projet, issues ouvertes et écarts entre les maquettes et l'app. À lire avant de choisir une tâche, et à mettre à jour quand une issue est fermée ou qu'un écart est corrigé.
+- `doc/roadmap.md` : historique du projet, issues ouvertes et écarts entre les maquettes et l'app. À lire avant de choisir une tâche, et à mettre à jour quand une issue est fermée ou qu'un écart est corrigé.
 
 ## Façon de travailler
 

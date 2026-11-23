@@ -62,7 +62,7 @@ Le serveur possède toutes les données ; l'app et le recommender passent par so
 
 ## État du projet
 
-Projet personnel, utilisé au quotidien sur une seule bibliothèque, avec un seul compte. Les trois premières phases sont terminées : serveur et client, synchronisation entre appareils, puis analyse audio et recommandations. Le travail en cours porte surtout sur l'alignement de l'app avec les maquettes (`design/`). macOS et Android sont pris en charge ; Windows et iOS viendront plus tard, le code étant commun. Le détail est dans la [feuille de route](doc/roadmap.md).
+Projet personnel, utilisé au quotidien sur une seule bibliothèque, avec un seul compte. Tout ce qui est listé plus haut fonctionne : bibliothèque et lecture, synchronisation entre appareils, analyse audio et recommandations. Le travail en cours porte surtout sur l'alignement de l'app avec les maquettes (`design/`). macOS et Android sont pris en charge ; Windows et iOS viendront plus tard, le code étant commun. Le détail est dans la [feuille de route](doc/roadmap.md).
 
 ## Documentation
 
@@ -75,7 +75,7 @@ Projet personnel, utilisé au quotidien sur une seule bibliothèque, avec un seu
 | [app/README.md](app/README.md) | client Flutter : développement, builds, releases, tests |
 | [recommender/README.md](recommender/README.md) | analyse audio, MusicBrainz, ListenBrainz |
 | [design/HANDOFF.md](design/HANDOFF.md) | écrans, tokens et règles du design |
-| [doc/roadmap.md](doc/roadmap.md) | phases, issues ouvertes, écarts avec les maquettes |
+| [doc/roadmap.md](doc/roadmap.md) | historique, issues ouvertes, écarts avec les maquettes |
 | [doc/conventions.md](doc/conventions.md) | branches, commits, pull requests |
 
 ## Structure du dépôt
