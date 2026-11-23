@@ -1,6 +1,12 @@
 # recommender
 
-Service Python de la phase 3. Il fait pour l'instant une seule chose : l'**analyse audio** des morceaux, y compris genre, ambiance et acoustique grâce aux modèles TensorFlow d'Essentia. Viendront ensuite les titres similaires, la radio infinie, les mix tirés de l'historique (`plays`) et la découverte via MusicBrainz / ListenBrainz (les `mbid` sont déjà stockés par le serveur).
+Service Python de la phase 3. Il fournit au serveur les données dont les recommandations ont besoin, en trois fils :
+
+- **Analyse audio** des morceaux avec Essentia : bpm, tonalité, loudness, énergie, puis genre, ambiance, acoustique et **embedding** grâce aux modèles TensorFlow ([Ce qui est calculé](#ce-qui-est-calculé)).
+- **Nouvelles sorties** des artistes de la bibliothèque, cherchées sur MusicBrainz ([Nouvelles sorties](#nouvelles-sorties-musicbrainz)).
+- **Découverte** : les artistes proches des artistes likés, d'après ListenBrainz ([Découverte](#découverte-listenbrainz)).
+
+Les recommandations elles-mêmes sont calculées par le serveur Go à partir de ces données : les titres similaires (distance cosinus entre embeddings, table `sqlite-vec`), la radio infinie, le mix du jour (k-means sur les embeddings des titres écoutés, chaque nuit), les nouvelles sorties et les artistes à découvrir affichés à l'accueil. Voir [doc/api.md](../doc/api.md) pour les routes et [doc/architecture.md](../doc/architecture.md) pour la vue d'ensemble.
 
 ## Fonctionnement
 
