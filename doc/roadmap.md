@@ -4,7 +4,7 @@
 
 ## 1. Historique
 
-Les grandes étapes du projet, reconstituées à partir de l'historique git. Le code les appelle parfois encore « phases » (« phase 3 » pour l'analyse audio et les recommandations).
+Les grandes étapes du projet, reconstituées à partir de l'historique git.
 
 | étape | contenu | état |
 |---|---|---|
