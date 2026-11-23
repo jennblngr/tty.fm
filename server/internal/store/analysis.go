@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// Analysis is the audio analysis of one track (phase 3). The recommender
+// Analysis is the audio analysis of one track. The recommender
 // service computes it from the file and reports it through the API.
 // Fields the analyser could not compute are nil.
 type Analysis struct {

@@ -33,8 +33,10 @@ services:
       - ${MUSIC_DIR:?set MUSIC_DIR in .env}:/music:ro
       - ${DATA_DIR:?set DATA_DIR in .env}:/data
 
-  # Audio analysis (phase 3): reads the music folder (read-only), takes its
-  # queue from the server and reports bpm, key, loudness... through the API.
+  # Recommender: audio analysis (reads the music folder read-only, takes its
+  # queue from the server and reports bpm, key, loudness, embedding... through
+  # the API), new releases from MusicBrainz and similar artists from
+  # ListenBrainz.
   # Background work at low CPU priority; stop the service to pause it.
   recommender:
     build:

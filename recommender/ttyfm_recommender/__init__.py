@@ -1,3 +1,4 @@
-"""tty.fm recommender service (phase 3): audio analysis worker."""
+"""tty.fm recommender service: audio analysis, new releases (MusicBrainz)
+and similar artists (ListenBrainz)."""
 
 __version__ = "0.1.0"

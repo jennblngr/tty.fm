@@ -1,4 +1,4 @@
--- Mixes of the day (phase 3): computed each night from the listening
+-- Mixes of the day: computed each night from the listening
 -- history (groups of similar tracks listened lately, completed with
 -- neighbours seldom or never played), kept as they are for the whole day.
 -- track_ids is a JSON array, in play order. Old days are pruned.

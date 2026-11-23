@@ -4,11 +4,13 @@ Repères pour les agents qui travaillent sur ce dépôt.
 
 ## Documentation
 
-- `README.md` : architecture du monorepo et installation sur le NAS.
+- `README.md` : présentation, fonctionnalités, stack et liens vers le reste de la documentation.
+- `doc/architecture.md` : composants et flux ; `doc/api.md` : API REST v1 et hub WebSocket.
+- `doc/installation.md` : installation Docker Compose et configuration ; `doc/nas-ugreen.md` : installation de référence sur le NAS et déploiement.
 - `app/README.md` : client Flutter.
 - `design/HANDOFF.md` : écrans, tokens, règles et décisions du design ; les maquettes de `design/mockups/` font foi pour les détails visuels.
 - `doc/conventions.md` : guide rapide, branches, commits, pull requests, reverts et vérifications.
-- `doc/roadmap.md` : phases du projet, issues ouvertes et écarts entre les maquettes et l'app. À lire avant de choisir une tâche, et à mettre à jour quand une issue est fermée ou qu'un écart est corrigé.
+- `doc/roadmap.md` : historique du projet, issues ouvertes et écarts entre les maquettes et l'app. À lire avant de choisir une tâche, et à mettre à jour quand une issue est fermée ou qu'un écart est corrigé.
 
 ## Façon de travailler
 

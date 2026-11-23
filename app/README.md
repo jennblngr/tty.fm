@@ -50,19 +50,19 @@ Le workflow échoue si `version:` dans `pubspec.yaml` ne correspond pas au tag. 
 
 Les APK de la Release sont signés avec une clé dédiée, pas avec la clé de debug du Mac. Android refuse d'installer une mise à jour signée avec une autre clé.
 
-1. Utiliser une clé existante, par exemple celle de Habits (`~/secrets/habits-release.jks`, alias `habits`). Plusieurs apps peuvent partager la même clé. Ou en générer une nouvelle (hors du dépôt), qui ne demande que le mot de passe :
+1. Utiliser une clé existante (plusieurs apps peuvent partager la même clé), ou en générer une nouvelle, hors du dépôt, qui ne demande que le mot de passe :
    ```bash
-   keytool -genkeypair -v -keystore ~/secrets/ttyfm-release.jks -alias ttyfm -keyalg RSA -keysize 4096 -validity 36500 -dname "CN=tty.fm"
+   keytool -genkeypair -v -keystore <dossier>/ttyfm-release.jks -alias ttyfm -keyalg RSA -keysize 4096 -validity 36500 -dname "CN=tty.fm"
    ```
    **En garder une copie de sauvegarde** (gestionnaire de mots de passe, par exemple) : sans ce fichier, on ne peut plus publier de mise à jour installable par-dessus.
-2. Ajouter les secrets du dépôt (GitHub → Settings → Secrets and variables → Actions), avec les mêmes noms que dans Habits :
-   - `KEYSTORE_BASE64` : le résultat de `base64 -i ~/secrets/<clé>.jks | pbcopy` ;
+2. Ajouter les secrets du dépôt (GitHub → Settings → Secrets and variables → Actions) :
+   - `KEYSTORE_BASE64` : le résultat de `base64 -i <dossier>/<clé>.jks | pbcopy` ;
    - `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
 
    Les secrets sont propres à chaque dépôt et ne peuvent pas être relus : il faut les recréer ici à partir du gestionnaire de mots de passe.
 3. Pour signer aussi les builds faits sur le Mac avec cette clé, créer `android/key.properties` (ignoré par git) :
    ```properties
-   storeFile=/Users/<moi>/secrets/<clé>.jks
+   storeFile=<chemin absolu>/<clé>.jks
    storePassword=...
    keyAlias=<alias>
    keyPassword=...
@@ -162,7 +162,7 @@ lib/
 
 **Principes :**
 - **L'UI ne contient pas de logique.** Elle lit des providers et appelle `PlaybackController` ou `PlaylistActions`. Refaire le design, c'est changer `ui/` (et le thème dans `ui/app.dart`).
-- **`PlaybackController` est le seul point d'entrée de la lecture.** Les boutons de l'UI, les contrôles système et les boutons du casque y passent tous. Depuis la phase 2 bis, les commandes reçues par WebSocket depuis d'autres appareils appellent les mêmes méthodes.
+- **`PlaybackController` est le seul point d'entrée de la lecture.** Les boutons de l'UI, les contrôles système et les boutons du casque y passent tous, de même que les commandes reçues par WebSocket depuis d'autres appareils.
 - **Affichage instantané** : chaque écran affiche d'abord la dernière réponse connue (fichiers JSON dans le dossier support de l'app), puis la met à jour. Les listes complètes (artistes, albums, titres) sont chargées en une fois, ce qui suffit pour environ 5 000 titres.
 - **Qualité** : original sur le réseau local, Opus 192 kb/s à distance en Wi-Fi, Opus 128 kb/s sur réseau mobile. Ces valeurs se règlent dans Réglages. Changer de réseau en cours de lecture reconstruit les URL et reprend au même endroit.
 - **Historique** : une écoute compte comme passée (skip) si l'utilisateur change de morceau avant la moitié (plafonnée à 4 min). Les écoutes partent par lots ; hors ligne, elles sont conservées et renvoyées plus tard.

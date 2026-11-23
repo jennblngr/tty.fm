@@ -28,7 +28,7 @@ final _periodProvider = NotifierProvider<_Period, int>(_Period.new);
 
 /// "$ stats": listening time per weekday, top artists and genres, highlights.
 /// On phones it is also the "whoami" page with shortcuts to the settings.
-/// Tempo statistics come with the audio analysis (phase 3).
+/// Tempo statistics come with the audio analysis.
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
 

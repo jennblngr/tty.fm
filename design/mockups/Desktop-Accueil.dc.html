@@ -170,14 +170,14 @@ button,input{font:inherit}
   </footer>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"lectureSur":{"editor":"enum","options":["cet ordinateur","iphone de jenny"],"default":"iphone de jenny"},"$preview":{"width":1440,"height":1400}}'>
+<script type="text/x-dc" data-dc-script data-props='{"lectureSur":{"editor":"enum","options":["cet ordinateur","iphone de sam"],"default":"iphone de sam"},"$preview":{"width":1440,"height":1400}}'>
 class Component extends DCLogic {
   constructor(props) {
     super(props);
     this.state = { here: false };
   }
   renderVals() {
-    const device = this.props.lectureSur ?? 'iphone de jenny';
+    const device = this.props.lectureSur ?? 'iphone de sam';
     return {
       remote: device !== 'cet ordinateur' && !this.state.here,
       device: device,

@@ -1,4 +1,4 @@
--- Audio analysis (phase 3), computed by the recommender service from the
+-- Audio analysis, computed by the recommender service from the
 -- files and reported through the API. One row per analysed track; a row
 -- whose file_mtime differs from the track's is stale and queued again.
 

@@ -10,7 +10,7 @@ import (
 	"unicode"
 )
 
-// New releases (phase 3). The recommender asks which album artists to look
+// New releases. The recommender asks which album artists to look
 // up (ReleaseQueue), finds them on MusicBrainz and sends their release
 // groups (SaveArtistReleases); NewReleases compares them with the library.
 

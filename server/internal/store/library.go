@@ -54,7 +54,7 @@ type Track struct {
 	RGAlbumGain *float64 `json:"rg_album_gain,omitempty"`
 	RGAlbumPeak *float64 `json:"rg_album_peak,omitempty"`
 	CreatedAt   int64    `json:"created_at"`
-	// From the audio analysis (phase 3), once the track is analysed.
+	// From the audio analysis, once the track is analysed.
 	BPM     *float64 `json:"bpm,omitempty"`
 	Camelot *string  `json:"camelot,omitempty"`
 }

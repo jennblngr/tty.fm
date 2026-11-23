@@ -99,7 +99,7 @@ class Track {
   final int? bitDepth;
   final int? coverId;
 
-  /// From the audio analysis (phase 3), once the track is analysed.
+  /// From the audio analysis, once the track is analysed.
   final double? bpm;
   final String? camelot;
 
@@ -739,7 +739,7 @@ class ListeningStats {
   );
 }
 
-/// Audio analysis of a track (phase 3), computed by the recommender service
+/// Audio analysis of a track, computed by the recommender service
 /// from the file. Values it could not compute are null; genre shares, mood
 /// and acousticness need its ML models.
 class TrackAnalysis {
