@@ -1,4 +1,4 @@
--- Discovery (phase 3): artists similar to the liked ones, from ListenBrainz,
+-- Discovery: artists similar to the liked ones, from ListenBrainz,
 -- fetched by the recommender at most once a week per liked artist. They
 -- need not be in the library: the home screen shows those it lacks.
 

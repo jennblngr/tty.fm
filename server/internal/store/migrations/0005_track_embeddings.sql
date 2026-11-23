@@ -1,4 +1,4 @@
--- Similarity between tracks (phase 3): the mean Discogs EffNet embedding of
+-- Similarity between tracks: the mean Discogs EffNet embedding of
 -- each analysed track, sent by the recommender with its analysis, in a
 -- sqlite-vec table searched by cosine distance. The vec0 module is linked
 -- into the server (store.init); vec0 tables know no foreign keys, so the

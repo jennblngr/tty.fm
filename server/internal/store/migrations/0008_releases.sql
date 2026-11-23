@@ -1,4 +1,4 @@
--- New releases (phase 3): the recommender looks each album artist up on
+-- New releases: the recommender looks each album artist up on
 -- MusicBrainz (at most once a week) and sends its release groups; the
 -- server compares them with the library. artist_lookups.mbid is null when
 -- MusicBrainz knows no such artist.

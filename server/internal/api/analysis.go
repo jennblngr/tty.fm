@@ -8,7 +8,7 @@ import (
 	"ttyfm/internal/store"
 )
 
-// --- audio analysis (phase 3) ----------------------------------------------
+// --- audio analysis --------------------------------------------------------
 //
 // The recommender service pulls the queue, analyses the files from its own
 // read-only mount of the music folder and reports each result back.
