@@ -50,19 +50,19 @@ Le workflow échoue si `version:` dans `pubspec.yaml` ne correspond pas au tag. 
 
 Les APK de la Release sont signés avec une clé dédiée, pas avec la clé de debug du Mac. Android refuse d'installer une mise à jour signée avec une autre clé.
 
-1. Utiliser une clé existante, par exemple celle de Habits (`~/secrets/habits-release.jks`, alias `habits`). Plusieurs apps peuvent partager la même clé. Ou en générer une nouvelle (hors du dépôt), qui ne demande que le mot de passe :
+1. Utiliser une clé existante (plusieurs apps peuvent partager la même clé), ou en générer une nouvelle, hors du dépôt, qui ne demande que le mot de passe :
    ```bash
-   keytool -genkeypair -v -keystore ~/secrets/ttyfm-release.jks -alias ttyfm -keyalg RSA -keysize 4096 -validity 36500 -dname "CN=tty.fm"
+   keytool -genkeypair -v -keystore <dossier>/ttyfm-release.jks -alias ttyfm -keyalg RSA -keysize 4096 -validity 36500 -dname "CN=tty.fm"
    ```
    **En garder une copie de sauvegarde** (gestionnaire de mots de passe, par exemple) : sans ce fichier, on ne peut plus publier de mise à jour installable par-dessus.
-2. Ajouter les secrets du dépôt (GitHub → Settings → Secrets and variables → Actions), avec les mêmes noms que dans Habits :
-   - `KEYSTORE_BASE64` : le résultat de `base64 -i ~/secrets/<clé>.jks | pbcopy` ;
+2. Ajouter les secrets du dépôt (GitHub → Settings → Secrets and variables → Actions) :
+   - `KEYSTORE_BASE64` : le résultat de `base64 -i <dossier>/<clé>.jks | pbcopy` ;
    - `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
 
    Les secrets sont propres à chaque dépôt et ne peuvent pas être relus : il faut les recréer ici à partir du gestionnaire de mots de passe.
 3. Pour signer aussi les builds faits sur le Mac avec cette clé, créer `android/key.properties` (ignoré par git) :
    ```properties
-   storeFile=/Users/<moi>/secrets/<clé>.jks
+   storeFile=<chemin absolu>/<clé>.jks
    storePassword=...
    keyAlias=<alias>
    keyPassword=...
