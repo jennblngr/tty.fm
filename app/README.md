@@ -162,7 +162,7 @@ lib/
 
 **Principes :**
 - **L'UI ne contient pas de logique.** Elle lit des providers et appelle `PlaybackController` ou `PlaylistActions`. Refaire le design, c'est changer `ui/` (et le thème dans `ui/app.dart`).
-- **`PlaybackController` est le seul point d'entrée de la lecture.** Les boutons de l'UI, les contrôles système et les boutons du casque y passent tous. Depuis la phase 2 bis, les commandes reçues par WebSocket depuis d'autres appareils appellent les mêmes méthodes.
+- **`PlaybackController` est le seul point d'entrée de la lecture.** Les boutons de l'UI, les contrôles système et les boutons du casque y passent tous, de même que les commandes reçues par WebSocket depuis d'autres appareils.
 - **Affichage instantané** : chaque écran affiche d'abord la dernière réponse connue (fichiers JSON dans le dossier support de l'app), puis la met à jour. Les listes complètes (artistes, albums, titres) sont chargées en une fois, ce qui suffit pour environ 5 000 titres.
 - **Qualité** : original sur le réseau local, Opus 192 kb/s à distance en Wi-Fi, Opus 128 kb/s sur réseau mobile. Ces valeurs se règlent dans Réglages. Changer de réseau en cours de lecture reconstruit les URL et reprend au même endroit.
 - **Historique** : une écoute compte comme passée (skip) si l'utilisateur change de morceau avant la moitié (plafonnée à 4 min). Les écoutes partent par lots ; hors ligne, elles sont conservées et renvoyées plus tard.
