@@ -47,7 +47,7 @@ button{font:inherit}
       <div style="background: #1E1E2E; border-radius: 8px; padding: 16px 12px 12px">
         <div style="background: #2A2A3C; border-radius: 8px; padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 8px">
           <div style="margin: -8px -12px 0 -12px; padding: 8px 12px; background: #26332B; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; color: #A6E3A1; font-size: 12px">
-            <span style="display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="4.5" width="16" height="11.5" rx="1.5"></rect><rect x="2" y="18" width="20" height="2" rx="1"></rect></svg>lecture sur macbook de jenny</span>
+            <span style="display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="4.5" width="16" height="11.5" rx="1.5"></rect><rect x="2" y="18" width="20" height="2" rx="1"></rect></svg>lecture sur macbook de sam</span>
             <span style="font-weight: 700">[écouter ici]</span>
           </div>
           <div style="display: flex; align-items: center; gap: 12px">
@@ -69,7 +69,7 @@ button{font:inherit}
         <div style="height: 60px; display: flex; align-items: center; padding: 0 24px; color: #45475A">// contenu de la page</div>
         <div style="border-top: 1px solid #34344A; background: #26332B; color: #A6E3A1; display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-size: 12px; padding: 8px 24px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true"><path d="M9 2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 17.5a1 1 0 0 0 0 2h2a1 1 0 0 0 0-2z"></path></svg>
-          <span>lecture sur iphone de jenny</span><span style="font-weight: 700">[écouter ici]</span>
+          <span>lecture sur iphone de sam</span><span style="font-weight: 700">[écouter ici]</span>
         </div>
         <div style="border-top: 1px solid #34344A; background: #181825; padding: 12px 24px; display: flex; align-items: center; gap: 24px">
           <span style="flex: 1; display: flex; align-items: center; gap: 12px"><img src="../covers/basse-ville.svg" alt="" width="48" height="48" style="width: 48px; height: 48px; border-radius: 4px; object-fit: cover"><span style="display: flex; flex-direction: column"><span style="color: #89B4FA">néons</span><span style="color: #9091AB">// nova kid</span></span></span>
@@ -123,8 +123,8 @@ class Component extends DCLogic {
     const base = { isLaptop: false, isPhone: false, isTablet: false, isSpeaker: false };
     return {
       icons: [
-        { ...base, isLaptop: true, name: 'ordinateur', when: "app desktop (mac, windows, linux)", example: '// vu sur mobile : lecture sur macbook de jenny' },
-        { ...base, isPhone: true, name: 'téléphone', when: 'app mobile (ios, android)', example: '// vu sur desktop : lecture sur iphone de jenny' },
+        { ...base, isLaptop: true, name: 'ordinateur', when: "app desktop (mac, windows, linux)", example: '// vu sur mobile : lecture sur macbook de sam' },
+        { ...base, isPhone: true, name: 'téléphone', when: 'app mobile (ios, android)', example: '// vu sur desktop : lecture sur iphone de sam' },
         { ...base, isTablet: true, name: 'tablette', when: 'app mobile sur grand écran', example: '// lecture sur ipad du salon' },
         { ...base, isSpeaker: true, name: 'enceinte', when: 'enceinte ou chaîne connectée', example: '// lecture sur enceinte cuisine' }
       ]
