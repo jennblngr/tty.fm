@@ -1,6 +1,6 @@
 # recommender
 
-Service Python de la phase 3. Il fournit au serveur les données dont les recommandations ont besoin, en trois fils :
+Service Python d'arrière-plan. Il fournit au serveur les données dont les recommandations ont besoin, en trois fils :
 
 - **Analyse audio** des morceaux avec Essentia : bpm, tonalité, loudness, énergie, puis genre, ambiance, acoustique et **embedding** grâce aux modèles TensorFlow ([Ce qui est calculé](#ce-qui-est-calculé)).
 - **Nouvelles sorties** des artistes de la bibliothèque, cherchées sur MusicBrainz ([Nouvelles sorties](#nouvelles-sorties-musicbrainz)).
