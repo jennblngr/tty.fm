@@ -1,19 +1,19 @@
 # Feuille de route
 
-État au 23 novembre 2026. Ce fichier rassemble trois choses : les phases du projet, les issues GitHub ouvertes et les écarts entre les maquettes (`design/mockups/`, résumées dans `design/HANDOFF.md`) et l'app. Les issues restent la source de vérité pour le détail : ce fichier sert de sommaire. À mettre à jour quand une issue est créée, fermée, ou qu'une phase avance.
+État au 23 novembre 2026. Ce fichier rassemble trois choses : les grandes étapes du projet, les issues GitHub ouvertes et les écarts entre les maquettes (`design/mockups/`, résumées dans `design/HANDOFF.md`) et l'app. Les issues restent la source de vérité pour le détail : ce fichier sert de sommaire. À mettre à jour quand une issue est créée, fermée, ou qu'une étape avance.
 
-## 1. Phases
+## 1. Historique
 
-Les phases 1 et 2 n'ont jamais été décrites dans le dépôt : leur contenu est reconstitué à partir de l'historique git. Seules les phases 2 bis et 3 sont nommées dans le code et les README.
+Les grandes étapes du projet, reconstituées à partir de l'historique git. Le code les appelle parfois encore « phases » (« phase 3 » pour l'analyse audio et les recommandations).
 
-| phase | contenu | état |
+| étape | contenu | état |
 |---|---|---|
-| 1 | Serveur Go + SQLite (scan, pochettes, recherche FTS5, auth, streaming, API REST v1), déploiement Docker sur le NAS, client Flutter macOS / Android (lecture, file d'attente, cache, réseau local / distant). | fait (31 oct.) |
-| 2 | Hub WebSocket (synchro entre appareils, événements `changed`), paroles, filtres de recherche, téléchargements hors-ligne, refonte « terminal » d'après les maquettes, stats d'écoute. | fait (1er nov.) |
-| 2 bis | Télécommande : les commandes reçues par WebSocket depuis un autre appareil passent par `PlaybackController` (`app/README.md`). | fait (`4ea4cb1`). Reste le bandeau « lecture sur… » du design : #17 |
-| 3 | Service `recommender/` (Python + Essentia) : analyse audio, titres similaires et radio infinie (embeddings, vecteurs dans `sqlite-vec`), mix quotidiens tirés de l'historique, découverte via MusicBrainz / ListenBrainz. Voir `recommender/README.md`. | fait (9 nov., PR 49 à 61). Analyse audio (bpm, tonalité + Camelot, LUFS, énergie, dansant ; genre et sous-genre en %, ambiance et acoustique avec les modèles TensorFlow d'Essentia), table `track_analysis`, API `/analysis`, affichage dans l'app ; similarité entre titres (embedding EffNet moyen envoyé avec l'analyse, table `sqlite-vec` `track_embeddings`, `GET /tracks/{id}/similar`) ; radio (`GET /radio` depuis un titre ou un artiste, avec dérive, diversité et repli sans embedding ; dans l'app : « lancer la radio », lecture auto, file marquée). Mix du jour, nouvelles sorties (MusicBrainz), artistes suivis, découverte (ListenBrainz) et radios d'artistes à l'accueil. Les suites sont rangées dans d'autres issues : notifications « nouvelles sorties » et « mix prêts » (#12), variantes du message du jour (#13), filtres `bpm:` / `ton:` de la biblio (#24), tuile radar (#14, en attente du design) |
+| Socle | Serveur Go + SQLite (scan, pochettes, recherche FTS5, auth, streaming, API REST v1), déploiement Docker sur le NAS, client Flutter macOS / Android (lecture, file d'attente, cache, réseau local / distant). | fait (31 oct.) |
+| Synchro et refonte | Hub WebSocket (synchro entre appareils, événements `changed`), paroles, filtres de recherche, téléchargements hors-ligne, refonte « terminal » d'après les maquettes, stats d'écoute. | fait (1er nov.) |
+| Télécommande | Les commandes reçues par WebSocket depuis un autre appareil passent par `PlaybackController` (`app/README.md`). | fait (`4ea4cb1`). Reste le bandeau « lecture sur… » du design : #17 |
+| Analyse audio et recommandations | Service `recommender/` (Python + Essentia) : analyse audio, titres similaires et radio infinie (embeddings, vecteurs dans `sqlite-vec`), mix quotidiens tirés de l'historique, découverte via MusicBrainz / ListenBrainz. Voir `recommender/README.md`. | fait (9 nov., PR 49 à 61). Analyse audio (bpm, tonalité + Camelot, LUFS, énergie, dansant ; genre et sous-genre en %, ambiance et acoustique avec les modèles TensorFlow d'Essentia), table `track_analysis`, API `/analysis`, affichage dans l'app ; similarité entre titres (embedding EffNet moyen envoyé avec l'analyse, table `sqlite-vec` `track_embeddings`, `GET /tracks/{id}/similar`) ; radio (`GET /radio` depuis un titre ou un artiste, avec dérive, diversité et repli sans embedding ; dans l'app : « lancer la radio », lecture auto, file marquée). Mix du jour, nouvelles sorties (MusicBrainz), artistes suivis, découverte (ListenBrainz) et radios d'artistes à l'accueil. Les suites sont rangées dans d'autres issues : notifications « nouvelles sorties » et « mix prêts » (#12), variantes du message du jour (#13), filtres `bpm:` / `ton:` de la biblio (#24), tuile radar (#14, en attente du design) |
 
-Ce que la phase 3 a apporté à l'app, et ce qui en reste :
+Ce que l'analyse audio et les recommandations ont apporté à l'app, et ce qui en reste :
 
 - **Analyse audio** : fait dans le lecteur (bloc `$ analyse --piste`, enchaînement compatible), les listes de titres (bpm en pêche), la file d'attente desktop, le menu `···` des titres et le menu `[···]` du lecteur (« relancer l'analyse »). Genre et sous-genre, ambiance et acoustique : calculés par le recommender et affichés dans le lecteur (sans les %), avec les chips de genre sous le titre et le lien `[détails]` (confiance de la tonalité, dynamique, analyseur et date ; acoustique sur téléphone). Les filtres `bpm:` / `ton:` existent dans la recherche (#18) : préfixes `bpm:>120`, `bpm:90-120`, `bpm:118`, `ton:8A`, `ton:am`, et puces `bpm` (tranches `<90 · 90–120 · 120–140 · >140`) et `ton`. Restent ceux de la biblio et des playlists (#24). Faits aussi : le tempo des stats (#20) et, dans les réglages, l'interrupteur « analyse audio » (pour tout le serveur, `PATCH /analysis`), l'état de l'analyse et « réinitialiser l'analyse audio » (#25).
 - **Recommandations** : l'API des titres similaires (`GET /tracks/{id}/similar`, remplie au fil de la réanalyse `discogs-effnet-2`) et celle de la radio (`GET /radio`) existent, et l'app s'en sert : « lancer la radio » dans le menu `[···]` du lecteur et le menu `···` des titres (depuis le titre en cours : remplace la suite de la file et lance le premier titre de la radio, avec confirmation s'il reste des ajouts manuels), lecture auto en fin de file quand la répétition est off (réglage `lecture auto`, on par défaut), titres marqués « · radio » / « · ajouté par toi » dans la file et ligne `// ensuite : radio « … »`, nouveau lot quand il reste moins de 3 titres. Les mix du jour sont faits (calcul de nuit sur le serveur, tuiles à l'accueil). Les radios d'artistes à l'accueil sont faites. Restent la notification « mix prêts » (#12) et les variantes mix du message du jour (#13), qui peuvent se brancher sur `daily_mixes`. Le radar attend le design (#14).
@@ -31,23 +31,23 @@ Ce que la phase 3 a apporté à l'app, et ce qui en reste :
 
 ### Fonctionnalités et alignement sur le design
 
-| # | sujet | dépend de la phase 3 |
+| # | sujet | notes |
 |---|---|---|
-| #3 | Menu contextuel au clic droit / appui long | non |
-| #6 | Mobile : fermer le lecteur en glissant vers le bas | non |
-| #12 | Écran des notifications et cloche | non. Livré par la PR #35 (type « titres ajoutés ») ; les autres types (scan terminé, sorties, mix prêts…) restent à faire. Fermer l'issue ou la réduire à ces types. |
-| #13 | Message du jour : 15 variantes, P1 → P4 | en partie. Livré par les PR #30 et #33 ; restent les variantes analyse, mix, sorties et rétro |
-| #14 | Accueil : tuile radar et panneau « à suivre » (desktop), en attente du design ; le reste est livré (PR 55, 56, 60, 61) | non |
-| #15 | Menu `[···]` du lecteur, archiver, retirer de la bibliothèque | en partie |
-| #16 | Menu de tri des listes, mémorisé par liste | non |
-| #17 | Multi-appareils : bandeau « lecture sur… [écouter ici] » | non |
-| #18 | Recherche : préfixes (`bpm:>120`, `paroles:`…), raccourcis, surlignage | en partie |
-| #20 | Stats : graphe d'activité, heures par mois, tempo, rétro | en partie |
-| #21 | Animations : onglets, défilement, panneau du bas, paroles | non |
-| #22 | Vignettes de playlist : 1 ou 4 pochettes, ou image perso | non |
-| #23 | Lecteur : en-tête centré, `[agrandir]` fixe, lecture auto | en partie |
-| #24 | Bibliothèque et playlists : en-tête, filtres, tableau desktop | en partie |
-| #25 | Réglages : sections et mise en page du design | en partie |
+| #3 | Menu contextuel au clic droit / appui long |  |
+| #6 | Mobile : fermer le lecteur en glissant vers le bas |  |
+| #12 | Écran des notifications et cloche | Livré par la PR #35 (type « titres ajoutés ») ; les autres types (scan terminé, sorties, mix prêts…) restent à faire. Fermer l'issue ou la réduire à ces types. |
+| #13 | Message du jour : 15 variantes, P1 → P4 | Livré par les PR #30 et #33 ; restent les variantes analyse, mix, sorties et rétro |
+| #14 | Accueil : tuile radar et panneau « à suivre » (desktop), en attente du design ; le reste est livré (PR 55, 56, 60, 61) |  |
+| #15 | Menu `[···]` du lecteur, archiver, retirer de la bibliothèque |  |
+| #16 | Menu de tri des listes, mémorisé par liste |  |
+| #17 | Multi-appareils : bandeau « lecture sur… [écouter ici] » |  |
+| #18 | Recherche : préfixes (`bpm:>120`, `paroles:`…), raccourcis, surlignage |  |
+| #20 | Stats : graphe d'activité, heures par mois, tempo, rétro |  |
+| #21 | Animations : onglets, défilement, panneau du bas, paroles |  |
+| #22 | Vignettes de playlist : 1 ou 4 pochettes, ou image perso |  |
+| #23 | Lecteur : en-tête centré, `[agrandir]` fixe, lecture auto |  |
+| #24 | Bibliothèque et playlists : en-tête, filtres, tableau desktop |  |
+| #25 | Réglages : sections et mise en page du design |  |
 
 ## 3. Écarts entre les maquettes et l'app
 
