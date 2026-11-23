@@ -118,3 +118,9 @@ Le build tag `sqlite_fts5` est obligatoire : passer par le `Makefile`, ou ajoute
 ### Client et recommender
 
 Voir [app/README.md](app/README.md) et [recommender/README.md](recommender/README.md). Avant de committer dans un nouveau clone, lancer `tools/setup-git.sh` ([doc/conventions.md](doc/conventions.md)).
+
+## Licence
+
+tty.fm est distribué sous licence [GNU AGPL-3.0](LICENSE) (version 3 ou, au choix, toute version ultérieure). Cette licence est compatible avec [Essentia](https://essentia.upf.edu), elle-même sous AGPL-3.0, que le recommender utilise.
+
+Certains éléments ont leurs propres conditions. Les modèles TensorFlow d'Essentia, téléchargés à la construction de l'image du recommender et absents du dépôt, appartiennent à l'Universitat Pompeu Fabra et sont réservés à un usage non commercial (licence Creative Commons BY-NC, voir [leurs conditions](https://essentia.upf.edu/models.html)). La police JetBrains Mono (`app/fonts`) est sous [SIL Open Font License 1.1](app/fonts/OFL.txt).
