@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
-# Audio analysis worker (phase 3). Essentia's wheel bundles its own decoders
-# (ffmpeg libraries) and TensorFlow, so the image needs nothing beyond Python.
+# Recommender service: audio analysis, MusicBrainz and ListenBrainz lookups.
+# Essentia's wheel bundles its own decoders (ffmpeg libraries) and
+# TensorFlow, so the image needs nothing beyond Python.
 FROM python:3.13-slim-trixie
 WORKDIR /app
 COPY requirements.txt ./
